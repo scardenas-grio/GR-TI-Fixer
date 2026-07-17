@@ -1,5 +1,19 @@
-instantclient/
+# Entorno
 .env
+.venv/
+
+# Python
 __pycache__/
 *.pyc
-.venv/
+
+# Oracle
+instantclient/
+
+# Base de datos local
+*.db
+
+# Logs
+logs/
+
+# Archivos temporales
+uploads/
