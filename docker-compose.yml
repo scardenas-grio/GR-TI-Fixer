@@ -1,0 +1,21 @@
+services:
+
+  ti_fixer:
+    build: .
+    container_name: ti_fixer
+
+    working_dir: /app
+
+    ports:
+      - "5000:5000"
+
+    env_file:
+      - .env
+
+    environment:
+      TZ: America/Mexico_City
+
+    volumes:
+      - .:/app
+
+    restart: always

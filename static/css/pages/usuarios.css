@@ -1,0 +1,266 @@
+.user-status {
+
+  width: 10px;
+  height: 10px;
+
+  border-radius: 50%;
+
+  display: inline-block;
+
+  margin-right: 8px;
+}
+
+.user-status.online {
+
+  background: #22c55e;
+
+  box-shadow:
+    0 0 10px #22c55e;
+}
+
+.user-status.offline {
+
+  background: #64748b;
+}
+
+.usuarios-grid {
+
+  display: grid;
+
+  grid-template-columns: 1.25fr .75fr;
+
+  gap: 28px;
+
+  align-items: start;
+
+}
+
+.usuarios-card .pagination {
+  margin-top: 22px;
+  padding-bottom: 8px;
+}
+
+
+/* =========================
+   USUARIOS MODERNO
+========================= */
+
+.usuarios-card {
+
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+  min-height: auto;
+}
+
+/* HEADER */
+.usuarios-card h3 {
+
+  margin: 0;
+
+  font-size: 22px;
+
+  font-weight: 700;
+
+  color: var(--text-main);
+
+}
+
+.card-header {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 18px;
+
+  margin-bottom: 22px;
+
+  padding-bottom: 18px;
+
+  border-bottom: 1px solid var(--border-color);
+
+}
+
+.card-header small {
+
+  display: block;
+
+  margin-top: 6px;
+
+  color: var(--text-soft);
+
+  font-size: 13px;
+
+}
+
+/* TABLA MÁS COMPACTA */
+.usuarios-card .tabla td {
+  padding: 10px 12px;
+}
+
+/* FILAS MÁS LIMPIAS */
+.usuarios-card .tabla tbody tr {
+  transition: 0.2s ease;
+}
+
+.usuarios-card .tabla tbody tr:hover {
+  background: rgba(59, 130, 246, 0.08);
+  transform: scale(1.002);
+}
+
+/* HEADER STICKY */
+.usuarios-card .tabla thead th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  backdrop-filter: blur(10px);
+}
+
+.usuarios-card .search-box {
+  width: 100%;
+  max-width: 420px;
+  margin-bottom: 20px;
+}
+
+/* EDITAR */
+.usuarios-card button:not(.btn-delete) {
+  background: var(--color-primary);
+}
+
+/* ELIMINAR */
+.usuarios-card .btn-delete {
+  background: var(--color-danger);
+}
+
+.usuarios-header {
+  margin-bottom: 28px;
+}
+
+.usuarios-header h1 {
+  font-size: 34px;
+
+  margin: 8px 0;
+}
+
+.usuarios-card .filtros-bar,
+.usuarios-card .search-box {
+  min-height: 58px;
+}
+
+.usuarios-card td:last-child {
+  display: table-cell;
+}
+
+.filtros-top-usuarios {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 14px;
+
+  flex-wrap: wrap;
+
+  margin: 0;
+
+}
+
+.usuarios-toolbar {
+  min-height: 90px;
+  display: flex;
+  align-items: center;
+}
+
+.usuarios-toolbar .search-box {
+  height: 72px;
+}
+
+.usuarios-toolbar select {
+  height: 48px;
+}
+
+.usuarios-card table {
+  table-layout: auto;
+}
+
+.usuarios-card th {
+  height: 58px;
+  vertical-align: middle;
+}
+
+.usuarios-card table tbody tr {
+  height: 44px;
+}
+
+.acciones {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.permisos-list {
+
+  display: grid;
+
+  grid-template-columns: repeat(2, minmax(140px, 1fr));
+
+  gap: 12px;
+
+  margin-top: 12px;
+
+}
+
+.permiso-item {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 12px;
+
+  border: 1px solid var(--border-color);
+
+  border-radius: 14px;
+
+  background: var(--bg-secondary);
+
+  cursor: pointer;
+
+  transition: .25s;
+
+}
+
+.permiso-item input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.permiso-item:hover {
+
+  border-color: var(--color-primary);
+
+  transform: translateY(-2px);
+
+}
+
+.permiso-item span {
+  color: var(--text-main);
+}
+
+.acciones-vertical {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+#tablaLDAP th:last-child,
+#tablaLDAP td:last-child {
+  width: 170px;
+}

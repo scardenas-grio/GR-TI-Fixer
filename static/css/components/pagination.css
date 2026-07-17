@@ -1,0 +1,158 @@
+/*==================================================
+    TI-FIXER
+    Design System
+    Archivo: pagination.css
+====================================================*/
+
+/*==================================================
+                PAGINATION
+====================================================*/
+
+.pagination,
+.paginacion{
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    gap:var(--space-3);
+
+    margin-top:var(--space-6);
+
+    flex-wrap:wrap;
+
+}
+
+/*==================================================
+                LINKS
+====================================================*/
+
+.pagination a,
+.pagination span,
+.paginacion a,
+.paginacion span,
+.paginacion button{
+
+    min-width:42px;
+
+    height:42px;
+
+    padding:0 var(--space-3);
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    text-decoration:none;
+
+    border:none;
+
+    border-radius:var(--radius-md);
+
+    background:var(--bg-card);
+
+    color:var(--text-main);
+
+    border:1px solid var(--border-color);
+
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:
+        background var(--transition-normal),
+        color var(--transition-normal),
+        transform var(--transition-fast),
+        box-shadow var(--transition-normal);
+
+}
+
+/*==================================================
+                HOVER
+====================================================*/
+
+.pagination a:hover,
+.paginacion a:hover,
+.paginacion button:hover{
+
+    background:var(--color-primary);
+
+    color:var(--text-white);
+
+    transform:translateY(-2px);
+
+    box-shadow:var(--shadow-sm);
+
+}
+
+/*==================================================
+                ACTIVE
+====================================================*/
+
+.pagination .active,
+.pagination a.active,
+.paginacion .activo{
+
+    background:var(--color-primary);
+
+    color:var(--text-white);
+
+    border-color:var(--color-primary);
+
+    box-shadow:var(--shadow-md);
+
+}
+
+/*==================================================
+                DISABLED
+====================================================*/
+
+.paginacion button:disabled{
+
+    opacity:.45;
+
+    cursor:not-allowed;
+
+    transform:none;
+
+    box-shadow:none;
+
+}
+
+/*==================================================
+                PAGE LABEL
+====================================================*/
+
+#paginaActual{
+
+    font-weight:700;
+
+    color:var(--text-main);
+
+    min-width:70px;
+
+    text-align:center;
+
+}
+
+/*==================================================
+                DARK MODE
+====================================================*/
+
+body.dark .pagination a,
+body.dark .pagination span,
+body.dark .paginacion a,
+body.dark .paginacion span,
+body.dark .paginacion button{
+
+    background:var(--bg-card);
+
+    color:var(--text-main);
+
+    border-color:var(--border-color);
+
+}

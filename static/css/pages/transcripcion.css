@@ -1,0 +1,166 @@
+.transcripcion-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.estado-operacion-card {
+  min-height: 180px;
+
+  background: var(--bg-card);
+
+  border: 1px solid var(--border-color);
+
+  border-radius: 28px;
+
+  padding: 28px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.estado-tiempo-card {
+  background: linear-gradient(
+    135deg,
+    rgba(59, 130, 246, 0.12),
+    rgba(16, 185, 129, 0.1)
+  );
+
+  border: 1px solid var(--border-color);
+
+  border-radius: 28px;
+
+  padding: 28px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* =========================
+   ESTADO SEMAFORO
+========================= */
+.semaforo-dot {
+  width: 22px;
+  height: 22px;
+
+  border-radius: 50%;
+}
+
+.estado-semaforo.activo .semaforo-dot {
+  background: #22c55e;
+
+  box-shadow: 0 0 18px #22c55e;
+}
+
+.estado-semaforo.desactivado .semaforo-dot {
+  background: #ef4444;
+
+  box-shadow: 0 0 18px #ef4444;
+}
+
+.estado-semaforo h2 {
+  font-size: 28px;
+  margin-bottom: 4px;
+}
+
+.estado-semaforo p {
+  color: var(--text-muted);
+}
+
+/* =========================
+   ESTADOS SEMAFORO
+========================= */
+
+.estado-semaforo {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 20px;
+
+  padding: 26px;
+
+  border-radius: 24px;
+
+  transition: 0.25s ease;
+}
+
+.cronometro-operacion {
+  font-size: 42px;
+  font-weight: 800;
+
+  color: var(--text-main);
+
+  letter-spacing: 2px;
+}
+
+.search-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+  padding: 20px;
+}
+
+
+.search-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  background: var(--bg-soft);
+
+  border: 1px solid var(--border-color);
+
+  border-radius: 20px;
+
+  padding: 14px 18px;
+
+  transition: 0.25s ease;
+
+  overflow: hidden;
+}
+
+.search-wrapper i {
+  flex-shrink: 0;
+
+  width: 22px;
+
+  font-size: 20px;
+
+  color: var(--text-muted);
+}
+
+.search-wrapper:focus-within {
+  border-color: var(--primary);
+
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.search-wrapper input {
+  flex: 1;
+
+  width: 100%;
+
+  min-width: 0;
+
+  height: 48px;
+
+  border: none;
+  outline: none;
+
+  background: transparent;
+
+  color: var(--text-main);
+
+  font-size: 15px;
+
+  padding: 0;
+
+  margin: 0;
+
+  box-shadow: none !important;
+}

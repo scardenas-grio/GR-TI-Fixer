@@ -1,0 +1,336 @@
+{% extends "base.html" %} {% block contenido %}
+
+<div class="usuarios-header">
+  <div>
+    <p class="eyebrow">Administración</p>
+
+    <h1>👥 Control de Usuarios</h1>
+
+    <p class="hero-copy">
+      Gestiona usuarios LDAP, permisos y roles del sistema.
+    </p>
+  </div>
+
+  <div class="usuarios-resumen">
+    <div class="resumen-card ldap">
+      <span class="resumen-numero">{{ total_ldap }}</span>
+
+      <small>LDAP</small>
+    </div>
+
+    <div class="resumen-card sistema">
+      <span class="resumen-numero">{{ total_db }}</span>
+
+      <small>Sistema</small>
+    </div>
+  </div>
+</div>
+
+<div class="usuarios-grid">
+  <!-- ================= TABLA LDAP ================= -->
+  <div class="card-admin usuarios-card">
+    <div class="card-header">
+      <div>
+        <h3>👥 Usuarios LDAP</h3>
+        <small>Sincronizados desde Active Directory</small>
+      </div>
+    </div>
+    <div class="filtros-bar">
+      <div class="filtros-top-usuarios">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+
+          <input type="text" id="searchLDAP" placeholder="Buscar usuario..." />
+
+          <button id="clearLDAP" class="btn-clear">✖</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabla-wrapper">
+      <div class="tabla-scroll">
+        <table class="tabla" id="tablaLDAP">
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Rol</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for u in ldap_users %} {% set user = usuarios_dict.get(u) %}
+
+            <tr id="fila-{{ u }}">
+              <td>
+                <div class="avatar">
+                  <div class="avatar-circle">
+                    {{ u[:2]|upper }} {% if user %}
+
+                    <span class="avatar-status online"></span>
+
+                    {% else %}
+
+                    <span class="avatar-status offline"></span>
+
+                    {% endif %}
+                  </div>
+
+                  <div class="avatar-content">
+                    <span class="avatar-title"> {{ u }} </span>
+
+                    <span class="avatar-subtitle"> Usuario LDAP </span>
+                  </div>
+                </div>
+              </td>
+
+              <td>
+                <span class="rol-badge {{ user.rol if user else 'usuario' }}">
+                  {{ user.rol if user else 'usuario' }}
+                </span>
+              </td>
+
+              <td>
+                {% if u != "admin_root" %}
+
+                <div class="acciones acciones-vertical">
+                  <button
+                    class="btn btn-primary btn-editar-usuarios"
+                    data-user="{{ u }}"
+                  >
+                    ✏️ Editar
+                  </button>
+
+                  <button class="btn btn-danger btn-delete" data-user="{{ u }}">
+                    🗑️ Eliminar
+                  </button>
+                </div>
+
+                {% else %} 🔒 {% endif %}
+              </td>
+            </tr>
+
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PAGINACIÓN LDAP -->
+    <div class="pagination">
+      {% if current_page > 1 %}
+      <a
+        href="{{ url_for('usuarios', page_ldap=current_page-1, page_activos=current_page_activos) }}"
+        >←</a
+      >
+      {% endif %} {% for p in range(1, total_pages + 1) %} {% if p >=
+      current_page - 1 and p <= current_page + 1 %}
+      <a
+        href="{{ url_for('usuarios', page_ldap=p, page_activos=current_page_activos) }}"
+        class="{% if p == current_page %}active{% endif %}"
+      >
+        {{ p }}
+      </a>
+      {% endif %} {% endfor %} {% if current_page < total_pages %}
+      <a
+        href="{{ url_for('usuarios', page_ldap=current_page+1, page_activos=current_page_activos) }}"
+        >→</a
+      >
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ================= TABLA ACTIVOS ================= -->
+  <div class="card-admin usuarios-card">
+    <div class="card-header">
+      <div>
+        <h3>🛡️ Usuarios del Sistema</h3>
+        <small>Con acceso a la aplicación</small>
+      </div>
+
+      <div class="filtros-bar">
+        <div class="filtros-top-usuarios">
+          <select id="filtroRol">
+            <option value="">Todos</option>
+            <option value="admin">Admin</option>
+            <option value="usuario">Usuario</option>
+            <option value="superadmin">Superadmin</option>
+          </select>
+
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input
+              type="text"
+              id="searchActivos"
+              placeholder="Buscar usuario..."
+            />
+            <button id="clearActivos" class="btn-clear">✖</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabla-wrapper">
+      <div class="tabla-scroll">
+        <table class="tabla" id="tablaActivos">
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Rol</th>
+              <th>Permisos</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="tablaActivosBody">
+            {% for u in usuarios_db %}
+            <tr>
+              <td>
+                <div class="avatar">
+                  <div class="avatar-circle">{{ u.username[:2]|upper }}</div>
+
+                  <div class="avatar-content">
+                    <span class="avatar-title"> {{ u.username }} </span>
+
+                    <span class="avatar-subtitle"> Usuario del sistema </span>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="rol-badge {{ u.rol }}"> {{ u.rol }} </span>
+              </td>
+              <td>
+                <div class="permisos-chips">
+                  {% if u.permisos %} {% for permiso in u.permisos.split(",") %}
+
+                  <span class="feed-chip"> {{ permiso.strip() }} </span>
+
+                  {% endfor %} {% endif %}
+                </div>
+              </td>
+              <td>
+                <div class="acciones">
+                  <button class="btn btn-outline" data-user="{{ u.username }}">
+                    ✏️ Editar
+                  </button>
+                  <button class="btn btn-danger" data-user="{{ u.username }}">
+                    🗑️ Eliminar
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PAGINACIÓN ACTIVOS -->
+    <div class="pagination">
+      {% if current_page_activos > 1 %}
+      <a
+        href="{{ url_for('usuarios', page_ldap=current_page, page_activos=current_page_activos-1) }}"
+        >←</a
+      >
+      {% endif %} {% for p in range(1, total_pages_activos + 1) %} {% if p >=
+      current_page_activos - 1 and p <= current_page_activos + 1 %}
+      <a
+        href="{{ url_for('usuarios', page_ldap=current_page, page_activos=p) }}"
+        class="{% if p == current_page_activos %}active{% endif %}"
+      >
+        {{ p }}
+      </a>
+      {% endif %} {% endfor %} {% if current_page_activos < total_pages_activos
+      %}
+      <a
+        href="{{ url_for('usuarios', page_ldap=current_page, page_activos=current_page_activos+1) }}"
+        >→</a
+      >
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ================= PANEL ================= -->
+  <div id="overlay" class="overlay"></div>
+
+  <div id="panelUsuario" class="panel">
+    <input type="hidden" id="usernamePanel" />
+
+    <div class="panel-header">
+      <button class="panel-close" id="closePanelBtn">✕</button>
+    </div>
+
+    <div class="panel-user">
+      <div class="avatar avatar-xl">
+        <div class="avatar-circle" id="panelAvatar">US</div>
+      </div>
+
+      <h2 id="panelNombre">Usuario</h2>
+
+      <span id="panelRolActual" class="rol-badge usuario"> usuario </span>
+    </div>
+
+    <div class="panel-body">
+      <label>Rol</label>
+
+      <select id="rolPanel">
+        {% for r in roles %}
+        <option value="{{ r.nombre }}">{{ r.nombre }}</option>
+        {% endfor %}
+      </select>
+
+      <label>Permisos</label>
+
+      <div class="permisos-list">
+        {% for p in permisos %}
+
+        <label class="permiso-item">
+          <input type="checkbox" value="{{ p.nombre }}" class="permisoCheck" />
+
+          <span>{{ p.nombre }}</span>
+        </label>
+
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="panel-footer">
+      <button id="btnGuardarUsuario" class="btn btn-primary">Guardar</button>
+
+      <button id="btnCancelarPanel" class="btn btn-secondary">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- ================= MODAL ================= -->
+  <div id="modalDelete" class="modal">
+    <div class="modal-content">
+      <h3>⚠️ Confirmar acción</h3>
+      <p id="modalTexto"></p>
+
+      <div class="modal-actions">
+        <button id="btnConfirmarEliminar" class="btn btn-danger">
+          >Eliminar
+        </button>
+        <button id="btnCancelarModal" class="btn btn-secondary">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toastContainer"></div>
+
+<!-- ================= JS ================= -->
+<script type="application/json" id="ldap-json">
+  {{ ldap_users | tojson }}
+</script>
+
+<script src="{{ url_for('static', filename='js/usuarios/usuarios.tabla.js') }}"></script>
+
+<script src="{{ url_for('static', filename='js/usuarios/usuarios.filtros.js') }}"></script>
+
+<script src="{{ url_for('static', filename='js/usuarios/usuarios.modal.js') }}"></script>
+
+<script src="{{ url_for('static', filename='js/usuarios/usuarios.panel.js') }}"></script>
+
+<script src="{{ url_for('static', filename='js/usuarios.js') }}"></script>
+
+{% endblock %}

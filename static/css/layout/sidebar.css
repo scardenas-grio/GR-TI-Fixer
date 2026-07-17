@@ -1,0 +1,396 @@
+/* =========================
+   SIDEBAR
+========================= */
+
+.menu-lateral {
+
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 250px;
+  height: 100vh;
+  background: var(--bg-card);
+  color: var(--text-main);
+  backdrop-filter: blur(16px);
+  border-right: 1px solid var(--border-color);
+  z-index: 2000;
+  transition:
+    width .3s ease,
+    transform .3s ease;
+  box-shadow: var(--shadow);
+  overflow-y: auto;
+}
+
+/* =========================
+   LINKS MENU
+========================= */
+
+.menu-lateral a {
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding:
+    14px 18px;
+  margin:
+    6px 12px;
+  border-radius: 14px;
+  color: var(--text-main);
+  font-weight: 500;
+  transition:
+    all .25s ease;
+}
+
+/* hover */
+
+.menu-lateral a:hover {
+
+  background:
+    rgba(59,130,246,.18);
+
+  color: var(--text-main);
+
+  transform:
+    translateX(4px);
+}
+
+/* activo */
+
+.menu-lateral a.active {
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(59,130,246,.30),
+      rgba(139,92,246,.25)
+    );
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  color: var(--text-main);
+}
+
+/* =========================
+   SCROLL SIDEBAR
+========================= */
+
+.menu-lateral::-webkit-scrollbar {
+  width: 6px;
+}
+
+.menu-lateral::-webkit-scrollbar-thumb {
+
+  background:
+    rgba(255,255,255,.15);
+
+  border-radius: 999px;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 900px) {
+
+  .menu-lateral {
+
+    transform:
+      translateX(-100%);
+  }
+
+  .menu-lateral.open {
+
+    transform:
+      translateX(0);
+  }
+
+  .topbar {
+
+    left: 0;
+  }
+
+  .contenido {
+
+    margin-left: 0;
+
+    padding: 20px;
+  }
+}
+
+/* =========================
+   SIDEBAR COLLAPSE
+========================= */
+
+.menu-lateral.collapsed {
+
+  width: 90px;
+}
+
+/* contenido */
+
+.menu-lateral.collapsed + .topbar {
+
+  left: 90px;
+}
+
+.menu-lateral.collapsed ~ .contenido {
+
+  margin-left: 90px;
+}
+
+/* ocultar texto */
+
+.menu-lateral.collapsed .menu-text {
+
+  opacity: 0;
+
+  visibility: hidden;
+
+  width: 0;
+}
+
+/* centrar iconos */
+
+.menu-lateral.collapsed a {
+
+  justify-content: center;
+}
+
+/* =========================
+   SIDEBAR COLLAPSED
+========================= */
+
+.menu-lateral.collapsed {
+
+  width: 90px;
+}
+
+/* topbar */
+
+.menu-lateral.collapsed ~ .main .topbar {
+
+  left: 90px;
+}
+
+
+/* ocultar textos */
+
+.menu-lateral.collapsed .menu-text,
+.menu-lateral.collapsed .menu-seccion-title span,
+.menu-lateral.collapsed .usuario-info span,
+.menu-lateral.collapsed .accordion-btn span {
+
+  opacity: 0;
+
+  visibility: hidden;
+
+  width: 0;
+
+  overflow: hidden;
+}
+
+/* centrar iconos */
+
+.menu-lateral.collapsed a,
+.menu-lateral.collapsed .accordion-btn {
+
+  justify-content: center;
+}
+
+/* ocultar título */
+
+.menu-lateral.collapsed .menu-titulo {
+
+  font-size: 0;
+}
+
+/* usuario */
+
+.menu-lateral.collapsed .usuario-info {
+
+  justify-content: center;
+}
+
+
+/* =========================
+   ACTIVE LINK GLOW
+========================= */
+
+.menu-lateral a.active-link {
+
+  position: relative;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(59,130,246,.22),
+      rgba(139,92,246,.18)
+    );
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  box-shadow:
+    0 0 20px rgba(59,130,246,.18);
+}
+
+/* glow line */
+
+.menu-lateral a.active-link::before {
+
+  content: "";
+
+  position: absolute;
+
+  left: -10px;
+
+  top: 10%;
+
+  width: 4px;
+
+  height: 80%;
+
+  border-radius: 999px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #3b82f6,
+      #8b5cf6
+    );
+}
+
+/* hover icon */
+
+.menu-lateral a:hover .menu-icon i {
+
+  transform:
+    scale(1.15);
+
+  color: #60a5fa;
+}
+
+/* iconos */
+
+.menu-icon i {
+
+  transition:
+    transform .25s ease,
+    color .25s ease;
+}
+
+/* ================= MENU ================= */
+
+.menu-titulo {
+  padding: 20px;
+  font-weight: 600;
+}
+
+.usuario-info {
+  padding: 25px;
+  color: var(--text-main);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+/* =========================
+   MENU RIO
+========================= */
+
+.menu-rio {
+  display: flex;
+  flex-direction: column;
+
+  gap: 14px;
+
+  padding: 0;
+  margin: 0;
+
+  list-style: none;
+}
+
+.menu-seccion-principal {
+  margin-top: 26px;
+  margin-bottom: 8px;
+}
+
+/* =========================
+   TITULO
+========================= */
+
+.menu-seccion-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-soft);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  padding-left: 10px;
+}
+
+/* =========================
+   LOGOUT
+========================= */
+
+.menu-logout-item {
+  margin-top: 18px;
+}
+
+.logout-link {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 14px 16px;
+
+  border-radius: 16px;
+
+  color: #ef4444 !important;
+
+  text-decoration: none;
+
+  font-weight: 700;
+
+  transition: 0.2s ease;
+}
+
+.logout-link:hover {
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.menu-toggle {
+  display: none;
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  background: var(--bg-card);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  z-index: 1100;
+}
+
+/* MODO CLARO */
+body:not(.dark) .accordion-btn {
+    color: #334155 !important;
+}
+
+body:not(.dark) .accordion-btn span {
+    color: #334155 !important;
+}
+
+body:not(.dark) .accordion-btn i {
+    color: #334155 !important;
+}
+
+body:not(.dark) .accordion-btn.active {
+    color: #1e293b !important;
+}

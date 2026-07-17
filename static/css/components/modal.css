@@ -1,0 +1,74 @@
+/* =========================
+   MODAL
+========================= */
+
+.modal {
+
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+  z-index: 3000;
+}
+
+.modal.open {
+
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-content {
+
+  width: min(500px, 92vw);
+  background: var(--bg-card);
+  color: var(--text-main);
+  border-radius: 20px;
+  padding: 25px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  transform: translateY(20px);
+  transition: transform 0.25s ease;
+  border: 1px solid var(--border-color);
+  text-align: center;
+}
+
+.modal.open .modal-content {
+
+  transform: translateY(0);
+}
+
+.modal.activo {
+  display: flex;
+}
+
+.modal-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.modal-actions button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.modal-detalle {
+  position: fixed;
+  top: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  width: 400px;
+  max-height: 400px;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}

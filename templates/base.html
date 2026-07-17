@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>TI-Fixer</title>
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static',
+          filename='css/app.css') }}"
+    />
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static',
+          filename='css/darkmode.css') }}"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <link
+        rel="icon"
+        type="image/x-icon"
+        href="{{ url_for('static', filename='image/TI-Fixer-icon.ico') }}?v=2"
+    >
+  </head>
+
+  <body>
+    <!-- 🔥 APP CONTAINER -->
+    <div class="app">
+      <!-- SIDEBAR -->
+      <aside class="menu-lateral" id="menu">
+        <div class="menu-titulo">SISTEMA PUNTOS</div>
+
+        <!-- 👤 INFO USUARIO -->
+        <div class="usuario-info">
+          <i class="fas fa-user"></i> {{ session.usuario }} {% if session.rol ==
+          "superadmin" %}
+          <span class="rol-badge super">SUPERADMIN</span>
+          {% elif session.rol == "admin" %}
+          <span class="rol-badge admin">ADMIN</span>
+          {% else %}
+          <span class="rol-badge user">USER</span>
+          {% endif %}
+        </div>
+
+        <ul class="menu-rio">
+          <!-- SISTEMA -->
+          <li class="menu-seccion-principal">
+            <div class="menu-seccion-title">
+              <i class="fa-solid fa-layer-group"></i>
+
+              <span>Sistema RIO</span>
+            </div>
+          </li>
+
+          {% if session.rol in ["admin", "superadmin"] %}
+
+          <!-- =========================
+       PUNTOS
+  ========================== -->
+
+          <li class="accordion-item">
+            <button class="accordion-btn active">
+              <div>
+                <i class="fa-solid fa-coins"></i>
+
+                <span>PUNTOS RIO REWARDS</span>
+              </div>
+
+              <i class="fa-solid fa-chevron-down"></i>
+            </button>
+
+            <div class="accordion-content open">
+              <a href="/dashboard" title="Dashboard">
+                <span class="menu-icon">
+                  <i class="fa-solid fa-chart-line"></i>
+                </span>
+                <span class="menu-text"> Dashboard </span>
+              </a>
+
+              <a href="/usuarios" title="Usuarios">
+                <span class="menu-icon">
+                  <i class="fa-solid fa-users"></i>
+                </span>
+                <span class="menu-text"> Usuarios </span>
+              </a>
+
+              <a href="/reportes" title="Reportes">
+                <span class="menu-icon">
+                  <i class="fa-solid fa-file-lines"></i>
+                </span>
+                <span class="menu-text"> Reportes </span>
+              </a>
+
+              <a href="/puntos" title="Puntos">
+                <span class="menu-icon">
+                  <i class="fa-solid fa-coins"></i>
+                </span>
+                <span class="menu-text"> Puntos </span>
+              </a>
+            </div>
+          </li>
+
+          <!-- =========================
+              SEMAFORO
+          ========================== -->
+
+          <li class="accordion-item">
+            <button
+              class="accordion-btn {% if request.path == '/transcripcion' %} active {% endif %}"
+            >
+              <div>
+                <i class="fa-solid fa-wave-square"></i>
+
+                <span>SIO WEB</span>
+              </div>
+
+              <i class="fa-solid fa-chevron-down"></i>
+            </button>
+
+            <div
+              class="accordion-content {% if request.path == '/transcripcion' %} open {% endif %}"
+            >
+              <a
+                href="/transcripcion"
+                class="{% if request.path == '/transcripcion' %} active-link {% endif %}"
+              >
+                Liberacion de Pacientes (Semaforo)
+              </a>
+            </div>
+          </li>
+
+          {% endif %}
+
+          <!-- LOGOUT -->
+          <li class="menu-logout-item">
+            <a href="/logout" class="logout-link">
+              <i class="fa-solid fa-right-from-bracket"></i>
+
+              <span>Salir</span>
+            </a>
+          </li>
+        </ul>
+      </aside>
+
+      <!-- CONTENIDO PRINCIPAL -->
+      <div class="main">
+        <!-- TOPBAR -->
+        <div class="topbar">
+          <div class="left">
+            <button class="menu-toggle" onclick="toggleMenu()">
+              <i class="fas fa-bars"></i>
+            </button>
+          </div>
+
+          <!-- 🔥 TODO ESTO VA AGRUPADO -->
+          <div class="topbar-right">
+            <div class="notificacion" onclick="abrirNotificaciones()">
+              <i class="fas fa-bell"></i>
+              <span id="badgeNotificaciones" class="badge">
+                {{ notificaciones or 0 }}
+              </span>
+
+              <!-- 🔥 PANEL AQUÍ -->
+              <div id="panelNotificaciones" class="panel-notificaciones">
+                <div class="notif-header">
+                  <span>Notificaciones</span>
+                  <button onclick="limpiarTodas()">Limpiar</button>
+                </div>
+
+                <ul id="listaNotificaciones">
+                  <li class="notif-empty">No hay notificaciones</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="theme-switch" onclick="toggleTheme()">
+              <div class="switch-track">
+                <div class="switch-thumb">
+                  <i id="themeIcon" class="fas fa-sun"></i>
+                </div>
+              </div>
+            </div>
+
+            <a href="/logout" class="logout-btn">
+              <i class="fas fa-sign-out-alt"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- CONTENIDO -->
+        <div class="contenido">{% block contenido %}{% endblock %}</div>
+      </div>
+    </div>
+    <!-- =========================
+         COMMAND PALETTE
+     ========================= -->
+
+    <div id="commandPalette" class="command-palette">
+      <div class="command-box">
+        <input
+          type="text"
+          id="commandInput"
+          placeholder="Buscar o ejecutar acción..."
+        />
+
+        <div class="command-results">
+          <a href="/dashboard">
+            <i class="fa-solid fa-chart-line"></i>
+            Dashboard
+          </a>
+
+          <a href="/usuarios">
+            <i class="fa-solid fa-users"></i>
+            Usuarios
+          </a>
+
+          <a href="/reportes">
+            <i class="fa-solid fa-file-lines"></i>
+            Reportes
+          </a>
+
+          <a href="/puntos">
+            <i class="fa-solid fa-coins"></i>
+            Puntos
+          </a>
+        </div>
+      </div>
+    </div>
+    <!-- JS -->
+
+    <script>
+      window.addEventListener("load", function () {
+        const savedTheme = localStorage.getItem("theme");
+        const body = document.body;
+        const icon = document.getElementById("themeIcon");
+
+        if (savedTheme === "dark") {
+          body.classList.add("dark");
+          if (icon) icon.className = "fas fa-moon";
+        } else {
+          if (icon) icon.className = "fas fa-sun";
+        }
+      });
+
+      function actualizarFila(username, rol) {
+        const fila = document.getElementById(`fila-${username}`);
+        if (!fila) return;
+
+        const badge = fila.querySelector(".rol-badge");
+
+        if (badge) {
+          const clase = obtenerClaseRol(rol);
+
+          badge.className = `rol-badge ${clase}`;
+          badge.innerText = clase;
+        }
+
+        // ✨ animación visual
+        fila.classList.add("flash-row");
+        setTimeout(() => {
+          fila.classList.remove("flash-row");
+        }, 1200);
+      }
+    </script>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <div id="toastContainer"></div>
+
+    <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/notificaciones.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/socket.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/accordion.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/command.js') }}"></script>
+  </body>
+</html>

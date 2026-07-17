@@ -1,0 +1,136 @@
+/*==================================================
+    TI-FIXER
+    DESIGN SYSTEM
+    Archivo: variables.css
+==================================================*/
+
+:root {
+  /*====================================
+    BRAND
+  ====================================*/
+
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-primary-dark: #1e40af;
+  --color-primary-light: #60a5fa;
+
+  /*====================================
+    STATUS
+  ====================================*/
+
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #0ea5e9;
+
+  /*====================================
+    BACKGROUND
+  ====================================*/
+
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-soft: #eef4ff;
+  --bg-hover: #f1f5f9;
+  --bg-sidebar: #0f172a;
+
+  /*====================================
+    TEXT
+  ====================================*/
+
+  --text-main: #0f172a;
+  --text-secondary: #334155;
+  --text-soft: #64748b;
+  --text-muted: #94a3b8;
+  --text-white: #ffffff;
+
+  /*====================================
+    BORDER
+  ====================================*/
+
+  --border-color: #e2e8f0;
+  --border-hover: #bfdbfe;
+  --border-focus: #2563eb;
+
+  /*====================================
+    RADIUS
+  ====================================*/
+
+  --radius-xs: 8px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-round: 999px;
+
+  /*====================================
+    SHADOWS
+  ====================================*/
+
+  --shadow-xs: 0 2px 6px rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 6px 14px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 12px 28px rgba(15, 23, 42, 0.1);
+  --shadow-lg: 0 20px 48px rgba(15, 23, 42, 0.14);
+  --shadow-xl: 0 30px 70px rgba(15, 23, 42, 0.18);
+
+  /*====================================
+    SPACING
+  ====================================*/
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+  --space-9: 48px;
+  --space-10: 64px;
+
+  /*====================================
+    TRANSITIONS
+  ====================================*/
+
+  --transition-fast: 0.15s;
+  --transition-normal: 0.3s;
+  --transition-slow: 0.5s;
+
+  /*====================================
+    LAYOUT
+  ====================================*/
+
+  --sidebar-width: 280px;
+  --topbar-height: 70px;
+  --content-width: 1600px;
+  --z-dropdown:100;
+  --z-modal:500;
+  --z-toast:700;
+
+  /*====================================
+    COMPONENTS
+  ====================================*/
+
+  --button-height: 48px;
+  --button-radius: 16px;
+
+  --input-height: 52px;
+  --input-radius: 16px;
+
+  --card-radius: 24px;
+  --card-padding: 24px;
+}
+
+body.dark {
+  --bg-main: #020617;
+  --bg-card: #0f172a;
+  --bg-soft: #172033;
+  --bg-hover: #1e293b;
+
+  --text-main: #f8fafc;
+  --text-secondary: #e2e8f0;
+  --text-soft: #cbd5e1;
+  --text-muted: #94a3b8;
+
+  --border-color: #334155;
+  --border-hover: #475569;
+}

@@ -1,0 +1,175 @@
+/*==================================================
+    TI-FIXER
+    Design System
+    Archivo: tables.css
+====================================================*/
+
+/*==================================================
+                TABLE WRAPPER
+====================================================*/
+
+.tabla-wrapper{
+
+    width:100%;
+
+    overflow-x:auto;
+
+    border-radius:var(--radius-lg);
+
+}
+
+.tabla-scroll{
+
+    min-height:400px;
+
+}
+
+/*==================================================
+                TABLE
+====================================================*/
+
+.tabla{
+
+    width:100%;
+
+    border-collapse:separate;
+
+    border-spacing:0 10px;
+
+}
+
+/*==================================================
+                HEADER
+====================================================*/
+
+.tabla thead th{
+
+    position:sticky;
+
+    top:0;
+
+    z-index:2;
+
+    padding:16px;
+
+    background:var(--bg-soft);
+
+    color:var(--text-soft);
+
+    text-align:center;
+
+    font-size:13px;
+
+    font-weight:700;
+
+    text-transform:uppercase;
+
+    letter-spacing:.5px;
+
+}
+
+/*==================================================
+                BODY
+====================================================*/
+
+.tabla tbody tr{
+
+    transition:
+        transform var(--transition-fast),
+        background var(--transition-fast);
+
+}
+
+.tabla tbody tr:hover{
+
+    transform:translateY(-2px);
+
+    background:var(--bg-hover);
+
+}
+
+.tabla td{
+
+    padding:16px;
+
+    text-align:center;
+
+    vertical-align:middle;
+
+    color:var(--text-main);
+
+    background:var(--bg-card);
+
+    border-top:1px solid var(--border-color);
+
+    border-bottom:1px solid var(--border-color);
+
+}
+
+/*==================================================
+                ROUND ROWS
+====================================================*/
+
+.tabla td:first-child{
+
+    border-radius:
+
+        var(--radius-md) 0 0 var(--radius-md);
+
+}
+
+.tabla td:last-child{
+
+    border-radius:
+
+        0 var(--radius-md) var(--radius-md) 0;
+
+}
+
+/*==================================================
+                EMPTY TABLE
+====================================================*/
+
+.tabla-vacia{
+
+    padding:40px;
+
+    text-align:center;
+
+    color:var(--text-soft);
+
+}
+
+/*==================================================
+                DARK MODE
+====================================================*/
+
+body.dark .tabla td{
+
+    background:var(--bg-card);
+
+}
+
+body.dark .tabla thead th{
+
+    background:var(--bg-soft);
+
+}
+
+/*==================================================
+                SCROLLBAR
+====================================================*/
+
+.tabla-wrapper::-webkit-scrollbar{
+
+    height:8px;
+
+}
+
+.tabla-wrapper::-webkit-scrollbar-thumb{
+
+    background:var(--color-primary);
+
+    border-radius:999px;
+
+}

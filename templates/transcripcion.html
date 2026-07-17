@@ -1,0 +1,515 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+
+<div class="transcripcion-shell">
+
+  <!-- HERO -->
+  <section class="transcripcion-hero">
+
+    <div>
+
+      <span class="hero-badge">
+        OPERACIÓN MÉDICA
+      </span>
+
+      <h1>Transcripción</h1>
+
+      <p>
+        Consulta estados, valida estudios y libera procedimientos.
+      </p>
+
+    </div>
+
+  </section>
+
+  <!-- PANEL ESTADO -->
+  <section class="estado-operacion-grid">
+
+  <!-- ESTADO -->
+  <div
+    class="estado-operacion-card"
+    id="estadoOperacionCard"
+  >
+
+    <div class="estado-operacion-empty">
+
+      <i class="fa-solid fa-wave-square"></i>
+
+      <span>
+        Consulta un estudio para visualizar su estado actual
+      </span>
+
+    </div>
+
+  </div>
+
+  <!-- CRONOMETRO -->
+  <div class="estado-tiempo-card">
+
+    <div class="estado-tiempo-header">
+
+      <span>
+        Tiempo activo
+      </span>
+
+      <i class="fa-solid fa-clock"></i>
+
+    </div>
+
+    <div
+      class="cronometro-operacion"
+      id="cronometroOperacion"
+    >
+      00:00:00
+    </div>
+
+    <span class="estado-tiempo-label">
+      Tiempo desde liberación
+    </span>
+
+  </div>
+
+</section>
+
+  <!-- BUSCADOR -->
+  <section class="transcripcion-topbar">
+
+    <div class="search-card">
+
+      <label>
+        Buscar cita o estudio
+      </label>
+
+      <div class="search-wrapper">
+
+        <i class="fa-solid fa-magnifying-glass"></i>
+
+        <input
+          type="text"
+          id="inputBuscarTranscripcion"
+          placeholder="Buscar por cita, paciente o estudio"
+        >
+
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- BOTONES -->
+  <section class="acciones-transcripcion">
+
+    <button class="btn-pro btn-validar" id="btnValidar60">
+
+      <i class="fa-solid fa-clock"></i>
+
+      Validar +60 días
+
+    </button>
+
+    <button class="btn-pro btn-estado" id="btnConsultarEstado">
+
+      <i class="fa-solid fa-wave-square"></i>
+
+      Consultar estado
+
+    </button>
+
+    <button class="btn-pro btn-liberar" id="btnLiberarEstudio">
+
+      <i class="fa-solid fa-unlock"></i>
+
+      Liberar estudio
+
+    </button>
+
+  </section>
+
+</div>
+
+<script>
+    const estadoOperacionCard = document.getElementById(
+  "estadoOperacionCard"
+);
+
+const cronometroOperacion = document.getElementById(
+  "cronometroOperacion"
+);
+
+const btnValidar60 = document.getElementById(
+  "btnValidar60"
+);
+
+const btnConsultarEstado = document.getElementById(
+  "btnConsultarEstado"
+);
+
+const btnLiberarEstudio = document.getElementById(
+  "btnLiberarEstudio"
+);
+
+let cronometroInterval = null;
+let resetEstadoTimeout = null;
+
+let segundos = parseInt(
+  localStorage.getItem("cronometro_segundos")
+) || 0;
+
+let estadoSemaforo =
+  localStorage.getItem("estado_semaforo");
+
+if(
+  estadoSemaforo !== "activo" &&
+  estadoSemaforo !== "desactivado"
+){
+  estadoSemaforo = null;
+}
+if(!localStorage.getItem("estado_inicializado")){
+
+  localStorage.removeItem("estado_semaforo");
+
+  localStorage.removeItem("cronometro_segundos");
+
+  localStorage.setItem(
+    "estado_inicializado",
+    "true"
+  );
+}
+
+/* =========================
+   FORMATO TIEMPO
+========================= */
+
+function formatearTiempo(totalSegundos){
+
+  const horas = String(
+    Math.floor(totalSegundos / 3600)
+  ).padStart(2, "0");
+
+  const minutos = String(
+    Math.floor((totalSegundos % 3600) / 60)
+  ).padStart(2, "0");
+
+  const secs = String(
+    totalSegundos % 60
+  ).padStart(2, "0");
+
+  return `${horas}:${minutos}:${secs}`;
+}
+
+/* =========================
+   RENDER ESTADO
+========================= */
+
+function renderEstado(){
+
+  /* =========================
+     LIBERACION POR CITA
+  ========================= */
+
+  if(estadoSemaforo === "activo"){
+
+    estadoOperacionCard.innerHTML = `
+      <div class="estado-semaforo estado-orange">
+
+        <div class="semaforo-dot orange"></div>
+
+        <div>
+
+          <h2>
+            Semáforo activo
+          </h2>
+
+          <p>
+            Liberación por cita específica
+          </p>
+
+        </div>
+
+      </div>
+    `;
+
+  }
+
+  /* =========================
+     MODO 60 DIAS
+  ========================= */
+
+  else if(estadoSemaforo === "60dias"){
+
+    estadoOperacionCard.innerHTML = `
+      <div class="estado-semaforo estado-green">
+
+        <div class="semaforo-dot green"></div>
+
+        <div>
+
+          <h2>
+            Semáforo común
+          </h2>
+
+          <p>
+            Semáforo por 60 días
+          </p>
+
+        </div>
+
+      </div>
+    `;
+  }
+
+  /* =========================
+     ESTADO NEUTRO
+  ========================= */
+
+  else{
+
+    estadoOperacionCard.innerHTML = `
+      <div class="estado-operacion-empty">
+
+        <i class="fa-solid fa-wave-square"></i>
+
+        <div>
+
+          <h2>
+            Sin información del estudio
+          </h2>
+
+          <p>
+            Consulta el estado para comenzar
+          </p>
+
+        </div>
+
+      </div>
+    `;
+  }
+}
+
+/* =========================
+   RESET ESTADO VISUAL
+========================= */
+
+function resetEstadoVisual(){
+
+  clearTimeout(resetEstadoTimeout);
+
+  // 🔥 si esta activo no resetear
+  if(estadoSemaforo === "activo"){
+    return;
+  }
+
+  resetEstadoTimeout = setTimeout(() => {
+
+    estadoOperacionCard.innerHTML = `
+      <div class="estado-operacion-empty">
+
+        <i class="fa-solid fa-wave-square"></i>
+
+        <div>
+
+          <h2>
+            Sin información del estudio
+          </h2>
+
+          <p>
+            Consulta el estado para comenzar
+          </p>
+
+        </div>
+
+      </div>
+    `;
+
+  }, 8000);
+}
+
+/* =========================
+   ACTUALIZAR CRONOMETRO
+========================= */
+
+function actualizarCronometro(){
+
+  cronometroOperacion.innerText =
+    formatearTiempo(segundos);
+}
+
+/* =========================
+   INICIAR CRONOMETRO
+========================= */
+
+function iniciarCronometro(){
+
+  clearInterval(cronometroInterval);
+
+  cronometroInterval = setInterval(() => {
+
+    segundos++;
+
+    localStorage.setItem(
+      "cronometro_segundos",
+      segundos
+    );
+
+    actualizarCronometro();
+
+  }, 1000);
+}
+
+/* =========================
+   DETENER CRONOMETRO
+========================= */
+
+function detenerCronometro(){
+
+  clearInterval(cronometroInterval);
+}
+
+/* =========================
+   LIBERAR ESTUDIO
+========================= */
+
+btnLiberarEstudio.addEventListener("click", () => {
+
+  estadoSemaforo = "activo";
+
+  localStorage.setItem(
+    "estado_semaforo",
+    estadoSemaforo
+  );
+
+  iniciarCronometro();
+
+  renderEstado();
+  resetEstadoVisual();
+});
+
+/* =========================
+   VALIDAR +60
+========================= */
+
+btnValidar60.addEventListener("click", () => {
+
+  estadoSemaforo = "60dias";
+
+  localStorage.setItem(
+    "estado_semaforo",
+    estadoSemaforo
+  );
+
+  detenerCronometro();
+
+  segundos = 0;
+
+  localStorage.setItem(
+    "cronometro_segundos",
+    segundos
+  );
+
+  actualizarCronometro();
+
+  renderEstado();
+  resetEstadoVisual();
+});
+
+/* =========================
+   CONSULTAR ESTADO
+========================= */
+
+btnConsultarEstado.addEventListener("click", async () => {
+
+  try{
+
+    const res = await fetch(
+      "/api/transcripcion/estado"
+    );
+
+    const data = await res.json();
+
+    //console.log("ESTADO:", data);
+
+    if(data.status !== "success"){
+      return;
+    }
+
+    /* =========================
+       MODO 60 DIAS
+    ========================= */
+
+    if(data.modo === "ULTIMOS_60"){
+
+      estadoSemaforo = "60dias";
+
+      renderEstado();
+
+      resetEstadoVisual();
+    }
+
+    /* =========================
+       MODO IDCITA
+    ========================= */
+
+    else if(data.modo === "IDCITA"){
+
+      estadoSemaforo = "activo";
+
+      renderEstado();
+    }
+
+    /* =========================
+       ESTADO VACIO
+    ========================= */
+
+    else{
+
+      estadoSemaforo = null;
+
+      renderEstado();
+    }
+
+  }catch(error){
+
+    console.error(error);
+  }
+});
+
+/* =========================
+   INIT
+========================= */
+
+actualizarCronometro();
+
+// 🔥 si esta activo mantener visible
+if(estadoSemaforo === "activo"){
+
+  renderEstado();
+
+  iniciarCronometro();
+
+}else{
+
+  // 🔥 cualquier otro estado inicia neutro
+  estadoOperacionCard.innerHTML = `
+    <div class="estado-operacion-empty">
+
+      <i class="fa-solid fa-wave-square"></i>
+
+      <div>
+
+        <h2>
+          Sin información del estudio
+        </h2>
+
+        <p>
+          Consulta el estado para comenzar
+        </p>
+
+      </div>
+
+    </div>
+  `;
+}
+</script>
+
+{% endblock %}

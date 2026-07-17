@@ -1,0 +1,260 @@
+/*==================================================
+    TI-FIXER
+    Design System
+    Archivo: cards.css
+====================================================*/
+
+/*==================================================
+                CARD BASE
+====================================================*/
+
+.card,
+.card-admin,
+.reporte-card-kpi,
+.grafica-box,
+.tabla-transcripcion-card {
+  background: var(--bg-card);
+
+  border: 1px solid var(--border-color);
+
+  border-radius: var(--card-radius);
+
+  padding: var(--card-padding);
+
+  box-shadow: var(--shadow-md);
+
+  transition:
+    transform var(--transition-normal),
+    box-shadow var(--transition-normal),
+    border-color var(--transition-normal);
+}
+
+/*==================================================
+                HOVER
+====================================================*/
+
+.card:hover,
+.card-admin:hover,
+.reporte-card-kpi:hover,
+.grafica-box:hover,
+.tabla-transcripcion-card:hover {
+  transform: translateY(-4px);
+
+  box-shadow: var(--shadow-lg);
+
+  border-color: var(--border-hover);
+}
+
+/*==================================================
+                GLASS
+====================================================*/
+
+.card-glass {
+  backdrop-filter: blur(18px);
+
+  background: rgba(255, 255, 255, 0.75);
+}
+
+/*==================================================
+                DARK
+====================================================*/
+
+body.dark .card,
+body.dark .card-admin,
+body.dark .grafica-box,
+body.dark .reporte-card-kpi,
+body.dark .tabla-transcripcion-card {
+  background: rgba(15, 23, 42, 0.82);
+}
+
+/*==================================================
+                GRID
+====================================================*/
+
+.cards {
+  display: grid;
+
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+
+  gap: var(--space-6);
+}
+
+/*==================================================
+                TITLES
+====================================================*/
+
+.card h3 {
+  margin-bottom: var(--space-3);
+
+  color: var(--text-main);
+
+  font-size: 18px;
+}
+
+.card p {
+  color: var(--text-soft);
+}
+
+/*==================================================
+                KPI
+====================================================*/
+
+.kpi-card {
+  background: var(--bg-card);
+
+  border: 1px solid var(--border-color);
+
+  border-radius: var(--card-radius);
+
+  padding: var(--card-padding);
+
+  box-shadow: var(--shadow-sm);
+}
+
+.kpi-card h2 {
+  margin-top: var(--space-3);
+
+  font-size: 34px;
+}
+
+/*==================================================
+                ACTION CARD
+====================================================*/
+
+.accion-card {
+  flex: 1;
+
+  background: linear-gradient(180deg, var(--bg-card), var(--bg-soft));
+
+  border: 1px solid var(--border-color);
+
+  border-radius: var(--radius-lg);
+
+  padding: 22px;
+
+  transition: all var(--transition-normal);
+}
+
+.accion-card:hover {
+  transform: translateY(-3px);
+
+  box-shadow: var(--shadow-md);
+}
+
+.accion-card p {
+  color: var(--text-soft);
+}
+
+/*==================================================
+                PERMISOS
+====================================================*/
+
+.permiso-card {
+  display: flex;
+
+  align-items: center;
+
+  gap: var(--space-2);
+
+  padding: 12px;
+
+  border-radius: var(--radius-md);
+
+  background: var(--bg-main);
+
+  border: 1px solid var(--border-color);
+
+  cursor: pointer;
+
+  transition: all var(--transition-fast);
+}
+
+.permiso-card:hover {
+  transform: scale(1.02);
+
+  border-color: var(--color-primary);
+}
+
+.permiso-card input {
+  accent-color: var(--color-primary);
+}
+
+.kpi-card {
+  display: flex;
+
+  align-items: center;
+
+  gap: 18px;
+
+  padding: 22px;
+
+  background: var(--bg-card);
+
+  border: 1px solid var(--border-color);
+
+  border-radius: 18px;
+
+  transition: 0.25s;
+}
+
+.kpi-card:hover {
+  transform: translateY(-4px);
+
+  box-shadow: 0 14px 35px rgba(15, 23, 42, 0.08);
+}
+
+.kpi-content {
+  flex: 1;
+}
+
+.kpi-label {
+  display: block;
+
+  font-size: 14px;
+
+  color: var(--text-muted);
+
+  margin-bottom: 6px;
+}
+
+.kpi-value {
+  font-size: 42px;
+
+  font-weight: 700;
+
+  color: var(--text-main);
+}
+
+.kpi-icon {
+  width: 58px;
+
+  height: 58px;
+
+  border-radius: 50%;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  font-size: 28px;
+
+  background: #eef2ff;
+}
+
+.stat-card {
+  background: var(--bg-soft);
+
+  border: 1px solid var(--border-color);
+
+  border-radius: 16px;
+
+  padding: 18px;
+
+  text-align: center;
+
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease;
+}

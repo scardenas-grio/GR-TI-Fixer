@@ -1,0 +1,223 @@
+{% extends "base.html" %} {% block contenido %}
+<div class="puntos-shell">
+  <section class="puntos-hero">
+    <div>
+      <p class="eyebrow">Operacion diaria</p>
+      <h1>Gestion de puntos</h1>
+      <p class="hero-copy">
+        Consulta saldo operativo, aplica ajustes sin dejar negativos y revisa el
+        historial reciente del paciente.
+      </p>
+    </div>
+  </section>
+  <div class="dashboard-topbar">
+    <div class="topbar-left">
+      <h2>Gestión de puntos</h2>
+      <span class="sub">Monitoreo en tiempo real</span>
+    </div>
+
+    <div class="topbar-right">
+      <button
+        class="filtro-btn active"
+        onclick="
+          filtrarHistorial('hoy');
+          setActivo(this);
+        "
+      >
+        Hoy
+      </button>
+      <button
+        class="filtro-btn"
+        onclick="
+          filtrarHistorial('semana');
+          setActivo(this);
+        "
+      >
+        Semana
+      </button>
+      <button
+        class="filtro-btn"
+        onclick="
+          filtrarHistorial('mes');
+          setActivo(this);
+        "
+      >
+        Mes
+      </button>
+    </div>
+  </div>
+  <section class="puntos-grid-pro">
+    <article class="card-admin puntos-workspace">
+      <div class="search-panel">
+        <label for="buscarPaciente"> Buscar paciente </label>
+
+        <div class="search-box-puntos">
+          <span class="search-icon"> 🔍 </span>
+
+          <input
+            type="text"
+            id="buscarPaciente"
+            placeholder="Buscar por ID o nombre del paciente"
+            onkeyup="debounceBuscar()"
+            autocomplete="off"
+          />
+        </div>
+        <div id="resultadosBusqueda" class="resultados"></div>
+      </div>
+
+      <div class="saldo-board">
+        <div class="paciente-header">
+          <div class="paciente-info">
+            <h2 id="nombrePaciente">Selecciona un paciente</h2>
+
+            <span class="paciente-id" id="pacienteId"> IDCLIENTE ---- </span>
+            <div class="paciente-divider"></div>
+          </div>
+
+          <div class="saldo-central">
+            <span class="saldo-label"> Saldo disponible </span>
+
+            <div class="saldo-numero" id="puntosActuales">0</div>
+
+            <span class="saldo-texto"> puntos </span>
+          </div>
+          <div class="paciente-divider"></div>
+
+          <div class="stats-wrapper">
+            <div class="stats-grid">
+              <div class="stat-card">
+                <span class="stat-title">Puntos anteriores</span>
+
+                <strong id="puntosAntes">0</strong>
+              </div>
+
+              <div class="stat-card">
+                <span class="stat-title">Puntos aplicados</span>
+
+                <strong id="puntosOtorgados">0</strong>
+              </div>
+
+              <div class="stat-card">
+                <span class="stat-title">Estado reseña</span>
+
+                <strong id="estadoResena" class="estado-resena">
+                  Pendiente
+                </strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="acciones-puntos acciones-puntos-pro">
+        <div class="accion-card accion-suma">
+          <h3>
+            <span class="accion-icon"> ➕ </span>
+            Agregar puntos
+          </h3>
+          <p class="text-muted">Otorga puntos al paciente</p>
+          <div class="input-pro">
+            <div class="dropdown-pro" id="dropdownAgregar">
+              <div
+                class="dropdown-selected"
+                onclick="toggleDropdown('Agregar')"
+              >
+                Selecciona tipo
+              </div>
+
+              <div class="dropdown-options">
+                <div class="option" data-value="reseña" data-puntos="500">
+                  ⭐ Reseña (+500 pts)
+                </div>
+              </div>
+            </div>
+          </div>
+          <button class="btn-sumar-puntos" onclick="sumar()">Agregar</button>
+        </div>
+        {% if session.get("rol") in ["admin", "superadmin"] %}
+        <div class="accion-card accion-resta">
+          <h3>
+            <span class="accion-icon"> ➖ </span>
+            Quitar puntos
+          </h3>
+          <p class="text-muted">Descuenta puntos del saldo</p>
+          <div class="input-pro">
+            <div class="dropdown-pro" id="dropdownQuitar">
+              <div class="dropdown-selected" onclick="toggleDropdown('Quitar')">
+                Selecciona tipo
+              </div>
+              <div class="dropdown-options">
+                <div class="option" data-value="reseña" data-puntos="500">
+                  ⭐ Reseña (-500 pts)
+                </div>
+              </div>
+            </div>
+          </div>
+          <button class="btn-restar-puntos" onclick="restar()">Quitar</button>
+        </div>
+        {% endif %}
+      </div>
+    </article>
+    <article class="card-admin historial-panel">
+      <div class="table-header-pro">
+        <div>
+          <p class="eyebrow">Trazabilidad</p>
+          <h3>Historial reciente</h3>
+        </div>
+      </div>
+      <div id="toastPanel" class="toast-panel"></div>
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon">📋</div>
+
+          <div class="kpi-content">
+            <span class="kpi-label"> Movimientos </span>
+
+            <div class="kpi-value" id="totalMovs">0</div>
+          </div>
+        </div>
+
+        <div class="kpi-card success">
+          <div class="kpi-icon">⬆</div>
+
+          <div class="kpi-content">
+            <span class="kpi-label"> Puntos otorgados </span>
+
+            <div class="kpi-value">+<span id="puntosGanados">0</span></div>
+          </div>
+        </div>
+
+        <div class="kpi-card danger">
+          <div class="kpi-icon">⬇</div>
+
+          <div class="kpi-content">
+            <span class="kpi-label"> Puntos retirados </span>
+
+            <div class="kpi-value">-<span id="puntosUsados">0</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="grafica-puntos">
+        <div class="grafica-header">
+            <h4>Historial de saldo</h4>
+        </div>
+        <canvas id="graficaPuntos"></canvas>
+      </div>
+      <ul id="listaHistorial" class="historial-lista">
+        <li class="historial-empty">
+          <div class="empty-state">
+            Selecciona un paciente para ver sus movimientos
+          </div>
+        </li>
+      </ul>
+    </article>
+  </section>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<div id="toast-overlay" class="toast-overlay"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/puntos.js') }}"></script>
+
+{% endblock %}

@@ -1,0 +1,211 @@
+/* =========================
+   SKELETON PREMIUM
+========================= */
+
+.skeleton {
+
+  position: relative;
+
+  overflow: hidden;
+
+  background:
+    rgba(255,255,255,.05);
+
+  border-radius: 12px;
+}
+
+.skeleton::before {
+
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  transform:
+    translateX(-100%);
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255,255,255,.08),
+      transparent
+    );
+
+  animation:
+    shimmer 1.4s infinite;
+}
+
+@keyframes shimmer {
+
+  100% {
+
+    transform:
+      translateX(100%);
+  }
+}
+
+/* animation */
+
+@keyframes notifIn {
+
+  from {
+
+    opacity: 0;
+
+    transform:
+      translateY(-8px);
+  }
+
+  to {
+
+    opacity: 1;
+
+    transform:
+      translateY(0);
+  }
+}
+
+/* =========================
+   FADE UP
+========================= */
+
+.fade-up {
+
+  animation:
+    fadeUp .45s ease;
+}
+
+@keyframes fadeUp {
+
+  from {
+
+    opacity: 0;
+
+    transform:
+      translateY(16px);
+  }
+
+  to {
+
+    opacity: 1;
+
+    transform:
+      translateY(0);
+  }
+}
+
+/*==================================================
+                Animacion de Dashboard
+====================================================*/
+
+@keyframes fadeIn {
+
+  from {
+
+    opacity: 0;
+
+    transform:
+      translateY(10px);
+  }
+
+  to {
+
+    opacity: 1;
+
+    transform:
+      translateY(0);
+  }
+}
+
+@keyframes fadeUp {
+
+  from {
+
+    opacity: 0;
+
+    transform:
+      translateY(16px);
+  }
+
+  to {
+
+    opacity: 1;
+
+    transform:
+      translateY(0);
+  }
+}
+
+@keyframes timelineIn {
+
+  from {
+
+    opacity: 0;
+
+    transform:
+      translateY(10px);
+  }
+
+  to {
+
+    opacity: 1;
+
+    transform:
+      translateY(0);
+  }
+}
+
+@keyframes glowRow {
+
+  0% {
+
+    background:
+      rgba(59,130,246,.28);
+  }
+
+  100% {
+
+    background:
+      transparent;
+  }
+}
+
+@keyframes rowFade {
+
+  from {
+
+    opacity: 0;
+
+    transform:
+      translateY(10px);
+  }
+
+  to {
+
+    opacity: 1;
+
+    transform:
+      translateY(0);
+  }
+}
+
+@keyframes slideFeed {
+
+  from {
+
+    opacity: 0;
+
+    transform:
+      translateX(-12px);
+  }
+
+  to {
+
+    opacity: 1;
+
+    transform:
+      translateX(0);
+  }
+}

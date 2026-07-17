@@ -1,0 +1,49 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+
+  font-family:
+    "Inter",
+    "Segoe UI",
+    sans-serif;
+
+  background: var(--bg-main);
+
+  color: var(--text-main);
+
+  overflow-x: hidden;
+
+  min-height: 100vh;
+
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
+
+  position: relative;
+}
+
+/* =========================
+   Canvas
+========================= */
+
+canvas {
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+/* =========================
+   Links
+========================= */
+
+a {
+  text-decoration: none;
+  color: inherit;
+}

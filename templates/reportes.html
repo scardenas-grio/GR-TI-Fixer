@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% block contenido %}
+<div class="reportes-shell">
+  <div class="reportes-actions">
+    <a class="btn-crear-admin"
+      href="{{ url_for('exportar_reportes', formato='excel', tipo=filtros.tipo, usuario=filtros.usuario, fecha_inicio=filtros.fecha_inicio, fecha_fin=filtros.fecha_fin, movimiento_tipo=filtros.movimiento_tipo) }}">
+      Exportar Excel
+    </a>
+
+    <a class="btn-crear-admin btn-secondary"
+      href="{{ url_for('exportar_reportes', formato='csv', tipo=filtros.tipo, usuario=filtros.usuario, fecha_inicio=filtros.fecha_inicio, fecha_fin=filtros.fecha_fin, movimiento_tipo=filtros.movimiento_tipo) }}">
+      Exportar CSV
+    </a>
+  </div>
+  <div class="reportes-grid">
+    <!-- SIDEBAR -->
+    <aside class="reportes-sidebar card-admin">
+      <form method="get" class="report-filters" id="formReportes">
+
+        <label>
+          <span>Vista</span>
+          <select name="tipo">
+            <option value="puntos" {% if filtros.tipo == "puntos" %}selected{% endif %}>Puntos</option>
+            <option value="admin" {% if filtros.tipo == "admin" %}selected{% endif %}>Auditoría</option>
+          </select>
+        </label>
+
+        <label>
+          <span>Administrador</span>
+          <input type="text" class="input-pro" name="usuario" value="{{ filtros.usuario }}">
+        </label>
+
+        <label>
+          <span>Fecha inicio</span>
+          <input type="date" name="fecha_inicio" value="{{ filtros.fecha_inicio }}">
+        </label>
+
+        <label>
+          <span>Fecha fin</span>
+          <input type="date" name="fecha_fin" value="{{ filtros.fecha_fin }}">
+        </label>
+
+        <label>
+          <span>Movimiento</span>
+          <select name="movimiento_tipo">
+            <option value="">Todos</option>
+            <option value="suma" {% if filtros.movimiento_tipo == "suma" %}selected{% endif %}>Suma</option>
+            <option value="resta" {% if filtros.movimiento_tipo == "resta" %}selected{% endif %}>Resta</option>
+          </select>
+        </label>
+
+        <button class="btn-crear-admin">Aplicar filtros</button>
+      </form>
+    </aside>
+
+    <!-- CONTENIDO -->
+    <div class="reportes-main">
+
+      <!-- KPIs -->
+      <section class="report-kpi-grid">
+        <div class="reporte-card-kpi">
+          <span>Usuarios</span>
+          <h2 id="kpiUsuarios">{{ kpis.usuarios }}</h2>
+        </div>
+        <div class="reporte-card-kpi">
+          <span>Admins</span>
+          <h2 id="kpiAdmins">{{ kpis.admins }}</h2>
+        </div>
+        <div class="reporte-card-kpi">
+          <span>Puntos netos</span>
+          <h2 id="kpiPuntos">{{ kpis.puntos_netos }}</h2>
+        </div>
+        <div class="reporte-card-kpi">
+          <span>Movimientos hoy</span>
+          <h2 id="kpiMovimientos">{{ kpis.movimientos_hoy }}</h2>
+        </div>
+      </section>
+
+      <!-- TABLA -->
+      <div class="card-admin tabla-wrapper-lg">
+        <table class="tabla reporte-tabla">
+          <thead>
+            <tr>
+              <th onclick="ordenarTabla(0)">Paciente</th>
+              <th onclick="ordenarTabla(1)">Tipo</th>
+              <th onclick="ordenarTabla(2)">Cantidad</th>
+              <th onclick="ordenarTabla(3)">Admin</th>
+              <th onclick="ordenarTabla(4)">Fecha</th>
+            </tr>
+          </thead>
+          <tbody id="tablaReportes">
+            {% if filtros.tipo == "admin" %}
+              {% for r in datos_admin %}
+              <tr>
+                <td>{{ r.usuario_afectado }}</td>
+                <td>{{ r.accion }}</td>
+                <td>-</td>
+                <td>{{ r.usuario_admin }}</td>
+                <td>{{ r.fecha }}</td>
+              </tr>
+              {% endfor %}
+            {% else %}
+              {% for r in datos_puntos %}
+              <tr>
+                <td>{{ r.paciente_id }}</td>
+                <td>{{ r.tipo }}</td>
+                <td>{{ r.cantidad }}</td>
+                <td>{{ r.usuario_admin }}</td>
+                <td>{{ r.fecha }}</td>
+              </tr>
+              {% endfor %}
+            {% endif %}
+
+          </tbody>
+        </table>
+        <div class="paginacion">
+
+          <button id="btnAnterior">
+            ← Anterior
+          </button>
+
+          <span id="paginaActual">
+            Página 1
+          </span>
+
+          <button id="btnSiguiente">
+            Siguiente →
+          </button>
+
+        </div>
+      </div>
+
+      <div class="grafica-toolbar">
+        <h3>Visualización</h3>
+
+        <select id="tipoGrafica" class="select-pro">
+          <option value="bar">Barras</option>
+          <option value="line">Línea</option>
+          <option value="pie">Pastel</option>
+        </select>
+      </div>
+      <!-- GRAFICA -->
+      <div class="grafica-principal">
+        <div class="chart-container main-chart">
+          <canvas id="grafica"></canvas>
+        </div>
+      </div>
+      
+      <div class="grid-graficas">
+
+      <div class="grafica-box">
+        <h3>Distribución por roles</h3>
+        <div class="chart-container">
+          <canvas id="graficaRoles"></canvas>
+        </div>
+      </div>
+
+      <div class="grafica-box">
+        <h3>Puntos por fecha</h3>
+        <div class="chart-container">
+          <canvas id="graficaFechas"></canvas>
+        </div>
+      </div>
+
+      <div id="insights" class="grafica-box"></div>
+
+    </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/reportes.js') }}"></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+
+
+{% endblock %}

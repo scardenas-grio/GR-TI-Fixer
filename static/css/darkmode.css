@@ -1,0 +1,79 @@
+/* =========================
+   REPORTES
+========================= */
+
+.filtros-reportes {
+
+  display: flex;
+
+  gap: 15px;
+
+  flex-wrap: wrap;
+
+  margin-bottom: 20px;
+}
+
+.tabla-reportes {
+
+  width: 100%;
+
+  border-collapse: collapse;
+
+  background: var(--bg-card);
+
+  border-radius: 18px;
+
+  overflow: hidden;
+
+  box-shadow: var(--shadow);
+}
+
+.tabla-reportes th {
+
+  background: var(--bg-main);
+
+  color: var(--text-main);
+
+  padding: 14px;
+
+  text-align: left;
+}
+
+.tabla-reportes td {
+
+  padding: 14px;
+
+  border-top:
+    1px solid var(--border-color);
+
+  color: var(--text-main);
+}
+
+.tabla-reportes tr:hover {
+
+  background:
+    rgba(59,130,246,0.05);
+}
+
+
+/* =========================
+   DARK MODE OVERRIDES
+========================= */
+
+body.dark .dashboard-header h1,
+body.dark .card h1,
+body.dark .reporte-card-kpi h2,
+body.dark .grafica-box h3,
+body.dark .grafica-titulo {
+  color: #f8fafc;
+}
+
+body.dark .dashboard-header p,
+body.dark .card p,
+body.dark .card h3,
+body.dark .reporte-card-kpi p,
+body.dark .reporte-card-kpi span,
+body.dark #insights p,
+body.dark .feed-time ,body.dark .feed-msg ,body.dark #tablaActividad td:nth-child(4)  {
+  color: rgba(255,255,255,.65);
+}

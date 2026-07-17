@@ -1,0 +1,161 @@
+{% extends "base.html" %} {% block contenido %}
+
+<div class="fade-up dashboard-header">
+  <h1>📊 Panel Corporativo</h1>
+</div>
+
+<div class="dashboard-status">
+  <div class="status-pill online">
+    <span id="estadoSistemaIcono">🟢</span>
+
+    <strong id="estadoSistema"> Sistema en línea </strong>
+  </div>
+
+  <div class="status-pill">
+    🕒
+
+    <strong> {{ now.strftime('%d/%m/%Y %H:%M') }} </strong>
+  </div>
+</div>
+
+<!-- ================= CARDS ================= -->
+<div class="dashboard-kpis">
+  <div class="dashboard-kpi ldap fade-up">
+    <div class="kpi-icon">👥</div>
+
+    <div class="kpi-info">
+      <span>LDAP</span>
+
+      <h2 id="totalLDAP">{{ total_ldap }}</h2>
+
+      <small>Total usuarios</small>
+    </div>
+    <div class="kpi-bg-icon">👥</div>
+  </div>
+
+  <div class="dashboard-kpi acceso fade-up">
+    <div class="kpi-icon">🛡️</div>
+
+    <div class="kpi-info">
+      <span>SISTEMA</span>
+
+      <h2 id="totalDB">{{ total_db }}</h2>
+
+      <small>Usuarios con acceso</small>
+    </div>
+    <div class="kpi-bg-icon">🛡️</div>
+  </div>
+
+  <div class="dashboard-kpi admin fade-up">
+    <div class="kpi-icon">👑</div>
+
+    <div class="kpi-info">
+      <span>Admins</span>
+
+      <h2 id="totalAdmins">{{ total_admins }}</h2>
+
+      <small>Usuarios privilegiados</small>
+    </div>
+    <div class="kpi-bg-icon">👑</div>
+  </div>
+</div>
+
+<!-- ================= GRAFICA ================= -->
+<div class="dashboard-main">
+  <div class="grafica-container fade-up">
+    <div class="dashboard-chart">
+      <div class="chart-left">
+        <canvas id="grafica"></canvas>
+      </div>
+
+      <div class="chart-right">
+        <h3>Resumen Ejecutivo</h3>
+
+        <div class="chart-item">
+          <span class="dot ldap"></span>
+
+          <div class="chart-info">
+            <small>Usuarios LDAP</small>
+
+            <strong id="porcentajeLDAP">0%</strong>
+          </div>
+        </div>
+
+        <div class="chart-item">
+          <span class="dot admin"></span>
+
+          <div class="chart-info">
+            <small>Usuarios con acceso</small>
+
+            <strong id="porcentajeDB">0%</strong>
+          </div>
+        </div>
+
+        <div class="chart-item">
+          <span class="dot admin"></span>
+
+          <div class="chart-info">
+            <small>Administradores</small>
+
+            <strong id="porcentajeAdmins">0%</strong>
+          </div>
+        </div>
+
+        <hr />
+
+        <div class="dashboard-health">
+          <span id="dashboardEstado"> ✔ Sistema estable </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= ACTIVIDAD ================= -->
+  <div class="dashboard-feed fade-up">
+    <div class="feed-title">🧾 Actividad reciente</div>
+
+    <div id="actividadFeed" class="activity-feed">
+      {% for a in actividad %}
+
+      <div class="feed-card">
+        <div class="feed-top">
+          <div class="feed-avatar">{{ a.usuario_admin[:1]|upper }}</div>
+
+          <div class="feed-info">
+            <div class="feed-admin">
+              <span class="feed-admin-name"> {{ a.usuario_admin }} </span>
+
+              <span class="feed-badge {{ a.accion|lower }}">
+                {{ a.accion }}
+              </span>
+            </div>
+
+            <div class="feed-user">{{ a.usuario_afectado }}</div>
+
+            <div class="feed-detail">
+              {% for modulo in a.detalle.split(",") %}
+
+              <span class="feed-chip"> {{ modulo|capitalize }} </span>
+
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="feed-date">{{ a.fecha }}</div>
+        </div>
+      </div>
+
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- ================= CHART ================= -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script id="data-chart" type="application/json">
+  {{ [total_ldap, total_db, total_admins] | tojson }}
+</script>
+
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

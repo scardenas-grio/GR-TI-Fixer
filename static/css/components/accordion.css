@@ -1,0 +1,124 @@
+/* =========================
+   ACCORDION
+========================= */
+
+.accordion-item {
+  display: flex;
+  flex-direction: column;
+
+  gap: 10px;
+}
+
+
+/* =========================
+   BOTON
+========================= */
+
+.accordion-btn {
+  width: 100%;
+
+  border: none;
+
+  background: rgba(255, 255, 255, 0.04);
+
+  border-radius: 16px;
+
+  padding: 14px 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  color: #fff;
+
+  cursor: pointer;
+
+  transition: 0.25s ease;
+}
+
+.accordion-btn:hover {
+  background: rgba(59, 130, 246, 0.18);
+}
+
+.accordion-btn.active {
+  background: linear-gradient(
+    135deg,
+    rgba(59, 130, 246, 0.2),
+    rgba(37, 99, 235, 0.12)
+  );
+
+  border: 1px solid rgba(59, 130, 246, 0.22);
+}
+
+.accordion-btn div {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  font-weight: 700;
+}
+
+
+/* =========================
+   SUBMENU
+========================= */
+
+.accordion-content {
+  display: none;
+
+  flex-direction: column;
+
+  gap: 8px;
+
+  padding-left: 12px;
+}
+
+.accordion-content.open {
+  display: flex;
+}
+
+/* =========================
+   LINKS
+========================= */
+
+.accordion-content a {
+  padding: 12px 14px;
+
+  border-radius: 12px;
+
+  text-decoration: none;
+
+  color: var(--text-main);
+
+  transition: 0.2s ease;
+}
+
+/* MODO CLARO */
+body:not(.dark) .accordion-content a:hover {
+    background: rgba(59, 130, 246, 0.10);
+    color: #0f172a;
+}
+
+/* MODO OSCURO */
+body.dark .accordion-content a:hover {
+    background: rgba(255,255,255,0.06);
+    color: #fff;
+}
+
+.accordion-content a:hover i,
+.accordion-content a:hover .menu-text {
+    color: inherit;
+}
+
+body:not(.dark) .accordion-btn {
+    color: #334155;
+}
+
+body:not(.dark) .menu-seccion-title {
+    color: #64748b;
+}
+
+body:not(.dark) .accordion-content a {
+    color: #334155;
+}

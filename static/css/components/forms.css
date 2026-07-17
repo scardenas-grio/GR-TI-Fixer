@@ -1,0 +1,249 @@
+/*==================================================
+    TI-FIXER
+    Design System
+    Archivo: forms.css
+====================================================*/
+
+/*==================================================
+                INPUT BASE
+====================================================*/
+
+input,
+select,
+textarea {
+  width: 100%;
+
+  height: var(--input-height);
+
+  padding: 0 var(--space-4);
+
+  border: 1px solid var(--border-color);
+
+  border-radius: var(--input-radius);
+
+  background: var(--bg-card);
+
+  color: var(--text-main);
+
+  font-family: inherit;
+
+  font-size: 14px;
+
+  transition:
+    border-color var(--transition-normal),
+    box-shadow var(--transition-normal),
+    background var(--transition-normal);
+
+  outline: none;
+}
+
+/*==================================================
+                TEXTAREA
+====================================================*/
+
+textarea {
+  min-height: 120px;
+
+  padding: var(--space-4);
+
+  resize: vertical;
+}
+
+/*==================================================
+                PLACEHOLDER
+====================================================*/
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-soft);
+}
+
+/*==================================================
+                FOCUS
+====================================================*/
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--border-focus);
+
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+}
+
+/*==================================================
+                DISABLED
+====================================================*/
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  opacity: 0.65;
+
+  cursor: not-allowed;
+}
+
+/*==================================================
+                FORM GROUP
+====================================================*/
+
+.form-group {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: var(--space-2);
+}
+
+.form-group label {
+  font-size: 14px;
+
+  font-weight: 600;
+
+  color: var(--text-main);
+}
+
+/*==================================================
+                FORM ROW
+====================================================*/
+
+.form-row {
+  display: flex;
+
+  gap: var(--space-4);
+
+  flex-wrap: wrap;
+
+  align-items: flex-end;
+}
+
+/*==================================================
+                SELECT
+====================================================*/
+
+.select-pro {
+  appearance: none;
+
+  cursor: pointer;
+
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--text-soft) 50%),
+    linear-gradient(135deg, var(--text-soft) 50%, transparent 50%);
+
+  background-position:
+    calc(100% - 18px) calc(50% - 3px),
+    calc(100% - 12px) calc(50% - 3px);
+
+  background-size: 6px 6px;
+
+  background-repeat: no-repeat;
+
+  padding-right: 42px;
+}
+
+/*==================================================
+                COMMAND INPUT
+====================================================*/
+
+.command-box input {
+  background: transparent;
+
+  border: none;
+
+  border-bottom: 1px solid var(--border-color);
+
+  border-radius: 0;
+
+  height: 60px;
+
+  font-size: 17px;
+}
+
+/*==================================================
+                DROPDOWN
+====================================================*/
+
+.dropdown-pro {
+  position: relative;
+
+  width: 100%;
+}
+
+.dropdown-selected {
+  height: var(--input-height);
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  padding: 0 var(--space-4);
+
+  border-radius: var(--input-radius);
+
+  border: 1px solid var(--border-color);
+
+  background: var(--bg-card);
+
+  color: var(--text-main);
+
+  cursor: pointer;
+
+  transition: all var(--transition-normal);
+}
+
+.dropdown-selected:hover {
+  border-color: var(--border-hover);
+}
+
+.dropdown-selected::after {
+  content: "▾";
+
+  color: var(--text-soft);
+}
+
+.dropdown-options {
+  position: absolute;
+
+  top: calc(100% + 6px);
+
+  left: 0;
+
+  width: 100%;
+
+  background: var(--bg-card);
+
+  border: 1px solid var(--border-color);
+
+  border-radius: var(--radius-md);
+
+  box-shadow: var(--shadow-md);
+
+  overflow: hidden;
+
+  display: none;
+
+  z-index: var(--z-dropdown, 100);
+}
+
+.dropdown-pro.active .dropdown-options {
+  display: block;
+}
+
+/*==================================================
+                DARK MODE
+====================================================*/
+
+body.dark input,
+body.dark select,
+body.dark textarea {
+  background: var(--bg-card);
+
+  color: var(--text-main);
+
+  border-color: var(--border-color);
+}
+
+body.dark .dropdown-selected {
+  background: var(--bg-card);
+}

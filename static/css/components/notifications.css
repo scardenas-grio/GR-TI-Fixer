@@ -1,0 +1,279 @@
+/*==================================================
+    TI-FIXER
+    Design System
+    Archivo: notifications.css
+====================================================*/
+
+/*==================================================
+                PANEL
+====================================================*/
+
+.panel-notificaciones {
+  position: absolute;
+
+  top: 60px;
+
+  right: 0;
+
+  width: 340px;
+
+  max-height: 420px;
+
+  overflow: hidden;
+
+  display: flex;
+
+  flex-direction: column;
+
+  background: var(--bg-card);
+
+  border: 1px solid var(--border-color);
+
+  border-radius: var(--radius-lg);
+
+  box-shadow: var(--shadow-lg);
+
+  opacity: 0;
+
+  transform: translateY(-10px);
+
+  pointer-events: none;
+
+  transition: all var(--transition-normal);
+
+  z-index: var(--z-dropdown);
+}
+
+.panel-notificaciones.activo {
+  opacity: 1;
+
+  transform: none;
+
+  pointer-events: auto;
+}
+
+/*==================================================
+                HEADER
+====================================================*/
+
+.notif-header {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  padding: 16px;
+
+  border-bottom: 1px solid var(--border-color);
+
+  font-weight: 700;
+}
+
+.notif-header button {
+  background: none;
+
+  border: none;
+
+  color: var(--color-primary);
+
+  cursor: pointer;
+}
+
+/*==================================================
+                LISTA
+====================================================*/
+
+#listaNotificaciones {
+  overflow-y: auto;
+
+  max-height: 340px;
+}
+
+/*==================================================
+                ITEM
+====================================================*/
+
+.notif-item {
+  padding: 14px 18px;
+
+  border-bottom: 1px solid var(--border-color);
+
+  transition: all var(--transition-fast);
+
+  cursor: pointer;
+}
+
+.notif-item:hover {
+  background: var(--bg-hover);
+}
+
+.notif-item.nueva {
+  border-left: 4px solid var(--color-primary);
+
+  background: rgba(37, 99, 235, 0.06);
+}
+
+/*==================================================
+                TEXTO
+====================================================*/
+
+.notif-msg {
+  color: var(--text-main);
+
+  font-size: 14px;
+}
+
+.notif-time {
+  margin-top: 6px;
+
+  font-size: 12px;
+
+  color: var(--text-soft);
+}
+
+/*==================================================
+                EMPTY
+====================================================*/
+
+.notif-empty {
+  padding: 40px;
+
+  text-align: center;
+
+  color: var(--text-soft);
+}
+
+/*==================================================
+                SCROLL
+====================================================*/
+
+#listaNotificaciones::-webkit-scrollbar {
+  width: 6px;
+}
+
+#listaNotificaciones::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+
+  border-radius: 999px;
+}
+
+/*==================================================
+                TOAST
+====================================================*/
+
+.toast-container {
+  position: fixed;
+
+  top: 80px;
+
+  left: 50%;
+
+  transform: translateX(-50%);
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 12px;
+
+  z-index: var(--z-toast);
+}
+
+.toast {
+  min-width: 320px;
+
+  background: var(--bg-card);
+
+  color: var(--text-main);
+
+  border: 1px solid var(--border-color);
+
+  border-left: 5px solid var(--color-primary);
+
+  border-radius: var(--radius-lg);
+
+  box-shadow: var(--shadow-lg);
+
+  overflow: hidden;
+
+  animation: toastIn 0.35s ease;
+}
+
+.toast-content {
+  padding: 16px 18px;
+}
+
+.toast-title {
+  font-weight: 700;
+
+  margin-bottom: 4px;
+}
+
+.toast-message {
+  font-size: 14px;
+
+  color: var(--text-soft);
+}
+
+/*==================================================
+                PROGRESS
+====================================================*/
+
+.toast-progress {
+  height: 4px;
+
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.toast-progress span {
+  display: block;
+
+  width: 100%;
+
+  height: 100%;
+
+  background: var(--color-primary);
+
+  animation: progress 3s linear forwards;
+}
+
+/*==================================================
+                COLORS
+====================================================*/
+
+.toast-success {
+  border-left-color: var(--color-success);
+}
+
+.toast-success .toast-progress span {
+  background: var(--color-success);
+}
+
+.toast-warning {
+  border-left-color: var(--color-warning);
+}
+
+.toast-warning .toast-progress span {
+  background: var(--color-warning);
+}
+
+.toast-danger {
+  border-left-color: var(--color-danger);
+}
+
+.toast-danger .toast-progress span {
+  background: var(--color-danger);
+}
+
+/*==================================================
+                DARK
+====================================================*/
+
+body.dark .panel-notificaciones {
+  background: var(--bg-card);
+}
+
+body.dark .toast {
+  background: var(--bg-card);
+}

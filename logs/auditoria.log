@@ -1,0 +1,10 @@
+import logging
+
+logging.basicConfig(
+    filename="logs/auditoria.log",
+    level=logging.INFO
+)
+
+def registrar_evento(evento):
+
+    logging.info(evento)

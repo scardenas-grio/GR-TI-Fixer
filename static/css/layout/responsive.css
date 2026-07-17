@@ -1,0 +1,314 @@
+/* =========================
+   LARGE TABLETS
+========================= */
+
+@media (max-width: 1200px) {
+
+  .contenido {
+
+    padding: 24px;
+  }
+
+  .cards {
+
+    grid-template-columns:
+      repeat(2, 1fr);
+  }
+
+  .grid-graficas {
+
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================
+   TABLETS
+========================= */
+
+@media (max-width: 900px) {
+
+  /* sidebar */
+
+  .menu-lateral {
+
+    transform:
+      translateX(-100%);
+
+    width: 260px;
+  }
+
+  .menu-lateral.open {
+
+    transform:
+      translateX(0);
+  }
+
+  /* topbar */
+
+  .topbar {
+
+    left: 0;
+
+    padding:
+      0 18px;
+  }
+
+  /* contenido */
+
+  .contenido {
+
+    margin-left: 0;
+
+    padding: 20px;
+
+    margin-top: 85px;
+  }
+
+  /* cards */
+
+  .cards {
+
+    grid-template-columns: 1fr;
+
+    gap: 18px;
+  }
+
+  /* graficas */
+
+  .grid-graficas {
+
+    grid-template-columns: 1fr;
+  }
+
+  .grafica-container,
+  .grafica-box {
+
+    min-height: auto;
+
+    padding: 20px;
+  }
+
+  /* tabla */
+
+  .tabla {
+
+    min-width: 700px;
+  }
+
+  .tabla-wrapper-lg {
+
+    overflow-x: auto;
+  }
+
+    /* =====================
+     PUNTOS
+  ===================== */
+
+  .puntos-grid-pro{
+
+      grid-template-columns:1fr;
+
+  }
+
+  .saldo-board{
+
+      grid-template-columns:1fr;
+
+  }
+
+  .stats-grid{
+
+      grid-template-columns:1fr;
+
+  }
+
+  .acciones-puntos-pro{
+
+      grid-template-columns:1fr;
+
+  }
+
+  .kpi-grid{
+
+      grid-template-columns:1fr;
+
+  }
+
+  .search-box-puntos{
+
+      width:100%;
+
+  }
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 600px) {
+
+  body {
+
+    font-size: 14px;
+  }
+
+  /* topbar */
+
+  .topbar {
+
+    height: 65px;
+
+    padding:
+      0 14px;
+  }
+
+  /* contenido */
+
+  .contenido {
+
+    padding: 16px;
+
+    margin-top: 75px;
+  }
+
+  /* headers */
+
+  .dashboard-header h1 {
+
+    font-size: 28px;
+  }
+
+  .dashboard-header p {
+
+    font-size: 14px;
+  }
+
+  /* cards */
+
+  .card,
+  .reporte-card-kpi {
+
+    padding: 20px;
+
+    border-radius: 18px;
+  }
+
+  .card h1,
+  .reporte-card-kpi h2 {
+
+    font-size: 30px;
+  }
+
+  /* charts */
+
+  .grafica-container,
+  .grafica-box {
+
+    padding: 18px;
+
+    border-radius: 18px;
+  }
+
+  .grafica-titulo {
+
+    font-size: 16px;
+  }
+
+  /* buttons */
+
+  button {
+
+    width: 100%;
+  }
+
+  .btn-crear-admin {
+
+    width: 100%;
+
+    justify-content: center;
+  }
+
+  /* forms */
+
+  input,
+  select,
+  textarea {
+
+    font-size: 14px;
+  }
+
+  /* insights */
+
+  #insights p {
+
+    font-size: 13px;
+
+    padding: 12px;
+  }
+
+  /* tabla */
+
+  .tabla td,
+  .tabla th {
+
+    padding: 12px;
+  }
+  
+    /* =====================
+       PUNTOS
+    ===================== */
+
+    .saldo-numero{
+
+        font-size:48px;
+
+    }
+
+    .paciente-header h2{
+
+        font-size:26px;
+
+    }
+
+    .stat-card{
+
+        padding:18px;
+
+    }
+
+    .accion-card{
+
+        padding:18px;
+
+    }
+
+}
+
+/* =========================
+   SMALL MOBILE
+========================= */
+
+@media (max-width: 400px) {
+
+  .dashboard-header h1 {
+
+    font-size: 24px;
+  }
+
+  .card h1,
+  .reporte-card-kpi h2 {
+
+    font-size: 26px;
+  }
+
+  .topbar {
+
+    padding:
+      0 10px;
+  }
+
+  .contenido {
+
+    padding: 12px;
+  }
+}
