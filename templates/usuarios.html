@@ -209,10 +209,10 @@
               </td>
               <td>
                 <div class="acciones">
-                  <button class="btn btn-outline" data-user="{{ u.username }}">
+                  <button class="btn btn-primary btn-editar" data-user="{{ u.username }}">
                     ✏️ Editar
                   </button>
-                  <button class="btn btn-danger" data-user="{{ u.username }}">
+                  <button class="btn btn-danger btn-delete" data-user="{{ u.username }}">
                     🗑️ Eliminar
                   </button>
                 </div>
@@ -310,7 +310,9 @@
         <button id="btnConfirmarEliminar" class="btn btn-danger">
           >Eliminar
         </button>
-        <button id="btnCancelarModal" class="btn btn-secondary">Cancelar</button>
+        <button id="btnCancelarModal" class="btn btn-secondary">
+          Cancelar
+        </button>
       </div>
     </div>
   </div>

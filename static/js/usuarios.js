@@ -8,7 +8,7 @@ const ldapCompleto = JSON.parse(
 );
 
 document.addEventListener("click", (e) => {
-  const editar = e.target.closest(".btn-editar");
+  const editar = e.target.closest(".btn-editar, .btn-editar-usuarios");
 
   if (editar) {
     abrirPanel(editar.dataset.user);

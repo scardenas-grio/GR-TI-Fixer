@@ -633,3 +633,30 @@ body:not(.dark) #insights p {
   background: rgba(0, 0, 0, 0.04);
   color: #1e293b;
 }
+
+/*==================================================
+                REPORTES
+====================================================*/
+
+.reportes-actions{
+    display:flex;
+    gap:12px;
+    margin-bottom:24px;
+    flex-wrap:wrap;
+}
+
+.btn-export{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+
+    min-width:180px;
+    height:46px;
+
+    text-decoration:none;
+}
+
+.btn-export i{
+    font-size:18px;
+}

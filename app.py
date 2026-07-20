@@ -1,16 +1,26 @@
+# ============================================================
+# IMPORTS - Librerías estándar
+# ============================================================
+
 import csv
 import io
 import os
 import sys
-import oracledb
-import ldap3
-import oracledb
-import json
+
 from collections import Counter
 from datetime import date, datetime, timedelta
 from math import ceil
 from time import time
 from urllib.parse import quote_plus
+
+# ============================================================
+# IMPORTS - Terceros
+# ============================================================
+
+import ldap3
+import oracledb
+import json
+
 from dotenv import load_dotenv
 from flask import Flask, Response, current_app, g, jsonify, redirect, render_template, request, session
 from flask_socketio import SocketIO, emit, join_room, leave_room
@@ -21,16 +31,105 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 from werkzeug.security import check_password_hash
 from sqlalchemy.exc import IntegrityError
 
+# ============================================================
+# CONFIGURACIÓN GENERAL
+# ============================================================
+
 load_dotenv()
 usuarios_online = {}
+
+CACHE_PUNTOS = {}
+CACHE_TTL = 60
+
+# ============================================================
+# CONFIGURACIÓN ORACLE
+# ============================================================
 
 os.environ["LD_LIBRARY_PATH"] = "/opt/oracle/instantclient"
 oracledb.init_oracle_client(
     lib_dir="/opt/oracle/instantclient"
 )
 
-CACHE_PUNTOS = {}
-CACHE_TTL = 60
+ORACLE_USER = os.getenv("ORACLE_USER")
+ORACLE_PASSWORD = os.getenv("ORACLE_PASSWORD")
+ORACLE_HOST = os.getenv("ORACLE_HOST")
+ORACLE_PORT = os.getenv("ORACLE_PORT")
+ORACLE_SERVICE = os.getenv("ORACLE_SERVICE")
+
+
+# ============================================================
+# CONFIGURACIÓN LDAP
+# ============================================================
+
+LDAP_SERVER = os.getenv("LDAP_SERVER")
+LDAP_BASE_DN = os.getenv("LDAP_BASE_DN")
+LDAP_ADMIN_USER = os.getenv("LDAP_USER_DN")
+LDAP_ADMIN_PASSWORD = os.getenv("LDAP_PASSWORD")
+SUPERADMIN_USER = os.getenv("SUPERADMIN_USER")
+SUPERADMIN_PASSWORD_HASH = os.getenv("SUPERADMIN_PASSWORD_HASH")
+
+# ============================================================
+# BASE DE DATOS
+# ============================================================
+
+def build_engine():
+    db_user = os.getenv("DB_USER")
+    db_password = quote_plus(os.getenv("DB_PASSWORD") or "")
+    db_host = os.getenv("DB_HOST")
+    db_name = os.getenv("DB_NAME")
+
+    if db_user and db_host and db_name:
+        return create_engine(
+            f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}:5432/{db_name}",
+            pool_pre_ping=True,
+            pool_recycle=1800,
+            pool_size=10,
+            max_overflow=20,
+            pool_timeout=30,
+            echo=False,
+        )
+
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    sqlite_path = os.path.join(base_dir, "database", "sistema.db")
+    return create_engine(f"sqlite:///{sqlite_path}", future=True)
+
+def build_oracle_pool():
+
+    try:
+
+        dsn = f"{ORACLE_HOST}:{ORACLE_PORT}/{ORACLE_SERVICE}"
+
+        pool = oracledb.create_pool(
+            user=ORACLE_USER,
+            password=ORACLE_PASSWORD,
+            dsn=dsn,
+            min=1,
+            max=5,
+            increment=1
+        )
+
+        return pool
+
+    except Exception as e:
+
+        print("ERROR CREANDO POOL ORACLE:")
+        print(str(e))
+
+        return None
+
+
+engine = build_engine()
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+Base = declarative_base()
+
+# ============================================================
+# APLICACIÓN FLASK
+# ============================================================
+
+app = Flask(__name__)
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY") or "clave_super_secreta"
+socketio = SocketIO(app, cors_allowed_origins="*",async_mode="gevent") # agregar dominio ahorita slo tiene un simbolo
+
 
 def get_oracle_points(idcliente):
 
@@ -279,74 +378,8 @@ def tiene_resena_oracle(idcliente):
         if conn:
             conn.close()
 
-def build_engine():
-    db_user = os.getenv("DB_USER")
-    db_password = quote_plus(os.getenv("DB_PASSWORD") or "")
-    db_host = os.getenv("DB_HOST")
-    db_name = os.getenv("DB_NAME")
-
-    if db_user and db_host and db_name:
-        return create_engine(
-            f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}:5432/{db_name}",
-            pool_pre_ping=True,
-            pool_recycle=1800,
-            pool_size=10,
-            max_overflow=20,
-            pool_timeout=30,
-            echo=False,
-        )
-
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    sqlite_path = os.path.join(base_dir, "database", "sistema.db")
-    return create_engine(f"sqlite:///{sqlite_path}", future=True)
-
-ORACLE_USER = os.getenv("ORACLE_USER")
-ORACLE_PASSWORD = os.getenv("ORACLE_PASSWORD")
-ORACLE_HOST = os.getenv("ORACLE_HOST")
-ORACLE_PORT = os.getenv("ORACLE_PORT")
-ORACLE_SERVICE = os.getenv("ORACLE_SERVICE")
-
-def build_oracle_pool():
-
-    try:
-
-        dsn = f"{ORACLE_HOST}:{ORACLE_PORT}/{ORACLE_SERVICE}"
-
-        pool = oracledb.create_pool(
-            user=ORACLE_USER,
-            password=ORACLE_PASSWORD,
-            dsn=dsn,
-            min=1,
-            max=5,
-            increment=1
-        )
-
-        return pool
-
-    except Exception as e:
-
-        print("ERROR CREANDO POOL ORACLE:")
-        print(str(e))
-
-        return None
-
-
-engine = build_engine()
-SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
-Base = declarative_base()
 oracle_pool = build_oracle_pool()
 print("ORACLE POOL CREADO:", oracle_pool)
-
-app = Flask(__name__)
-app.config["SECRET_KEY"] = os.getenv("SECRET_KEY") or "clave_super_secreta"
-socketio = SocketIO(app, cors_allowed_origins="*",async_mode="gevent") # agregar dominio ahorita slo tiene un simbolo
-
-LDAP_SERVER = os.getenv("LDAP_SERVER")
-LDAP_BASE_DN = os.getenv("LDAP_BASE_DN")
-LDAP_ADMIN_USER = os.getenv("LDAP_USER_DN")
-LDAP_ADMIN_PASSWORD = os.getenv("LDAP_PASSWORD")
-SUPERADMIN_USER = os.getenv("SUPERADMIN_USER")
-SUPERADMIN_PASSWORD_HASH = os.getenv("SUPERADMIN_PASSWORD_HASH")
 
 
 class Usuario(Base):

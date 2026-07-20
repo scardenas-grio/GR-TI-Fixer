@@ -1,17 +1,34 @@
 {% extends "base.html" %}
 {% block contenido %}
-<div class="reportes-shell">
-  <div class="reportes-actions">
-    <a class="btn-crear-admin"
-      href="{{ url_for('exportar_reportes', formato='excel', tipo=filtros.tipo, usuario=filtros.usuario, fecha_inicio=filtros.fecha_inicio, fecha_fin=filtros.fecha_fin, movimiento_tipo=filtros.movimiento_tipo) }}">
-      Exportar Excel
-    </a>
+<div class="reportes-actions">
+  <a
+    class="btn-crear-admin btn-export"
+    href="{{ url_for('exportar_reportes',
+        formato='excel',
+        tipo=filtros.tipo,
+        usuario=filtros.usuario,
+        fecha_inicio=filtros.fecha_inicio,
+        fecha_fin=filtros.fecha_fin,
+        movimiento_tipo=filtros.movimiento_tipo) }}"
+  >
+    <i class="fa-solid fa-file-excel"></i>
+    <span>Exportar Excel</span>
+  </a>
 
-    <a class="btn-crear-admin btn-secondary"
-      href="{{ url_for('exportar_reportes', formato='csv', tipo=filtros.tipo, usuario=filtros.usuario, fecha_inicio=filtros.fecha_inicio, fecha_fin=filtros.fecha_fin, movimiento_tipo=filtros.movimiento_tipo) }}">
-      Exportar CSV
-    </a>
-  </div>
+  <a
+    class="btn-crear-admin btn-secondary btn-export"
+    href="{{ url_for('exportar_reportes',
+        formato='csv',
+        tipo=filtros.tipo,
+        usuario=filtros.usuario,
+        fecha_inicio=filtros.fecha_inicio,
+        fecha_fin=filtros.fecha_fin,
+        movimiento_tipo=filtros.movimiento_tipo) }}"
+  >
+    <i class="fa-solid fa-file-csv"></i>
+    <span>Exportar CSV</span>
+  </a>
+</div>
   <div class="reportes-grid">
     <!-- SIDEBAR -->
     <aside class="reportes-sidebar card-admin">

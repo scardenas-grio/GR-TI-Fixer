@@ -77,3 +77,28 @@ body.dark #insights p,
 body.dark .feed-time ,body.dark .feed-msg ,body.dark #tablaActividad td:nth-child(4)  {
   color: rgba(255,255,255,.65);
 }
+
+/* =========================
+   DASHBOARD - RESUMEN EJECUTIVO
+========================= */
+
+body.dark .chart-item {
+    border-color: rgba(255, 255, 255, 0.103);
+}
+
+body.dark .chart-item:nth-of-type(1) {
+    background: rgba(70, 138, 247, 0.12);
+}
+
+body.dark .chart-item:nth-of-type(2) {
+    background: rgba(168,85,247,.12);
+}
+
+body.dark .chart-item:nth-of-type(3) {
+    background: rgba(245,158,11,.12);
+}
+
+body.dark .chart-info small,
+body.dark .chart-info strong {
+    color: #f8fafc;
+}

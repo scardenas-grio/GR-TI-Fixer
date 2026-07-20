@@ -60,7 +60,7 @@
 /* background glow */
 
 .grafica-container::before {
-  content: "";
+  
 
   position: absolute;
 
