@@ -65,7 +65,8 @@
             </div>
           </li>
 
-          {% if session.rol == "superadmin" or session.permisos %}
+          {% set es_admin = session.rol in ["admin", "superadmin"] %} {% if
+          es_admin or session.permisos %}
 
           <!-- =========================
        PUNTOS
@@ -83,37 +84,33 @@
             </button>
 
             <div class="accordion-content open">
-              {% if session.rol == "superadmin" or "dashboard" in
-              session.permisos %}
+              {% if es_admin or "dashboard" in session.permisos %}
               <a href="/dashboard" title="Dashboard">
                 <span class="menu-icon">
                   <i class="fa-solid fa-chart-line"></i>
                 </span>
-                <span class="menu-text"> Dashboard </span>
+                <span class="menu-text">Dashboard</span>
               </a>
-              {% endif %} {% if session.rol == "superadmin" or "usuarios" in
-              session.permisos %}
+              {% endif %} {% if es_admin or "usuarios" in session.permisos %}
               <a href="/usuarios" title="Usuarios">
                 <span class="menu-icon">
                   <i class="fa-solid fa-users"></i>
                 </span>
-                <span class="menu-text"> Usuarios </span>
+                <span class="menu-text">Usuarios</span>
               </a>
-              {% endif %} {% if session.rol == "superadmin" or "reportes" in
-              session.permisos %}
+              {% endif %} {% if es_admin or "reportes" in session.permisos %}
               <a href="/reportes" title="Reportes">
                 <span class="menu-icon">
                   <i class="fa-solid fa-file-lines"></i>
                 </span>
-                <span class="menu-text"> Reportes </span>
+                <span class="menu-text">Reportes</span>
               </a>
-              {% endif %} {% if session.rol == "superadmin" or "puntos" in
-              session.permisos %}
+              {% endif %} {% if es_admin or "puntos" in session.permisos %}
               <a href="/puntos" title="Puntos">
                 <span class="menu-icon">
                   <i class="fa-solid fa-coins"></i>
                 </span>
-                <span class="menu-text"> Puntos </span>
+                <span class="menu-text">Puntos</span>
               </a>
               {% endif %}
             </div>
@@ -122,7 +119,7 @@
           <!-- =========================
               SEMAFORO
           ========================== -->
-          {% if session.rol == "superadmin" or "transcripcion" in session.permisos %}
+          {% if es_admin or "transcripcion" in session.permisos %}
           <li class="accordion-item">
             <button
               class="accordion-btn {% if request.path == '/transcripcion' %} active {% endif %}"
@@ -147,8 +144,7 @@
               </a>
             </div>
           </li>
-          {% endif %}
-          {% endif %}
+          {% endif %} {% endif %}
 
           <!-- LOGOUT -->
           <li class="menu-logout-item">
