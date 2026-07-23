@@ -30,10 +30,10 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
     />
     <link
-        rel="icon"
-        type="image/x-icon"
-        href="{{ url_for('static', filename='image/TI-Fixer-icon.ico') }}?v=2"
-    >
+      rel="icon"
+      type="image/x-icon"
+      href="{{ url_for('static', filename='image/TI-Fixer-icon.ico') }}?v=2"
+    />
   </head>
 
   <body>
@@ -65,7 +65,7 @@
             </div>
           </li>
 
-          {% if session.rol in ["admin", "superadmin"] %}
+          {% if session.rol == "superadmin" or session.permisos %}
 
           <!-- =========================
        PUNTOS
@@ -83,40 +83,46 @@
             </button>
 
             <div class="accordion-content open">
+              {% if session.rol == "superadmin" or "dashboard" in
+              session.permisos %}
               <a href="/dashboard" title="Dashboard">
                 <span class="menu-icon">
                   <i class="fa-solid fa-chart-line"></i>
                 </span>
                 <span class="menu-text"> Dashboard </span>
               </a>
-
+              {% endif %} {% if session.rol == "superadmin" or "usuarios" in
+              session.permisos %}
               <a href="/usuarios" title="Usuarios">
                 <span class="menu-icon">
                   <i class="fa-solid fa-users"></i>
                 </span>
                 <span class="menu-text"> Usuarios </span>
               </a>
-
+              {% endif %} {% if session.rol == "superadmin" or "reportes" in
+              session.permisos %}
               <a href="/reportes" title="Reportes">
                 <span class="menu-icon">
                   <i class="fa-solid fa-file-lines"></i>
                 </span>
                 <span class="menu-text"> Reportes </span>
               </a>
-
+              {% endif %} {% if session.rol == "superadmin" or "puntos" in
+              session.permisos %}
               <a href="/puntos" title="Puntos">
                 <span class="menu-icon">
                   <i class="fa-solid fa-coins"></i>
                 </span>
                 <span class="menu-text"> Puntos </span>
               </a>
+              {% endif %}
             </div>
           </li>
 
           <!-- =========================
               SEMAFORO
           ========================== -->
-
+          {% if session.rol == "superadmin" or "transcripcion" in session.permisos %}
           <li class="accordion-item">
             <button
               class="accordion-btn {% if request.path == '/transcripcion' %} active {% endif %}"
@@ -141,7 +147,7 @@
               </a>
             </div>
           </li>
-
+          {% endif %}
           {% endif %}
 
           <!-- LOGOUT -->

@@ -1245,7 +1245,13 @@ def login():
                     db.commit()
                 session["usuario"] = user.username
                 session["rol"] = user.rol
-                return redirect("/dashboard")
+                session["permisos"] = (
+                        [p.strip() for p in user.permisos.split(",") if p.strip()]
+                        if user.permisos
+                        else []
+                    )
+                print("Permisos cargados:", session["permisos"])
+                return redirect(obtener_pagina_inicio())
 
         if autenticar_ldap(username, password):
             user = db.query(Usuario).filter_by(username=username).first()
@@ -1259,11 +1265,40 @@ def login():
             db.commit()
             session["usuario"] = user.username
             session["rol"] = user.rol
-            return redirect("/dashboard")
+            session["permisos"] = (
+                    [p.strip() for p in user.permisos.split(",") if p.strip()]
+                    if user.permisos
+                    else []
+                )
+            print("Permisos cargados:", session["permisos"])
+            return redirect(obtener_pagina_inicio())
 
         error = "Credenciales invalidas"
 
     return render_template("login.html", error=error)
+
+def obtener_pagina_inicio():
+    if session.get("rol") == "superadmin":
+        return "/dashboard"
+
+    permisos = session.get("permisos", [])
+
+    if "dashboard" in permisos:
+        return "/dashboard"
+
+    if "puntos" in permisos:
+        return "/puntos"
+
+    if "usuarios" in permisos:
+        return "/usuarios"
+
+    if "reportes" in permisos:
+        return "/reportes"
+
+    if "transcripcion" in permisos:
+        return "/transcripcion"
+
+    return "/logout"
 
 
 @app.route("/dashboard")
@@ -1294,7 +1329,6 @@ def dashboard():
         now=datetime.now(),
         notificaciones=get_unread_notifications_count(db, session.get("usuario")),
     )
-
 
 @app.route("/api/dashboard")
 def api_dashboard():
