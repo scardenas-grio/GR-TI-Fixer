@@ -390,29 +390,11 @@ async function actualizarDashboard() {
     if (ui.porcentajeAdmins)
       ui.porcentajeAdmins.textContent = porcentajeAdmins + "%";
 
-    animarContador(ui.totalLDAP, data.total_ldap);
+    actualizarKPI(ui.totalLDAP, data.total_ldap);
 
-    ui.totalLDAP.classList.add("kpi-update");
+    actualizarKPI(ui.totalDB, data.total_db);
 
-    setTimeout(() => {
-      ui.totalLDAP.classList.remove("kpi-update");
-    }, 400);
-
-    animarContador(ui.totalDB, data.total_db);
-
-    ui.totalDB.classList.add("kpi-update");
-
-    setTimeout(() => {
-      ui.totalDB.classList.remove("kpi-update");
-    }, 400);
-
-    animarContador(ui.totalAdmins, data.total_admins);
-
-    ui.totalAdmins.classList.add("kpi-update");
-
-    setTimeout(() => {
-      ui.totalAdmins.classList.remove("kpi-update");
-    }, 400);
+    actualizarKPI(ui.totalAdmins, data.total_admins);
 
     const nuevaFecha = data.actividad?.length ? data.actividad[0].fecha : null;
 

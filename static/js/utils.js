@@ -93,6 +93,27 @@ function showToast(message, type = "info") {
   }, 4500);
 }
 
+function formatearFechaLarga(fecha) {
+  if (!fecha) return "";
+
+  const f = new Date(fecha);
+
+  if (isNaN(f)) return fecha.toString();
+
+  return f.toLocaleString("es-MX", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+// Alias historico usado por api.js, socket.js y reportes.js
+function mostrarToast(mensaje, tipo = "info") {
+  showToast(mensaje, tipo);
+}
+
 function obtenerClaseRol(rol) {
   if (!rol) return "usuario";
 
@@ -104,8 +125,53 @@ function obtenerClaseRol(rol) {
 }
 
 // =========================
+// CHART THEME
+// =========================
+
+function obtenerColoresTema() {
+  const dark = document.body.classList.contains("dark");
+
+  return {
+    textColor: dark ? "#f8fafc" : "#111827",
+    gridColor: dark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.10)",
+  };
+}
+
+function aplicarColoresGrafica(chartInstance, textColor, gridColor) {
+  if (!chartInstance) return;
+
+  const opciones = chartInstance.options;
+
+  if (opciones.plugins?.legend?.labels) {
+    opciones.plugins.legend.labels.color = textColor;
+  }
+
+  ["x", "y"].forEach((eje) => {
+    const escala = opciones.scales?.[eje];
+
+    if (!escala) return;
+
+    if (escala.ticks) escala.ticks.color = textColor;
+
+    if (escala.grid) escala.grid.color = gridColor;
+  });
+}
+
+// =========================
 // COUNTER ANIMATION
 // =========================
+
+function actualizarKPI(elemento, valor) {
+  if (!elemento) return;
+
+  animarContador(elemento, valor);
+
+  elemento.classList.add("kpi-update");
+
+  setTimeout(() => {
+    elemento.classList.remove("kpi-update");
+  }, 400);
+}
 
 function animarContador(elemento, valorFinal, duracion = 800) {
   if (!elemento) return;

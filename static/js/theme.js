@@ -22,11 +22,7 @@ function toggleTheme() {
       return;
     }
 
-    const dark = document.body.classList.contains("dark");
-
-    const textColor = dark ? "#f8fafc" : "#111827";
-
-    const gridColor = dark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.10)";
+    const { textColor, gridColor } = obtenerColoresTema();
 
     const charts = [
       Chart.getChart("grafica"),
@@ -37,23 +33,7 @@ function toggleTheme() {
     charts.forEach((chart) => {
       if (!chart) return;
 
-      if (chart.options.plugins?.legend?.labels) {
-        chart.options.plugins.legend.labels.color = textColor;
-      }
-
-      if (chart.options.scales) {
-        if (chart.options.scales.x) {
-          chart.options.scales.x.ticks.color = textColor;
-
-          chart.options.scales.x.grid.color = gridColor;
-        }
-
-        if (chart.options.scales.y) {
-          chart.options.scales.y.ticks.color = textColor;
-
-          chart.options.scales.y.grid.color = gridColor;
-        }
-      }
+      aplicarColoresGrafica(chart, textColor, gridColor);
 
       chart.update("none");
     });
