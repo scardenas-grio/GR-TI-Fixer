@@ -1,4 +1,5 @@
 import sqlite3
+from getpass import getpass
 from security.auth import hash_password
 import os
 
@@ -34,7 +35,12 @@ CREATE TABLE IF NOT EXISTS administradores (
 """)
 
 # Generar hash del admin
-admin_pass = hash_password("admin123")
+admin_password = getpass("Contraseña para el usuario admin: ")
+
+if len(admin_password) < 12:
+    raise SystemExit("La contraseña debe tener al menos 12 caracteres")
+
+admin_pass = hash_password(admin_password)
 
 # Insertar admin en usuarios y administradores
 cursor.execute(

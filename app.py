@@ -5,10 +5,12 @@
 import csv
 import io
 import os
+import secrets
 import sys
 
 from collections import Counter
 from datetime import date, datetime, timedelta
+from functools import wraps
 from math import ceil
 from time import time
 from urllib.parse import quote_plus
@@ -23,6 +25,8 @@ import json
 
 from dotenv import load_dotenv
 from flask import Flask, Response, current_app, g, jsonify, redirect, render_template, request, session
+from ldap3.utils.conv import escape_filter_chars
+from ldap3.utils.dn import escape_rdn
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
@@ -127,8 +131,37 @@ Base = declarative_base()
 # ============================================================
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = os.getenv("SECRET_KEY") or "clave_super_secreta"
-socketio = SocketIO(app, cors_allowed_origins="*",async_mode="gevent") # agregar dominio ahorita slo tiene un simbolo
+
+secret_key = os.getenv("SECRET_KEY")
+
+if not secret_key:
+    secret_key = secrets.token_hex(32)
+    print(
+        "WARNING: SECRET_KEY no configurada. Se genero una clave temporal; "
+        "las sesiones se invalidaran al reiniciar el proceso."
+    )
+
+app.config["SECRET_KEY"] = secret_key
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_SECURE"] = (
+    os.getenv("SESSION_COOKIE_SECURE", "true").lower() == "true"
+)
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(
+    hours=int(os.getenv("SESSION_LIFETIME_HOURS", "8"))
+)
+
+CORS_ALLOWED_ORIGINS = [
+    origen.strip()
+    for origen in (os.getenv("CORS_ALLOWED_ORIGINS") or "").split(",")
+    if origen.strip()
+]
+
+socketio = SocketIO(
+    app,
+    cors_allowed_origins=CORS_ALLOWED_ORIGINS,
+    async_mode="gevent",
+)
 
 
 def get_oracle_points(idcliente):
@@ -480,6 +513,14 @@ def parse_date_param(value, end_of_day=False):
         return None
 
 
+def parse_int_param(valor, defecto, minimo, maximo):
+    try:
+        numero = int(valor)
+    except (TypeError, ValueError):
+        return defecto
+    return max(minimo, min(numero, maximo))
+
+
 def get_report_filters(source):
     return {
         "tipo": (source.get("tipo") or "puntos").strip().lower(),
@@ -498,11 +539,9 @@ def get_report_filters(source):
             source.get("movimiento_tipo") or ""
         ).strip().lower(),
 
-        # 🔥 NUEVO
-        "pagina": int(source.get("pagina", 1)),
+        "pagina": parse_int_param(source.get("pagina"), 1, 1, 100000),
 
-        # 🔥 NUEVO
-        "por_pagina": int(source.get("por_pagina", 20)),
+        "por_pagina": parse_int_param(source.get("por_pagina"), 20, 1, 200),
     }
 
 
@@ -727,10 +766,8 @@ def ya_tiene_resena_local(db, idcliente):
 
 
 def build_report_context(db, filtros):
-    pagina = int(filtros.get("pagina", 1))
-    por_pagina = int(
-        filtros.get("por_pagina", 8)
-    )
+    pagina = parse_int_param(filtros.get("pagina"), 1, 1, 100000)
+    por_pagina = parse_int_param(filtros.get("por_pagina"), 8, 1, 200)
     offset = (pagina - 1) * por_pagina
 
     query_movimientos = build_filtered_movimientos_query(db, filtros)
@@ -1035,7 +1072,7 @@ def exportar_reportes_csv(context):
 
 
 def crear_base(db):
-    permisos_base = ["dashboard", "usuarios", "reportes", "puntos"]
+    permisos_base = ["dashboard", "usuarios", "reportes", "puntos", "transcripcion"]
     roles_base = {
         "usuario": "dashboard",
         "admin": "dashboard,usuarios,reportes,puntos",
@@ -1063,7 +1100,7 @@ def autenticar_ldap(username, password):
         server = ldap3.Server(LDAP_SERVER)
         conn = ldap3.Connection(
             server,
-            user=f"uid={username},{LDAP_BASE_DN}",
+            user=f"uid={escape_rdn(username)},{LDAP_BASE_DN}",
             password=password,
             auto_bind=True,
         )
@@ -1105,7 +1142,11 @@ def obtener_grupos_ldap(username):
             password=LDAP_ADMIN_PASSWORD,
             auto_bind=True,
         )
-        conn.search(LDAP_BASE_DN, f"(uid={username})", attributes=["memberOf"])
+        conn.search(
+            LDAP_BASE_DN,
+            f"(uid={escape_filter_chars(username)})",
+            attributes=["memberOf"],
+        )
         grupos = []
         for entry in conn.entries:
             if "memberOf" in entry:
@@ -1152,16 +1193,43 @@ def log_auditoria(admin, accion, usuario, detalle):
     db.commit()
 
 
+def es_peticion_api():
+    return request.path.startswith("/api/") or request.is_json
+
+
+def respuesta_no_autenticado():
+    if es_peticion_api():
+        return jsonify({"status": "error", "msg": "No autenticado"}), 401
+    return redirect("/")
+
+
+def respuesta_sin_permiso():
+    if es_peticion_api():
+        return jsonify({"status": "error", "msg": "No tienes permiso"}), 403
+    return "No tienes permiso", 403
+
+
+def login_required(funcion):
+    @wraps(funcion)
+    def wrapped(*args, **kwargs):
+        if "usuario" not in session:
+            return respuesta_no_autenticado()
+        return funcion(*args, **kwargs)
+
+    return wrapped
+
+
 def requiere_permiso(permiso):
     def decorator(funcion):
+        @wraps(funcion)
         def wrapped(*args, **kwargs):
             db = get_db()
             if "usuario" not in session:
-                return redirect("/")
+                return respuesta_no_autenticado()
 
             usuario = db.query(Usuario).filter_by(username=session["usuario"]).first()
             if not usuario:
-                return redirect("/")
+                return respuesta_no_autenticado()
 
             if usuario.rol == "superadmin":
                 return funcion(*args, **kwargs)
@@ -1172,10 +1240,9 @@ def requiere_permiso(permiso):
             permisos_finales = {valor.strip() for valor in permisos_rol + permisos_usuario if valor}
 
             if permiso not in permisos_finales:
-                return "No tienes permiso", 403
+                return respuesta_sin_permiso()
             return funcion(*args, **kwargs)
 
-        wrapped.__name__ = funcion.__name__
         return wrapped
 
     return decorator
@@ -1243,6 +1310,8 @@ def login():
                     user = Usuario(username=username, rol="superadmin", permisos="all")
                     db.add(user)
                     db.commit()
+                session.clear()
+                session.permanent = True
                 session["usuario"] = user.username
                 session["rol"] = user.rol
                 session["permisos"] = (
@@ -1250,7 +1319,6 @@ def login():
                         if user.permisos
                         else []
                     )
-                print("Permisos cargados:", session["permisos"])
                 return redirect(obtener_pagina_inicio())
 
         if autenticar_ldap(username, password):
@@ -1263,14 +1331,18 @@ def login():
                 user.rol = mapear_rol_por_grupo(obtener_grupos_ldap(username))
 
             db.commit()
-            session["usuario"] = user.username
-            session["rol"] = user.rol
+            username_autenticado = user.username
+            rol_autenticado = user.rol
+            permisos_autenticados = user.permisos
+            session.clear()
+            session.permanent = True
+            session["usuario"] = username_autenticado
+            session["rol"] = rol_autenticado
             session["permisos"] = (
-                    [p.strip() for p in user.permisos.split(",") if p.strip()]
-                    if user.permisos
+                    [p.strip() for p in permisos_autenticados.split(",") if p.strip()]
+                    if permisos_autenticados
                     else []
                 )
-            print("Permisos cargados:", session["permisos"])
             return redirect(obtener_pagina_inicio())
 
         error = "Credenciales invalidas"
@@ -1302,17 +1374,15 @@ def obtener_pagina_inicio():
 
 
 @app.route("/dashboard")
+@login_required
 def dashboard():
     db = get_db()
-    if "usuario" not in session:
-        return redirect("/")
 
     try:
         total_ldap = len(obtener_usuarios_ldap_cache())
         total_db = db.query(Usuario).count()
         total_admins = db.query(Usuario).filter(Usuario.rol.in_(["admin", "superadmin"])).count()
         actividad = db.query(Auditoria).order_by(Auditoria.id.desc()).limit(10).all()
-        print("Hora Python:", datetime.now())
     except Exception as exc:
         print("DASHBOARD ERROR:", exc)
         total_ldap = 0
@@ -1331,6 +1401,7 @@ def dashboard():
     )
 
 @app.route("/api/dashboard")
+@login_required
 def api_dashboard():
     db = get_db()
     try:
@@ -1360,16 +1431,13 @@ def api_dashboard():
 
 
 @app.route("/api/reportes")
+@requiere_permiso("reportes")
 def api_reportes():
     db = get_db()
 
     try:
 
         filtros = get_report_filters(request.args)
-
-        filtros["pagina"] = int(
-            request.args.get("pagina", 1)
-        )
 
         filtros["por_pagina"] = 8
 
@@ -1384,8 +1452,7 @@ def api_reportes():
         print("API REPORTES ERROR:", exc)
 
         return jsonify({
-            "error": True,
-            "msg": str(exc)
+            "error": True
         }), 500
 
 
@@ -1429,10 +1496,10 @@ def usuarios():
 
 
 @app.route("/guardar_usuario", methods=["POST"])
+@requiere_permiso("usuarios")
 def guardar_usuario():
     db = get_db()
     try:
-        print("FORM:", request.form)
         username = request.form.get("username")
         rol = request.form.get("rol")
         permisos = request.form.getlist("permisos[]")
@@ -1532,10 +1599,11 @@ def guardar_usuario():
     except Exception as exc:
         db.rollback()
         print("ERROR API PUNTOS:", str(exc))
-        return jsonify({"status": "error", "msg": str(exc)}), 500
+        return jsonify({"status": "error", "msg": "Error interno"}), 500
 
 
 @app.route("/api/usuario/<username>")
+@requiere_permiso("usuarios")
 def api_usuario(username):
     db = get_db()
     try:
@@ -1550,16 +1618,16 @@ def api_usuario(username):
 
 
 @app.route("/reportes", methods=["GET", "POST"])
+@requiere_permiso("reportes")
 def reportes():
     db = get_db()
-    if "usuario" not in session:
-        return redirect("/")
     filtros = get_report_filters(request.values)
     context = build_report_context(db, filtros)
     return render_template("reportes.html", **context, notificaciones=get_unread_notifications_count(db, session.get("usuario")))
 
 
 @app.route("/exportar_reportes", methods=["GET", "POST"])
+@requiere_permiso("reportes")
 def exportar_reportes():
     db = get_db()
     filtros = get_report_filters(request.values)
@@ -1577,6 +1645,7 @@ def logout():
 
 
 @app.route("/eliminar_usuario/<username>", methods=["POST"])
+@requiere_permiso("usuarios")
 def eliminar_usuario(username):
 
     db = get_db()
@@ -1658,11 +1727,12 @@ def eliminar_usuario(username):
 
         return jsonify({
             "status": "error",
-            "msg": str(exc)
+            "msg": "Error interno"
         }), 500
 
 
 @app.route("/api/notificaciones")
+@login_required
 def api_notificaciones():
     db = get_db()
     try:
@@ -1687,6 +1757,7 @@ def api_notificaciones():
 
 
 @app.route("/api/notificaciones/leer", methods=["POST"])
+@login_required
 def leer_notificaciones():
     db = get_db()
     usuario = session.get("usuario")
@@ -1702,10 +1773,11 @@ def leer_notificaciones():
     except Exception as exc:
         db.rollback()
         print("ERROR API PUNTOS:", str(exc))
-        return jsonify({"status": "error", "msg": str(exc)}), 500
+        return jsonify({"status": "error", "msg": "Error interno"}), 500
 
 
 @app.route("/api/notificaciones/<int:notif_id>/leer", methods=["POST"])
+@login_required
 def leer_notificacion(notif_id):
     db = get_db()
     usuario = session.get("usuario")
@@ -1718,10 +1790,11 @@ def leer_notificacion(notif_id):
     except Exception as exc:
         db.rollback()
         print("ERROR API PUNTOS:", str(exc))
-        return jsonify({"status": "error", "msg": str(exc)}), 500
+        return jsonify({"status": "error", "msg": "Error interno"}), 500
 
 
 @app.route("/api/notificaciones/clear", methods=["POST"])
+@login_required
 def limpiar_notificaciones():
     db = get_db()
     usuario = session.get("usuario")
@@ -1732,10 +1805,11 @@ def limpiar_notificaciones():
     except Exception as exc:
         db.rollback()
         print("ERROR API PUNTOS:", str(exc))
-        return jsonify({"status": "error", "msg": str(exc)}), 500
+        return jsonify({"status": "error", "msg": "Error interno"}), 500
 
 
 @app.route("/api/usuarios_activos")
+@requiere_permiso("usuarios")
 def api_usuarios_activos():
     db = get_db()
     try:
@@ -1754,6 +1828,7 @@ def api_usuarios_activos():
 
 
 @app.route("/api/buscar_ldap")
+@requiere_permiso("usuarios")
 def api_buscar_ldap():
     q = (request.args.get("q") or "").lower()
     usuarios_ldap = obtener_usuarios_ldap_cache()
@@ -1763,17 +1838,16 @@ def api_buscar_ldap():
 
 
 @app.route("/puntos")
+@requiere_permiso("puntos")
 def puntos():
-    if "usuario" not in session:
-        return redirect("/")
     return render_template("puntos.html", notificaciones=get_unread_notifications_count(get_db(), session.get("usuario")))
 
 
 @app.route("/api/buscar_paciente")
+@requiere_permiso("puntos")
 def buscar_paciente():
-    
+
     valor = request.args.get("q", "").strip()
-    print("VALOR:", valor)
     if not valor.isdigit():
         return jsonify([])
 
@@ -1854,6 +1928,7 @@ def buscar_paciente():
         return jsonify([])
 
 @app.route("/api/puntos", methods=["POST"])
+@requiere_permiso("puntos")
 def modificar_puntos():
     db = get_db()
     data = request.json or {}
@@ -2071,16 +2146,18 @@ def modificar_puntos():
     except Exception as exc:
         db.rollback()
         print("ERROR API PUNTOS:", str(exc))
-        return jsonify({"status": "error", "msg": str(exc)}), 500
+        return jsonify({"status": "error", "msg": "Error interno"}), 500
 
 
 @app.route("/api/historial/<idcliente>")
+@requiere_permiso("puntos")
 def historial(idcliente):
     return jsonify(
         obtener_historial_oracle(idcliente)
     )
 
 @app.route("/api/paciente/<idcliente>")
+@requiere_permiso("puntos")
 def api_paciente(idcliente):
 
     db = get_db()
@@ -2103,7 +2180,7 @@ def api_paciente(idcliente):
 
         return jsonify({
             "error": True,
-            "msg": str(exc)
+            "msg": "Error interno"
         }), 500
 
 def get_puntos_cache(idcliente):
@@ -2111,11 +2188,13 @@ def get_puntos_cache(idcliente):
 
 
 @app.route("/api/tiene_resena/<idcliente>")
+@requiere_permiso("puntos")
 def api_tiene_resena(idcliente):
     return jsonify({"tiene": tiene_resena(idcliente)})
 
 
 @app.route("/api/grafica/puntos")
+@login_required
 def api_grafica_puntos():
     db = get_db()
     filtros = get_report_filters(request.args)
@@ -2130,6 +2209,7 @@ def api_grafica_puntos():
 
 
 @app.route("/api/dashboard/kpi")
+@login_required
 def api_dashboard_kpi():
     db = get_db()
     filtros = get_report_filters(request.args)
@@ -2145,6 +2225,7 @@ def api_dashboard_kpi():
 
 
 @app.route("/api/reportes/detalle")
+@requiere_permiso("reportes")
 def detalle_reporte():
     db = get_db()
     tipo = (request.args.get("tipo") or "").lower()
@@ -2162,10 +2243,12 @@ def detalle_reporte():
     return jsonify([])
 
 @app.route("/transcripcion")
+@requiere_permiso("transcripcion")
 def transcripcion():
     return render_template("transcripcion.html")
 
 @app.route("/api/transcripcion/estado")
+@requiere_permiso("transcripcion")
 def estado_transcripcion():
 
     conn = None
@@ -2210,7 +2293,7 @@ def estado_transcripcion():
 
         return jsonify({
             "status": "error",
-            "msg": str(e)
+            "msg": "Error interno"
         }), 500
 
     finally:
@@ -2228,7 +2311,8 @@ def socket_connect():
 
         username = session.get("usuario")
 
-        if username:
+        if not username:
+            return False
 
             room = f"user_{username}"
 
