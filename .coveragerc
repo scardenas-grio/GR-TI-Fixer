@@ -1,0 +1,13 @@
+[run]
+source = .
+omit =
+    .venv/*
+    tests/*
+    # scripts de un solo uso que se ejecutan al importarse
+    setup.py
+    setup_db.py
+    migrar_db.py
+    scripts/*
+
+[report]
+show_missing = True

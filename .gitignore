@@ -6,6 +6,11 @@
 __pycache__/
 *.pyc
 
+# Pruebas
+.pytest_cache/
+.coverage
+htmlcov/
+
 # Oracle
 instantclient/
 
