@@ -4,6 +4,7 @@
 
 import csv
 import io
+import logging
 import os
 import sys
 
@@ -36,6 +37,17 @@ from sqlalchemy.exc import IntegrityError
 # ============================================================
 
 load_dotenv()
+
+# ============================================================
+# LOGGING
+# ============================================================
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+)
+logger = logging.getLogger("ti_fixer")
+
 usuarios_online = {}
 
 CACHE_PUNTOS = {}
@@ -110,10 +122,9 @@ def build_oracle_pool():
 
         return pool
 
-    except Exception as e:
+    except Exception:
 
-        print("ERROR CREANDO POOL ORACLE:")
-        print(str(e))
+        logger.exception("Error creando el pool de Oracle")
 
         return None
 
@@ -156,9 +167,9 @@ def get_oracle_points(idcliente):
 
         return int(row[0] or 0)
 
-    except Exception as exc:
+    except Exception:
 
-        print("ORACLE POINTS ERROR:", exc)
+        logger.exception("Error consultando puntos en Oracle (idcliente=%s)", idcliente)
         return 0
 
     finally:
@@ -218,13 +229,13 @@ def insertar_puntos_oracle(
 
         conn.commit()
 
-        print(
-            f"ORACLE OK -> cliente={idcliente} puntos={cantidad}"
+        logger.info(
+            "Oracle OK -> cliente=%s puntos=%s", idcliente, cantidad
         )
 
-    except Exception as exc:
+    except Exception:
 
-        print("ERROR INSERT ORACLE:", exc)
+        logger.exception("Error insertando puntos en Oracle (idcliente=%s)", idcliente)
 
         raise
 
@@ -284,9 +295,9 @@ def insertar_cancelacion_resena_oracle(
 
         conn.commit()
 
-    except Exception as exc:
+    except Exception:
 
-        print("ERROR CANCELANDO RESEÑA:", exc)
+        logger.exception("Error cancelando reseña en Oracle (idcliente=%s)", idcliente)
         raise
 
     finally:
@@ -328,9 +339,9 @@ def paciente_tiene_resena_oracle(idcliente):
 
         return saldo_resena > 0
 
-    except Exception as exc:
+    except Exception:
 
-        print("ERROR VALIDANDO RESEÑA:", exc)
+        logger.exception("Error validando reseña en Oracle (idcliente=%s)", idcliente)
         return False
 
     finally:
@@ -379,7 +390,7 @@ def tiene_resena_oracle(idcliente):
             conn.close()
 
 oracle_pool = build_oracle_pool()
-print("ORACLE POOL CREADO:", oracle_pool)
+logger.info("Pool de Oracle creado: %s", oracle_pool)
 
 
 class Usuario(Base):
@@ -574,42 +585,52 @@ def obtener_historial_oracle(idcliente):
     # ======================
     if oracle_pool:
 
-        conn = oracle_pool.acquire()
-        cursor = conn.cursor()
+        conn = None
+        cursor = None
 
-        cursor.execute("""
-            SELECT
-                PUNTOS,
-                TIPORECOMPENSA,
-                COMENTARIO,
-                FECHATRANSACCION
-            FROM SISTSIO.RIOREWARDS_DETALLE
-            WHERE IDCLIENTE = :idcliente
-        """, {
-            "idcliente": int(idcliente)
-        })
+        try:
 
-        rows = cursor.fetchall()
+            conn = oracle_pool.acquire()
+            cursor = conn.cursor()
 
-        for row in rows:
-
-            puntos = int(row[0] or 0)
-
-            historial.append({
-                "tipo": "suma" if puntos >= 0 else "resta",
-                "cantidad": abs(puntos),
-                "motivo": row[1] or "",
-                "comentario": row[2] or "",
-                "usuario_admin": "Oracle",
-                "fecha": (
-                    row[3].strftime("%Y-%m-%d %H:%M:%S")
-                    if row[3]
-                    else ""
-                )
+            cursor.execute("""
+                SELECT
+                    PUNTOS,
+                    TIPORECOMPENSA,
+                    COMENTARIO,
+                    FECHATRANSACCION
+                FROM SISTSIO.RIOREWARDS_DETALLE
+                WHERE IDCLIENTE = :idcliente
+            """, {
+                "idcliente": int(idcliente)
             })
 
-        cursor.close()
-        conn.close()
+            rows = cursor.fetchall()
+
+            for row in rows:
+
+                puntos = int(row[0] or 0)
+
+                historial.append({
+                    "tipo": "suma" if puntos >= 0 else "resta",
+                    "cantidad": abs(puntos),
+                    "motivo": row[1] or "",
+                    "comentario": row[2] or "",
+                    "usuario_admin": "Oracle",
+                    "fecha": (
+                        row[3].strftime("%Y-%m-%d %H:%M:%S")
+                        if row[3]
+                        else ""
+                    )
+                })
+
+        finally:
+
+            if cursor:
+                cursor.close()
+
+            if conn:
+                conn.close()
 
     # ======================
     # HISTORIAL LOCAL
@@ -709,8 +730,8 @@ def tiene_resena(idcliente):
         )
         count = cursor.fetchone()[0]
         return count > 0
-    except Exception as exc:
-        print("ORACLE RESENA ERROR:", exc)
+    except Exception:
+        logger.exception("Error consultando reseña en Oracle (idcliente=%s)", idcliente)
         return False
     finally:
         if cursor:
@@ -1069,8 +1090,8 @@ def autenticar_ldap(username, password):
         )
         conn.unbind()
         return True
-    except Exception as exc:
-        print("LDAP LOGIN ERROR:", exc)
+    except Exception:
+        logger.exception("Error autenticando en LDAP (username=%s)", username)
         return False
 
 
@@ -1089,8 +1110,8 @@ def obtener_usuarios_ldap():
         usuarios = sorted({entry.uid.value for entry in conn.entries if hasattr(entry, "uid")})
         conn.unbind()
         return usuarios
-    except Exception as exc:
-        print("LDAP USERS ERROR:", exc)
+    except Exception:
+        logger.exception("Error obteniendo usuarios de LDAP")
         return []
 
 
@@ -1112,8 +1133,8 @@ def obtener_grupos_ldap(username):
                 grupos = list(entry.memberOf.values)
         conn.unbind()
         return grupos
-    except Exception as exc:
-        print("LDAP GROUP ERROR:", exc)
+    except Exception:
+        logger.exception("Error obteniendo grupos de LDAP (username=%s)", username)
         return []
 
 
@@ -1201,8 +1222,9 @@ try:
     db_bootstrap = SessionLocal()
     crear_base(db_bootstrap)
     db_bootstrap.close()
-except Exception as exc:
-    print("DATABASE INIT ERROR:", exc)
+except Exception:
+    logger.exception("Error inicializando la base de datos")
+    raise
 
 
 @app.before_request
@@ -1219,8 +1241,8 @@ def shutdown_session(exception=None):
             if exception:
                 db.rollback()
             db.close()
-        except Exception as exc:
-            print("DB CLOSE ERROR:", exc)
+        except Exception:
+            logger.exception("Error cerrando la sesión de base de datos")
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -1250,7 +1272,7 @@ def login():
                         if user.permisos
                         else []
                     )
-                print("Permisos cargados:", session["permisos"])
+                logger.debug("Permisos cargados: %s", session["permisos"])
                 return redirect(obtener_pagina_inicio())
 
         if autenticar_ldap(username, password):
@@ -1270,7 +1292,7 @@ def login():
                     if user.permisos
                     else []
                 )
-            print("Permisos cargados:", session["permisos"])
+            logger.debug("Permisos cargados: %s", session["permisos"])
             return redirect(obtener_pagina_inicio())
 
         error = "Credenciales invalidas"
@@ -1312,9 +1334,8 @@ def dashboard():
         total_db = db.query(Usuario).count()
         total_admins = db.query(Usuario).filter(Usuario.rol.in_(["admin", "superadmin"])).count()
         actividad = db.query(Auditoria).order_by(Auditoria.id.desc()).limit(10).all()
-        print("Hora Python:", datetime.now())
-    except Exception as exc:
-        print("DASHBOARD ERROR:", exc)
+    except Exception:
+        logger.exception("Error cargando el dashboard")
         total_ldap = 0
         total_db = 0
         total_admins = 0
@@ -1354,8 +1375,8 @@ def api_dashboard():
                 "hora_servidor": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
             }
         )
-    except Exception as exc:
-        print("API DASHBOARD ERROR:", exc)
+    except Exception:
+        logger.exception("Error en el API del dashboard")
         return jsonify({"error": True}), 500
 
 
@@ -1381,7 +1402,7 @@ def api_reportes():
         )
 
     except Exception as exc:
-        print("API REPORTES ERROR:", exc)
+        logger.exception("Error en el API de reportes")
 
         return jsonify({
             "error": True,
@@ -1432,7 +1453,7 @@ def usuarios():
 def guardar_usuario():
     db = get_db()
     try:
-        print("FORM:", request.form)
+        logger.debug("FORM: %s", request.form)
         username = request.form.get("username")
         rol = request.form.get("rol")
         permisos = request.form.getlist("permisos[]")
@@ -1531,7 +1552,7 @@ def guardar_usuario():
         return jsonify({"status": "ok"})
     except Exception as exc:
         db.rollback()
-        print("ERROR API PUNTOS:", str(exc))
+        logger.exception("Error procesando la solicitud")
         return jsonify({"status": "error", "msg": str(exc)}), 500
 
 
@@ -1544,8 +1565,8 @@ def api_usuario(username):
             return jsonify({"rol": "usuario", "permisos": []})
         permisos = [valor for valor in (user.permisos or "").split(",") if valor]
         return jsonify({"rol": user.rol or "usuario", "permisos": permisos})
-    except Exception as exc:
-        print("API USUARIO ERROR:", exc)
+    except Exception:
+        logger.exception("Error en el API de usuario")
         return jsonify({"error": True}), 500
 
 
@@ -1654,7 +1675,7 @@ def eliminar_usuario(username):
 
         db.rollback()
 
-        print("ERROR API PUNTOS:", str(exc))
+        logger.exception("Error procesando la solicitud")
 
         return jsonify({
             "status": "error",
@@ -1681,8 +1702,8 @@ def api_notificaciones():
             for registro in registros
         ]
         return jsonify({"status": "ok", "total": len(data), "data": data})
-    except Exception as exc:
-        print("API NOTIFICACIONES ERROR:", exc)
+    except Exception:
+        logger.exception("Error en el API de notificaciones")
         return jsonify({"status": "error", "data": []}), 500
 
 
@@ -1701,7 +1722,7 @@ def leer_notificaciones():
         return jsonify({"status": "ok"})
     except Exception as exc:
         db.rollback()
-        print("ERROR API PUNTOS:", str(exc))
+        logger.exception("Error procesando la solicitud")
         return jsonify({"status": "error", "msg": str(exc)}), 500
 
 
@@ -1717,7 +1738,7 @@ def leer_notificacion(notif_id):
         return jsonify({"status": "ok"})
     except Exception as exc:
         db.rollback()
-        print("ERROR API PUNTOS:", str(exc))
+        logger.exception("Error procesando la solicitud")
         return jsonify({"status": "error", "msg": str(exc)}), 500
 
 
@@ -1731,7 +1752,7 @@ def limpiar_notificaciones():
         return jsonify({"status": "ok"})
     except Exception as exc:
         db.rollback()
-        print("ERROR API PUNTOS:", str(exc))
+        logger.exception("Error procesando la solicitud")
         return jsonify({"status": "error", "msg": str(exc)}), 500
 
 
@@ -1748,9 +1769,9 @@ def api_usuarios_activos():
                 for usuario in usuarios_con_acceso
             ]
         )
-    except Exception as exc:
-        print("API USUARIOS ACTIVOS ERROR:", exc)
-        return jsonify([])
+    except Exception:
+        logger.exception("Error en el API de usuarios activos")
+        return jsonify({"status": "error", "msg": "No se pudieron obtener los usuarios activos"}), 500
 
 
 @app.route("/api/buscar_ldap")
@@ -1773,9 +1794,16 @@ def puntos():
 def buscar_paciente():
     
     valor = request.args.get("q", "").strip()
-    print("VALOR:", valor)
+    logger.debug("Buscar paciente, valor=%s", valor)
     if not valor.isdigit():
         return jsonify([])
+
+    if not oracle_pool:
+        logger.error("Buscar paciente sin pool de Oracle disponible")
+        return jsonify({
+            "error": True,
+            "msg": "Servicio de pacientes no disponible"
+        }), 503
 
     conn = None
     cur = None
@@ -1846,12 +1874,21 @@ def buscar_paciente():
         }])
 
     except Exception as exc:
-        import traceback
 
-        print("BUSCAR PACIENTE ERROR:")
-        traceback.print_exc()
+        logger.exception("Error buscando paciente (valor=%s)", valor)
 
-        return jsonify([])
+        return jsonify({
+            "error": True,
+            "msg": str(exc)
+        }), 500
+
+    finally:
+
+        if cur:
+            cur.close()
+
+        if conn:
+            conn.close()
 
 @app.route("/api/puntos", methods=["POST"])
 def modificar_puntos():
@@ -1870,7 +1907,7 @@ def modificar_puntos():
 
         try:
             cantidad = int(data.get("cantidad"))
-        except Exception:
+        except (TypeError, ValueError):
             return jsonify({"status": "error", "msg": "Cantidad invalida"}), 400
 
         if "usuario" not in session:
@@ -1954,13 +1991,13 @@ def modificar_puntos():
                 )    
             db.commit()
             if tipo == "suma" and categoria == "reseña":
-                print(
-                    f"RESEÑA APLICADA -> cliente={idcliente} cita={idcita}"
+                logger.info(
+                    "Reseña aplicada -> cliente=%s cita=%s", idcliente, idcita
                 )
 
             if tipo == "resta" and categoria == "reseña":
-                print(
-                    f"RESEÑA CANCELADA -> cliente={idcliente} cita={idcita}"
+                logger.info(
+                    "Reseña cancelada -> cliente=%s cita=%s", idcliente, idcita
                 )
             db.refresh(nuevo)
             # 🔔 crear notificación
@@ -2070,7 +2107,7 @@ def modificar_puntos():
         })
     except Exception as exc:
         db.rollback()
-        print("ERROR API PUNTOS:", str(exc))
+        logger.exception("Error procesando la solicitud")
         return jsonify({"status": "error", "msg": str(exc)}), 500
 
 
@@ -2099,7 +2136,7 @@ def api_paciente(idcliente):
 
     except Exception as exc:
 
-        print("ERROR API PACIENTE:", exc)
+        logger.exception("Error en el API de paciente (idcliente=%s)", idcliente)
 
         return jsonify({
             "error": True,
@@ -2206,7 +2243,7 @@ def estado_transcripcion():
 
     except Exception as e:
 
-        print("ERROR ESTADO:", e)
+        logger.exception("Error consultando el estado de transcripción")
 
         return jsonify({
             "status": "error",
@@ -2242,9 +2279,9 @@ def socket_connect():
                 broadcast=True
             )
 
-    except Exception as e:
+    except Exception:
 
-        print("SOCKET CONNECT ERROR:", e)
+        logger.exception("Error en la conexión de socket")
 
 @socketio.on("disconnect")
 def socket_disconnect():
@@ -2270,12 +2307,9 @@ def socket_disconnect():
                 broadcast=True
             )
 
-    except Exception as e:
+    except Exception:
 
-        print(
-            "SOCKET DISCONNECT ERROR:",
-            e
-        )
+        logger.exception("Error en la desconexión de socket")
 
 
 if __name__ == "__main__":
