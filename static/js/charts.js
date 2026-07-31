@@ -40,31 +40,12 @@ const canvasFechas = document.getElementById("graficaFechas");
 Chart.defaults.font.family = "'Inter', sans-serif";
 
 // =======================================
-// HELPERS
-// =======================================
-
-function actualizarColoresGrafica(chartInstance, textColor, gridColor) {
-  chartInstance.options.plugins.legend.labels.color = textColor;
-
-  if (chartInstance.options.scales) {
-    chartInstance.options.scales.x.ticks.color = textColor;
-    chartInstance.options.scales.y.ticks.color = textColor;
-
-    chartInstance.options.scales.x.grid.color = gridColor;
-    chartInstance.options.scales.y.grid.color = gridColor;
-  }
-}
-
-// =======================================
 // RENDER
+// (obtenerColoresTema y aplicarColoresGrafica viven en utils.js)
 // =======================================
 
 function renderCharts(data, tipoGrafica) {
-  const dark = document.body.classList.contains("dark");
-
-  const textColor = dark ? "#f8fafc" : "#111827";
-
-  const gridColor = dark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.10)";
+  const { textColor, gridColor } = obtenerColoresTema();
 
   renderMainChart(data, tipoGrafica, textColor, gridColor);
 
@@ -324,7 +305,7 @@ function renderFechasChart(data, textColor, gridColor) {
     chartFechas.data.datasets[0].label =
       data.tipo === "admin" ? "Auditoría" : "Puntos";
 
-    actualizarColoresGrafica(chartFechas, textColor, gridColor);
+    aplicarColoresGrafica(chartFechas, textColor, gridColor);
     chartFechas.update("active");
   }
 }

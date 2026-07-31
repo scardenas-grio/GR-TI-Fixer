@@ -258,7 +258,7 @@ function renderHistorial(historial) {
 
                     <div class="mov-fecha">
 
-                        🗓 ${formatearFecha(h.fecha)}
+                        🗓 ${formatearFechaLarga(h.fecha)}
 
                     </div>
 
@@ -287,20 +287,6 @@ function renderHistorial(historial) {
         `;
 
     lista.appendChild(li);
-  });
-}
-
-function formatearFecha(fecha) {
-  if (!fecha) return "";
-
-  const d = new Date(fecha);
-
-  return d.toLocaleString("es-MX", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
   });
 }
 

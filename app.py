@@ -17,8 +17,6 @@ from urllib.parse import quote_plus
 # IMPORTS - Terceros
 # ============================================================
 
-import ldap3
-import oracledb
 import json
 
 from dotenv import load_dotenv
@@ -30,6 +28,28 @@ from sqlalchemy import Column, DateTime, Integer, String, create_engine, func, o
 from sqlalchemy.orm import declarative_base, sessionmaker
 from werkzeug.security import check_password_hash
 from sqlalchemy.exc import IntegrityError
+
+# ============================================================
+# IMPORTS - Utilidades del proyecto
+# ============================================================
+
+import oracle_client
+
+from ldap_client import (
+    autenticar_ldap,
+    mapear_rol_por_grupo,
+    obtener_grupos_ldap,
+    obtener_usuarios_ldap,
+)
+from web_utils import (
+    counter_to_chart,
+    error_flag_json,
+    error_json,
+    handle_exception,
+    parse_date_param,
+    serialize_datetime,
+    serialize_dia,
+)
 
 # ============================================================
 # CONFIGURACIÓN GENERAL
@@ -45,26 +65,12 @@ CACHE_TTL = 60
 # CONFIGURACIÓN ORACLE
 # ============================================================
 
-os.environ["LD_LIBRARY_PATH"] = "/opt/oracle/instantclient"
-oracledb.init_oracle_client(
-    lib_dir="/opt/oracle/instantclient"
-)
-
-ORACLE_USER = os.getenv("ORACLE_USER")
-ORACLE_PASSWORD = os.getenv("ORACLE_PASSWORD")
-ORACLE_HOST = os.getenv("ORACLE_HOST")
-ORACLE_PORT = os.getenv("ORACLE_PORT")
-ORACLE_SERVICE = os.getenv("ORACLE_SERVICE")
-
+oracle_client.init_oracle_client()
 
 # ============================================================
-# CONFIGURACIÓN LDAP
+# CONFIGURACIÓN SUPERADMIN
 # ============================================================
 
-LDAP_SERVER = os.getenv("LDAP_SERVER")
-LDAP_BASE_DN = os.getenv("LDAP_BASE_DN")
-LDAP_ADMIN_USER = os.getenv("LDAP_USER_DN")
-LDAP_ADMIN_PASSWORD = os.getenv("LDAP_PASSWORD")
 SUPERADMIN_USER = os.getenv("SUPERADMIN_USER")
 SUPERADMIN_PASSWORD_HASH = os.getenv("SUPERADMIN_PASSWORD_HASH")
 
@@ -93,30 +99,6 @@ def build_engine():
     sqlite_path = os.path.join(base_dir, "database", "sistema.db")
     return create_engine(f"sqlite:///{sqlite_path}", future=True)
 
-def build_oracle_pool():
-
-    try:
-
-        dsn = f"{ORACLE_HOST}:{ORACLE_PORT}/{ORACLE_SERVICE}"
-
-        pool = oracledb.create_pool(
-            user=ORACLE_USER,
-            password=ORACLE_PASSWORD,
-            dsn=dsn,
-            min=1,
-            max=5,
-            increment=1
-        )
-
-        return pool
-
-    except Exception as e:
-
-        print("ERROR CREANDO POOL ORACLE:")
-        print(str(e))
-
-        return None
-
 
 engine = build_engine()
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
@@ -131,254 +113,184 @@ app.config["SECRET_KEY"] = os.getenv("SECRET_KEY") or "clave_super_secreta"
 socketio = SocketIO(app, cors_allowed_origins="*",async_mode="gevent") # agregar dominio ahorita slo tiene un simbolo
 
 
+# ============================================================
+# CONSULTAS ORACLE
+# ============================================================
+
+SQL_SALDO_PUNTOS = """
+    SELECT NVL(SUM(PUNTOS),0)
+    FROM SISTSIO.RIOREWARDS_DETALLE
+    WHERE IDCLIENTE = :idcliente
+"""
+
+SQL_SALDO_RESENA = """
+    SELECT NVL(SUM(PUNTOS),0)
+    FROM SISTSIO.RIOREWARDS_DETALLE
+    WHERE IDCLIENTE = :idcliente
+      AND UPPER(TIPORECOMPENSA) IN (
+            UPPER('Reseña'),
+            UPPER('Cancelación reseña')
+      )
+"""
+
+SQL_CONTAR_RESENAS = """
+    SELECT COUNT(*)
+    FROM SISTSIO.RIOREWARDS_DETALLE
+    WHERE IDCLIENTE = :idcliente
+      AND UPPER(TIPORECOMPENSA) LIKE '%RESE%'
+"""
+
+SQL_HISTORIAL_PUNTOS = """
+    SELECT
+        PUNTOS,
+        TIPORECOMPENSA,
+        COMENTARIO,
+        FECHATRANSACCION
+    FROM SISTSIO.RIOREWARDS_DETALLE
+    WHERE IDCLIENTE = :idcliente
+"""
+
+SQL_PACIENTE_POR_IDCLIENTE = """
+    SELECT
+        IDCLIENTE,
+        NOMBRE,
+        APATERNO,
+        AMATERNO
+    FROM SISTSIO.CLIENTES
+    WHERE IDCLIENTE = :valor
+"""
+
+SQL_PACIENTE_POR_IDCITA = """
+    SELECT
+        c.IDCLIENTE,
+        c.NOMBRE,
+        c.APATERNO,
+        c.AMATERNO
+    FROM SISTSIO.CLIENTES c,
+        SISTSIO.RIOREWARDS_DETALLE r
+    WHERE r.IDCLIENTE = c.IDCLIENTE
+    AND r.IDCITA = :valor
+    AND ROWNUM = 1
+"""
+
+SQL_ESTADO_TRANSCRIPCION = """
+    SELECT
+        CLAVE,
+        MODO,
+        IDCITA,
+        FECHA_MOD,
+        USUARIO_MOD
+    FROM SISTSIO.V_SEMAFORO_UNIFICADO_ESTADO
+"""
+
+SQL_INSERTAR_MOVIMIENTO_RESENA = """
+    INSERT INTO SISTSIO.RIOREWARDS_DETALLE
+    (
+        IDCLIENTE,
+        IDCITA,
+        CANTIDAD,
+        PUNTOS,
+        TIPORECOMPENSA,
+        COMENTARIO,
+        CORREOREGISTRADO
+    )
+    VALUES
+    (
+        :idcliente,
+        :idcita,
+        0,
+        :puntos,
+        :tipo,
+        :comentario,
+        NULL
+    )
+"""
+
+
 def get_oracle_points(idcliente):
 
-    if not oracle_pool:
-        return 0
-
-    conn = None
-    cursor = None
-
     try:
-
-        conn = oracle_pool.acquire()
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            SELECT NVL(SUM(PUNTOS),0)
-            FROM SISTSIO.RIOREWARDS_DETALLE
-            WHERE IDCLIENTE = :idcliente
-        """, {
-            "idcliente": int(idcliente)
-        })
-
-        row = cursor.fetchone()
-
-        return int(row[0] or 0)
+        return oracle_client.fetch_int(
+            oracle_pool,
+            SQL_SALDO_PUNTOS,
+            {"idcliente": int(idcliente)}
+        )
 
     except Exception as exc:
-
         print("ORACLE POINTS ERROR:", exc)
         return 0
 
-    finally:
 
-        if cursor:
-            cursor.close()
+def insertar_movimiento_resena_oracle(idcliente, idcita, puntos, tipo, comentario):
 
-        if conn:
-            conn.close()
-
-def insertar_puntos_oracle(
-    idcliente,
-    idcita,
-    cantidad,
-    categoria,
-    usuario
-):
-    if not oracle_pool:
-        return
-
-    conn = None
-    cursor = None
-
-    try:
-
-        conn = oracle_pool.acquire()
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            INSERT INTO SISTSIO.RIOREWARDS_DETALLE
-            (
-                IDCLIENTE,
-                IDCITA,
-                CANTIDAD,
-                PUNTOS,
-                TIPORECOMPENSA,
-                COMENTARIO,
-                CORREOREGISTRADO
-            )
-            VALUES
-            (
-                :idcliente,
-                :idcita,
-                0,
-                :puntos,
-                :tipo,
-                :comentario,
-                NULL
-            )
-        """, {
+    return oracle_client.execute(
+        oracle_pool,
+        SQL_INSERTAR_MOVIMIENTO_RESENA,
+        {
             "idcliente": int(idcliente),
             "idcita": int(idcita) if idcita else None,
-            "puntos": int(cantidad),
-            "tipo": "Reseña",
-            "comentario": "Bonificación por reseña"
-        })
+            "puntos": int(puntos),
+            "tipo": tipo,
+            "comentario": comentario,
+        }
+    )
 
-        conn.commit()
 
+def insertar_puntos_oracle(idcliente, idcita, cantidad):
+
+    try:
+        insertado = insertar_movimiento_resena_oracle(
+            idcliente,
+            idcita,
+            int(cantidad),
+            "Reseña",
+            "Bonificación por reseña"
+        )
+
+    except Exception as exc:
+        print("ERROR INSERT ORACLE:", exc)
+        raise
+
+    if insertado:
         print(
             f"ORACLE OK -> cliente={idcliente} puntos={cantidad}"
         )
 
-    except Exception as exc:
 
-        print("ERROR INSERT ORACLE:", exc)
-
-        raise
-
-    finally:
-
-        if cursor:
-            cursor.close()
-
-        if conn:
-            conn.close()
-
-def insertar_cancelacion_resena_oracle(
-    idcliente,
-    idcita,
-    cantidad,
-    usuario
-):
-    if not oracle_pool:
-        return
-
-    conn = None
-    cursor = None
+def insertar_cancelacion_resena_oracle(idcliente, idcita, cantidad):
 
     try:
-
-        conn = oracle_pool.acquire()
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            INSERT INTO SISTSIO.RIOREWARDS_DETALLE
-            (
-                IDCLIENTE,
-                IDCITA,
-                CANTIDAD,
-                PUNTOS,
-                TIPORECOMPENSA,
-                COMENTARIO,
-                CORREOREGISTRADO
-            )
-            VALUES
-            (
-                :idcliente,
-                :idcita,
-                0,
-                :puntos,
-                :tipo,
-                :comentario,
-                NULL
-            )
-        """, {
-            "idcliente": int(idcliente),
-            "idcita": int(idcita) if idcita else None,
-            "puntos": -abs(int(cantidad)),
-            "tipo": "Cancelación reseña",
-            "comentario": "Cancelación de bonificación por reseña"
-        })
-
-        conn.commit()
+        insertar_movimiento_resena_oracle(
+            idcliente,
+            idcita,
+            -abs(int(cantidad)),
+            "Cancelación reseña",
+            "Cancelación de bonificación por reseña"
+        )
 
     except Exception as exc:
-
         print("ERROR CANCELANDO RESEÑA:", exc)
         raise
 
-    finally:
 
-        if cursor:
-            cursor.close()
-
-        if conn:
-            conn.close()
-
-def paciente_tiene_resena_oracle(idcliente):
-
-    if not oracle_pool:
-        return False
-
-    conn = None
-    cursor = None
+def tiene_resena_oracle(idcliente):
+    """True si el saldo de reseña del paciente sigue siendo positivo."""
 
     try:
-
-        conn = oracle_pool.acquire()
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            SELECT NVL(SUM(PUNTOS),0)
-            FROM SISTSIO.RIOREWARDS_DETALLE
-            WHERE IDCLIENTE = :idcliente
-            AND UPPER(TIPORECOMPENSA) IN (
-                UPPER('Reseña'),
-                UPPER('Cancelación reseña')
-            )
-        """, {
-            "idcliente": int(idcliente)
-        })
-
-        row = cursor.fetchone()
-
-        saldo_resena = int(row[0] or 0)
-
-        return saldo_resena > 0
+        saldo = oracle_client.fetch_int(
+            oracle_pool,
+            SQL_SALDO_RESENA,
+            {"idcliente": int(idcliente)}
+        )
 
     except Exception as exc:
-
         print("ERROR VALIDANDO RESEÑA:", exc)
         return False
 
-    finally:
+    return saldo > 0
 
-        if cursor:
-            cursor.close()
 
-        if conn:
-            conn.close()
-
-def tiene_resena_oracle(idcliente):
-
-    if not oracle_pool:
-        return False
-
-    conn = None
-    cursor = None
-
-    try:
-
-        conn = oracle_pool.acquire()
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            SELECT NVL(SUM(PUNTOS),0)
-            FROM SISTSIO.RIOREWARDS_DETALLE
-            WHERE IDCLIENTE = :idcliente
-              AND UPPER(TIPORECOMPENSA) IN (
-                    UPPER('Reseña'),
-                    UPPER('Cancelación reseña')
-              )
-        """, {
-            "idcliente": int(idcliente)
-        })
-
-        saldo = int(cursor.fetchone()[0] or 0)
-
-        return saldo > 0
-
-    finally:
-
-        if cursor:
-            cursor.close()
-
-        if conn:
-            conn.close()
-
-oracle_pool = build_oracle_pool()
+oracle_pool = oracle_client.build_oracle_pool()
 print("ORACLE POOL CREADO:", oracle_pool)
 
 
@@ -460,26 +372,6 @@ def get_usuario():
     return session.get("usuario")
 
 
-def serialize_datetime(value):
-    if isinstance(value, datetime):
-        return value.strftime("%Y-%m-%d %H:%M:%S")
-    if value is None:
-        return ""
-    return str(value)
-
-
-def parse_date_param(value, end_of_day=False):
-    if not value:
-        return None
-    try:
-        parsed = datetime.strptime(value, "%Y-%m-%d")
-        if end_of_day:
-            return parsed + timedelta(days=1) - timedelta(seconds=1)
-        return parsed
-    except ValueError:
-        return None
-
-
 def get_report_filters(source):
     return {
         "tipo": (source.get("tipo") or "puntos").strip().lower(),
@@ -530,19 +422,31 @@ def serialize_auditoria(registro):
     }
 
 
-def build_filtered_movimientos_query(db, filtros):
-    query = db.query(MovimientoPuntos)
+def aplicar_filtros_admin_fecha(query, modelo, filtros):
+    """Filtra por usuario_admin y rango de fechas cualquier modelo que los tenga."""
     usuario = filtros.get("usuario")
     fecha_inicio = parse_date_param(filtros.get("fecha_inicio"))
     fecha_fin = parse_date_param(filtros.get("fecha_fin"), end_of_day=True)
-    movimiento_tipo = filtros.get("movimiento_tipo")
 
     if usuario:
-        query = query.filter(MovimientoPuntos.usuario_admin.ilike(f"%{usuario}%"))
+        query = query.filter(modelo.usuario_admin.ilike(f"%{usuario}%"))
     if fecha_inicio:
-        query = query.filter(MovimientoPuntos.fecha >= fecha_inicio)
+        query = query.filter(modelo.fecha >= fecha_inicio)
     if fecha_fin:
-        query = query.filter(MovimientoPuntos.fecha <= fecha_fin)
+        query = query.filter(modelo.fecha <= fecha_fin)
+
+    return query
+
+
+def build_filtered_movimientos_query(db, filtros):
+    query = aplicar_filtros_admin_fecha(
+        db.query(MovimientoPuntos),
+        MovimientoPuntos,
+        filtros
+    )
+
+    movimiento_tipo = filtros.get("movimiento_tipo")
+
     if movimiento_tipo in {"suma", "resta"}:
         query = query.filter(MovimientoPuntos.tipo == movimiento_tipo)
 
@@ -550,19 +454,7 @@ def build_filtered_movimientos_query(db, filtros):
 
 
 def build_filtered_auditoria_query(db, filtros):
-    query = db.query(Auditoria)
-    usuario = filtros.get("usuario")
-    fecha_inicio = parse_date_param(filtros.get("fecha_inicio"))
-    fecha_fin = parse_date_param(filtros.get("fecha_fin"), end_of_day=True)
-
-    if usuario:
-        query = query.filter(Auditoria.usuario_admin.ilike(f"%{usuario}%"))
-    if fecha_inicio:
-        query = query.filter(Auditoria.fecha >= fecha_inicio)
-    if fecha_fin:
-        query = query.filter(Auditoria.fecha <= fecha_fin)
-
-    return query
+    return aplicar_filtros_admin_fecha(db.query(Auditoria), Auditoria, filtros)
 
 
 def obtener_historial_oracle(idcliente):
@@ -572,44 +464,24 @@ def obtener_historial_oracle(idcliente):
     # ======================
     # HISTORIAL ORACLE
     # ======================
-    if oracle_pool:
+    rows = oracle_client.fetch_all(
+        oracle_pool,
+        SQL_HISTORIAL_PUNTOS,
+        {"idcliente": int(idcliente)}
+    )
 
-        conn = oracle_pool.acquire()
-        cursor = conn.cursor()
+    for row in rows:
 
-        cursor.execute("""
-            SELECT
-                PUNTOS,
-                TIPORECOMPENSA,
-                COMENTARIO,
-                FECHATRANSACCION
-            FROM SISTSIO.RIOREWARDS_DETALLE
-            WHERE IDCLIENTE = :idcliente
-        """, {
-            "idcliente": int(idcliente)
+        puntos = int(row[0] or 0)
+
+        historial.append({
+            "tipo": "suma" if puntos >= 0 else "resta",
+            "cantidad": abs(puntos),
+            "motivo": row[1] or "",
+            "comentario": row[2] or "",
+            "usuario_admin": "Oracle",
+            "fecha": serialize_datetime(row[3])
         })
-
-        rows = cursor.fetchall()
-
-        for row in rows:
-
-            puntos = int(row[0] or 0)
-
-            historial.append({
-                "tipo": "suma" if puntos >= 0 else "resta",
-                "cantidad": abs(puntos),
-                "motivo": row[1] or "",
-                "comentario": row[2] or "",
-                "usuario_admin": "Oracle",
-                "fecha": (
-                    row[3].strftime("%Y-%m-%d %H:%M:%S")
-                    if row[3]
-                    else ""
-                )
-            })
-
-        cursor.close()
-        conn.close()
 
     # ======================
     # HISTORIAL LOCAL
@@ -635,11 +507,7 @@ def obtener_historial_oracle(idcliente):
             "motivo": mov.motivo or "",
             "comentario": mov.motivo or "",
             "usuario_admin": mov.usuario_admin or "",
-            "fecha": (
-                mov.fecha.strftime("%Y-%m-%d %H:%M:%S")
-                if mov.fecha
-                else ""
-            )
+            "fecha": serialize_datetime(mov.fecha)
         })
 
     historial.sort(
@@ -677,6 +545,16 @@ def calcular_saldo_local(db, idcliente):
 
     return total
 
+def calcular_puntos_netos(db):
+    """Suma de todos los movimientos locales (suma - resta)."""
+    return sum(
+        movimiento.cantidad
+        if movimiento.tipo == "suma"
+        else -movimiento.cantidad
+        for movimiento in db.query(MovimientoPuntos).all()
+    )
+
+
 def get_operational_points(db, idcliente):
 
     oracle_points = get_oracle_points(idcliente)
@@ -690,33 +568,20 @@ def get_operational_points(db, idcliente):
 
 
 def tiene_resena(idcliente):
-    if not oracle_pool:
-        return False
+    """True si el paciente tiene algún movimiento de reseña registrado."""
 
-    conn = None
-    cursor = None
     try:
-        conn = oracle_pool.acquire()
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            SELECT COUNT(*)
-            FROM SISTSIO.RIOREWARDS_DETALLE
-            WHERE idcliente = :idcliente
-              AND UPPER(TIPORECOMPENSA) LIKE '%RESE%'
-            """,
-            {"idcliente": idcliente},
+        total = oracle_client.fetch_int(
+            oracle_pool,
+            SQL_CONTAR_RESENAS,
+            {"idcliente": idcliente}
         )
-        count = cursor.fetchone()[0]
-        return count > 0
+
     except Exception as exc:
         print("ORACLE RESENA ERROR:", exc)
         return False
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
+
+    return total > 0
 
 def ya_tiene_resena_local(db, idcliente):
     existe = db.query(MovimientoPuntos).filter(
@@ -724,6 +589,13 @@ def ya_tiene_resena_local(db, idcliente):
         MovimientoPuntos.motivo == "reseña"
     ).first()
     return existe is not None
+
+
+def paginar_por_fecha(query, modelo, offset, por_pagina):
+    """Devuelve (todos, pagina_actual) ordenados por fecha e id descendente."""
+    ordenada = query.order_by(modelo.fecha.desc(), modelo.id.desc())
+
+    return ordenada.all(), ordenada.offset(offset).limit(por_pagina).all()
 
 
 def build_report_context(db, filtros):
@@ -737,46 +609,22 @@ def build_report_context(db, filtros):
 
     total_movimientos = query_movimientos.count()
 
-    movimientos_chart = (
-        query_movimientos
-        .order_by(
-            MovimientoPuntos.fecha.desc(),
-            MovimientoPuntos.id.desc()
-        )
-        .all()
+    movimientos_chart, movimientos = paginar_por_fecha(
+        query_movimientos,
+        MovimientoPuntos,
+        offset,
+        por_pagina
     )
 
-    movimientos = (
-        query_movimientos
-        .order_by(
-            MovimientoPuntos.fecha.desc(),
-            MovimientoPuntos.id.desc()
-        )
-        .offset(offset)
-        .limit(por_pagina)
-        .all()
-    )
     query_auditoria = build_filtered_auditoria_query(db, filtros)
 
-    auditoria_chart = (
-        query_auditoria
-        .order_by(
-            Auditoria.fecha.desc(),
-            Auditoria.id.desc()
-        )
-        .all()
+    auditoria_chart, auditoria = paginar_por_fecha(
+        query_auditoria,
+        Auditoria,
+        offset,
+        por_pagina
     )
 
-    auditoria = (
-        query_auditoria
-        .order_by(
-            Auditoria.fecha.desc(),
-            Auditoria.id.desc()
-        )
-        .offset(offset)
-        .limit(por_pagina)
-        .all()
-    )
     usuarios = db.query(Usuario).order_by(
         Usuario.username.asc()
     ).all()
@@ -786,9 +634,7 @@ def build_report_context(db, filtros):
     movimientos_por_admin = Counter()
     for movimiento in movimientos_chart:
 
-        fecha_key = serialize_datetime(
-            movimiento.fecha
-        ).split(" ")[0]
+        fecha_key = serialize_dia(movimiento.fecha)
 
         valor = (
             movimiento.cantidad
@@ -810,7 +656,7 @@ def build_report_context(db, filtros):
         for registro in auditoria_chart
     )
     auditoria_por_fecha = Counter(
-        serialize_datetime(registro.fecha).split(" ")[0]
+        serialize_dia(registro.fecha)
         for registro in auditoria_chart
         if registro.fecha
     )
@@ -824,26 +670,11 @@ def build_report_context(db, filtros):
             roles.get("superadmin", 0),
         ],
     }
-    chart_puntos_fecha = {
-        "labels": list(puntos_por_fecha.keys()),
-        "valores": [int(valor) for valor in puntos_por_fecha.values()],
-    }
-    chart_movimientos_fecha = {
-        "labels": list(movimientos_por_fecha.keys()),
-        "valores": [int(valor) for valor in movimientos_por_fecha.values()],
-    }
-    chart_movimientos_admin = {
-        "labels": list(movimientos_por_admin.keys()),
-        "valores": [int(valor) for valor in movimientos_por_admin.values()],
-    }
-    chart_auditoria = {
-        "labels": list(auditoria_por_accion.keys()),
-        "valores": [int(valor) for valor in auditoria_por_accion.values()],
-    }
-    chart_auditoria_fecha = {
-        "labels": list(auditoria_por_fecha.keys()),
-        "valores": [int(valor) for valor in auditoria_por_fecha.values()],
-    }
+    chart_puntos_fecha = counter_to_chart(puntos_por_fecha)
+    chart_movimientos_fecha = counter_to_chart(movimientos_por_fecha)
+    chart_movimientos_admin = counter_to_chart(movimientos_por_admin)
+    chart_auditoria = counter_to_chart(auditoria_por_accion)
+    chart_auditoria_fecha = counter_to_chart(auditoria_por_fecha)
 
     datos_puntos = [serialize_movimiento(movimiento) for movimiento in movimientos]
     datos_admin = [serialize_auditoria(registro) for registro in auditoria]
@@ -865,12 +696,7 @@ def build_report_context(db, filtros):
         "puntos_netos":
             len(auditoria)
             if tipo == "admin"
-            else sum(
-                mov.cantidad
-                if mov.tipo == "suma"
-                else -mov.cantidad
-                for mov in db.query(MovimientoPuntos).all()
-            ),
+            else calcular_puntos_netos(db),
 
         "movimientos_hoy":
             len(auditoria_chart)
@@ -886,27 +712,13 @@ def build_report_context(db, filtros):
 
     if tipo == "admin":
 
-        chart_principal = {
-            "labels": chart_auditoria["labels"],
-            "valores": chart_auditoria["valores"]
-        }
-
-        chart_fechas = {
-            "labels": chart_auditoria_fecha["labels"],
-            "valores": chart_auditoria_fecha["valores"]
-        }
+        chart_principal = dict(chart_auditoria)
+        chart_fechas = dict(chart_auditoria_fecha)
 
     else:
 
-        chart_principal = {
-            "labels": chart_movimientos_admin["labels"],
-            "valores": chart_movimientos_admin["valores"]
-        }
-
-        chart_fechas = {
-            "labels": chart_puntos_fecha["labels"],
-            "valores": chart_puntos_fecha["valores"]
-        }
+        chart_principal = dict(chart_movimientos_admin)
+        chart_fechas = dict(chart_puntos_fecha)
     return {
         "tipo": filtros.get("tipo", "puntos"),
         "filtros": filtros,
@@ -930,6 +742,41 @@ def build_report_context(db, filtros):
         "chart_principal": chart_principal,
         "chart_fechas": chart_fechas,
     }
+
+
+# ============================================================
+# EXPORTACIONES
+# ============================================================
+
+# (encabezado, clave del registro serializado)
+COLUMNAS_PUNTOS = [
+    ("Paciente", "paciente_id"),
+    ("IDCita", "idcita"),
+    ("Tipo", "tipo"),
+    ("Cantidad", "cantidad"),
+    ("Admin", "usuario_admin"),
+    ("Fecha", "fecha"),
+]
+
+COLUMNAS_AUDITORIA = [
+    ("Admin", "usuario_admin"),
+    ("Accion", "accion"),
+    ("Usuario", "usuario_afectado"),
+    ("Detalle", "detalle"),
+    ("Fecha", "fecha"),
+]
+
+
+def filas_reporte(registros, columnas):
+    return [[registro[clave] for _, clave in columnas] for registro in registros]
+
+
+def respuesta_descarga(contenido, mimetype, filename):
+    return Response(
+        contenido,
+        mimetype=mimetype,
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
 
 
 def exportar_reportes_excel(context):
@@ -968,38 +815,23 @@ def exportar_reportes_excel(context):
     resumen.append(["Registros auditoria", context["kpis"]["auditoria"]])
     style_sheet(resumen)
 
-    puntos_sheet = workbook.create_sheet("Puntos")
-    puntos_sheet.append(["Paciente", "IDCita", "Tipo", "Cantidad", "Admin", "Fecha"])
-    for row in context["datos_puntos"]:
-        puntos_sheet.append([
-            row["paciente_id"],
-            row["idcita"],
-            row["tipo"],
-            row["cantidad"],
-            row["usuario_admin"],
-            row["fecha"],
-        ])
-    style_sheet(puntos_sheet)
+    def agregar_hoja(titulo, columnas, registros):
+        sheet = workbook.create_sheet(titulo)
+        sheet.append([encabezado for encabezado, _ in columnas])
+        for fila in filas_reporte(registros, columnas):
+            sheet.append(fila)
+        style_sheet(sheet)
 
-    auditoria_sheet = workbook.create_sheet("Auditoria")
-    auditoria_sheet.append(["Admin", "Accion", "Usuario", "Detalle", "Fecha"])
-    for row in context["datos_admin"]:
-        auditoria_sheet.append([
-            row["usuario_admin"],
-            row["accion"],
-            row["usuario_afectado"],
-            row["detalle"],
-            row["fecha"],
-        ])
-    style_sheet(auditoria_sheet)
+    agregar_hoja("Puntos", COLUMNAS_PUNTOS, context["datos_puntos"])
+    agregar_hoja("Auditoria", COLUMNAS_AUDITORIA, context["datos_admin"])
 
     output = io.BytesIO()
     workbook.save(output)
     output.seek(0)
-    return Response(
+    return respuesta_descarga(
         output.getvalue(),
-        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment; filename=reporte_sistema.xlsx"},
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "reporte_sistema.xlsx",
     )
 
 
@@ -1007,30 +839,17 @@ def exportar_reportes_csv(context):
     stream = io.StringIO()
     writer = csv.writer(stream)
     writer.writerow(["seccion", "campo_1", "campo_2", "campo_3", "campo_4", "campo_5", "campo_6"])
-    for row in context["datos_puntos"]:
-        writer.writerow([
-            "puntos",
-            row["paciente_id"],
-            row["idcita"],
-            row["tipo"],
-            row["cantidad"],
-            row["usuario_admin"],
-            row["fecha"],
-        ])
-    for row in context["datos_admin"]:
-        writer.writerow([
-            "auditoria",
-            row["usuario_admin"],
-            row["accion"],
-            row["usuario_afectado"],
-            row["detalle"],
-            row["fecha"],
-            "",
-        ])
-    return Response(
+
+    for fila in filas_reporte(context["datos_puntos"], COLUMNAS_PUNTOS):
+        writer.writerow(["puntos", *fila])
+
+    for fila in filas_reporte(context["datos_admin"], COLUMNAS_AUDITORIA):
+        writer.writerow(["auditoria", *fila, ""])
+
+    return respuesta_descarga(
         stream.getvalue(),
-        mimetype="text/csv; charset=utf-8",
-        headers={"Content-Disposition": "attachment; filename=reporte_sistema.csv"},
+        "text/csv; charset=utf-8",
+        "reporte_sistema.csv",
     )
 
 
@@ -1056,86 +875,62 @@ def crear_base(db):
     db.commit()
 
 
-def autenticar_ldap(username, password):
-    if not all([LDAP_SERVER, LDAP_BASE_DN, username, password]):
-        return False
-    try:
-        server = ldap3.Server(LDAP_SERVER)
-        conn = ldap3.Connection(
-            server,
-            user=f"uid={username},{LDAP_BASE_DN}",
-            password=password,
-            auto_bind=True,
-        )
-        conn.unbind()
-        return True
-    except Exception as exc:
-        print("LDAP LOGIN ERROR:", exc)
-        return False
-
-
-def obtener_usuarios_ldap():
-    if not all([LDAP_SERVER, LDAP_BASE_DN, LDAP_ADMIN_USER, LDAP_ADMIN_PASSWORD]):
-        return []
-    try:
-        server = ldap3.Server(LDAP_SERVER)
-        conn = ldap3.Connection(
-            server,
-            user=LDAP_ADMIN_USER,
-            password=LDAP_ADMIN_PASSWORD,
-            auto_bind=True,
-        )
-        conn.search(LDAP_BASE_DN, "(objectClass=person)", attributes=["uid"])
-        usuarios = sorted({entry.uid.value for entry in conn.entries if hasattr(entry, "uid")})
-        conn.unbind()
-        return usuarios
-    except Exception as exc:
-        print("LDAP USERS ERROR:", exc)
-        return []
-
-
-def obtener_grupos_ldap(username):
-    if not all([LDAP_SERVER, LDAP_BASE_DN, LDAP_ADMIN_USER, LDAP_ADMIN_PASSWORD, username]):
-        return []
-    try:
-        server = ldap3.Server(LDAP_SERVER)
-        conn = ldap3.Connection(
-            server,
-            user=LDAP_ADMIN_USER,
-            password=LDAP_ADMIN_PASSWORD,
-            auto_bind=True,
-        )
-        conn.search(LDAP_BASE_DN, f"(uid={username})", attributes=["memberOf"])
-        grupos = []
-        for entry in conn.entries:
-            if "memberOf" in entry:
-                grupos = list(entry.memberOf.values)
-        conn.unbind()
-        return grupos
-    except Exception as exc:
-        print("LDAP GROUP ERROR:", exc)
-        return []
-
-
-def mapear_rol_por_grupo(grupos):
-    mapa = {
-        "cn=admins": "admin",
-        "cn=sistemas": "admin",
-        "cn=rh": "usuario",
-    }
-    for grupo in grupos:
-        grupo_normalizado = grupo.lower()
-        for clave, rol in mapa.items():
-            if clave in grupo_normalizado:
-                return rol
-    return "usuario"
-
-
 def sync_ldap(db):
     for username in obtener_usuarios_ldap():
         if not db.query(Usuario).filter_by(username=username).first():
             db.add(Usuario(username=username, rol="usuario", permisos=""))
     db.commit()
+
+
+def lista_permisos(valor):
+    return [permiso.strip() for permiso in (valor or "").split(",") if permiso.strip()]
+
+
+def iniciar_sesion(user):
+    session["usuario"] = user.username
+    session["rol"] = user.rol
+    session["permisos"] = lista_permisos(user.permisos)
+    print("Permisos cargados:", session["permisos"])
+
+
+def registrar_notificacion(db, mensaje, usuario):
+    db.add(
+        Notificacion(
+            mensaje=mensaje,
+            usuario=usuario,
+            leido=0,
+            fecha=datetime.now(),
+        )
+    )
+    db.commit()
+
+
+def emitir_actividad(mensaje, tipo):
+    """Publica el mismo evento en notificaciones, dashboard y feed de actividad."""
+    ahora = datetime.now()
+
+    socketio.emit(
+        "nueva_notificacion",
+        {
+            "mensaje": mensaje,
+            "fecha": serialize_datetime(ahora)
+        }
+    )
+
+    socketio.emit(
+        "actualizar_dashboard",
+        {
+            "tipo": tipo
+        }
+    )
+
+    socketio.emit(
+        "activity_feed",
+        {
+            "mensaje": mensaje,
+            "hora": ahora.strftime("%H:%M")
+        }
+    )
 
 
 def log_auditoria(admin, accion, usuario, detalle):
@@ -1167,9 +962,10 @@ def requiere_permiso(permiso):
                 return funcion(*args, **kwargs)
 
             rol = db.query(Rol).filter_by(nombre=usuario.rol).first()
-            permisos_rol = (rol.permisos or "").split(",") if rol else []
-            permisos_usuario = (usuario.permisos or "").split(",")
-            permisos_finales = {valor.strip() for valor in permisos_rol + permisos_usuario if valor}
+            permisos_finales = set(
+                lista_permisos(rol.permisos if rol else "")
+                + lista_permisos(usuario.permisos)
+            )
 
             if permiso not in permisos_finales:
                 return "No tienes permiso", 403
@@ -1243,14 +1039,7 @@ def login():
                     user = Usuario(username=username, rol="superadmin", permisos="all")
                     db.add(user)
                     db.commit()
-                session["usuario"] = user.username
-                session["rol"] = user.rol
-                session["permisos"] = (
-                        [p.strip() for p in user.permisos.split(",") if p.strip()]
-                        if user.permisos
-                        else []
-                    )
-                print("Permisos cargados:", session["permisos"])
+                iniciar_sesion(user)
                 return redirect(obtener_pagina_inicio())
 
         if autenticar_ldap(username, password):
@@ -1263,14 +1052,7 @@ def login():
                 user.rol = mapear_rol_por_grupo(obtener_grupos_ldap(username))
 
             db.commit()
-            session["usuario"] = user.username
-            session["rol"] = user.rol
-            session["permisos"] = (
-                    [p.strip() for p in user.permisos.split(",") if p.strip()]
-                    if user.permisos
-                    else []
-                )
-            print("Permisos cargados:", session["permisos"])
+            iniciar_sesion(user)
             return redirect(obtener_pagina_inicio())
 
         error = "Credenciales invalidas"
@@ -1383,10 +1165,7 @@ def api_reportes():
     except Exception as exc:
         print("API REPORTES ERROR:", exc)
 
-        return jsonify({
-            "error": True,
-            "msg": str(exc)
-        }), 500
+        return error_flag_json(exc)
 
 
 @app.route("/usuarios")
@@ -1445,15 +1224,12 @@ def guardar_usuario():
             .first()
 
         if not admin_actual:
-            return jsonify({
-                "status": "error",
-                "msg": "Usuario inválido"
-            }), 403
+            return error_json("Usuario inválido", 403)
 
         if not username or not rol:
-            return jsonify({"status": "error", "msg": "Datos incompletos"}), 400
+            return error_json("Datos incompletos")
         if username == "admin_root":
-            return jsonify({"status": "error", "msg": "No se puede modificar el usuario principal"}), 403
+            return error_json("No se puede modificar el usuario principal", 403)
 
         permisos_str = ",".join(permisos) if permisos else ""
         admin = session.get("usuario") or "sistema"
@@ -1465,10 +1241,7 @@ def guardar_usuario():
 
         # Solo superadmin puede asignar superadmin
         if rol == "superadmin" and admin_actual.rol != "superadmin":
-            return jsonify({
-                "status": "error",
-                "msg": "Solo un superadmin puede asignar ese rol"
-            }), 403
+            return error_json("Solo un superadmin puede asignar ese rol", 403)
 
         # Si el usuario destino ya es superadmin,
         # solo otro superadmin puede modificarlo
@@ -1477,10 +1250,7 @@ def guardar_usuario():
             and user.rol == "superadmin"
             and admin_actual.rol != "superadmin"
         ):
-            return jsonify({
-                "status": "error",
-                "msg": "No puedes modificar un superadmin"
-            }), 403
+            return error_json("No puedes modificar un superadmin", 403)
 
         if user:
             user.rol = rol
@@ -1496,43 +1266,14 @@ def guardar_usuario():
         db.commit()
         log_auditoria(admin, accion, username, detalle)
 
-        notificacion = Notificacion(
-            mensaje=f"{admin} modifico a {username}",
-            usuario=admin,
-            leido=0,
-            fecha=datetime.now(),
-        )
-        db.add(notificacion)
-        db.commit()
+        mensaje = f"{admin} modificó a {username}"
 
-        socketio.emit(
-            "nueva_notificacion",
-            {
-                "mensaje": f"{admin} modifico a {username}",
-                "fecha": serialize_datetime(datetime.now())
-            }
-        )
-        socketio.emit(
-            "actualizar_dashboard",
-            {
-                "tipo": "usuarios"
-            }
-        )
-        socketio.emit(
-            "activity_feed",
-            {
-                "mensaje":
-                    f"{admin} modificó a {username}",
+        registrar_notificacion(db, mensaje, admin)
+        emitir_actividad(mensaje, "usuarios")
 
-                "hora":
-                    datetime.now().strftime("%H:%M")
-            }
-        )
         return jsonify({"status": "ok"})
     except Exception as exc:
-        db.rollback()
-        print("ERROR API PUNTOS:", str(exc))
-        return jsonify({"status": "error", "msg": str(exc)}), 500
+        return handle_exception("ERROR API PUNTOS", exc, db)
 
 
 @app.route("/api/usuario/<username>")
@@ -1542,11 +1283,12 @@ def api_usuario(username):
         user = db.query(Usuario).filter_by(username=username).first()
         if not user:
             return jsonify({"rol": "usuario", "permisos": []})
-        permisos = [valor for valor in (user.permisos or "").split(",") if valor]
+        permisos = lista_permisos(user.permisos)
         return jsonify({"rol": user.rol or "usuario", "permisos": permisos})
     except Exception as exc:
         print("API USUARIO ERROR:", exc)
         return jsonify({"error": True}), 500
+
 
 
 @app.route("/reportes", methods=["GET", "POST"])
@@ -1585,10 +1327,7 @@ def eliminar_usuario(username):
 
         # No tocar admin_root
         if username == "admin_root":
-            return jsonify({
-                "status": "error",
-                "msg": "No se puede eliminar admin_root"
-            }), 403
+            return error_json("No se puede eliminar admin_root", 403)
 
         admin = session.get("usuario")
 
@@ -1601,20 +1340,14 @@ def eliminar_usuario(username):
             .first()
 
         if not user:
-            return jsonify({
-                "status": "error",
-                "msg": "Usuario no encontrado"
-            }), 404
+            return error_json("Usuario no encontrado", 404)
 
         # Solo superadmin puede modificar otro superadmin
         if (
             user.rol == "superadmin"
             and admin_actual.rol != "superadmin"
         ):
-            return jsonify({
-                "status": "error",
-                "msg": "No puedes eliminar un superadmin"
-            }), 403
+            return error_json("No puedes eliminar un superadmin", 403)
 
         # ==========================
         # QUITAR ACCESO
@@ -1625,41 +1358,13 @@ def eliminar_usuario(username):
 
         db.commit()
 
-        socketio.emit(
-            "nueva_notificacion",
-            {
-                "mensaje": f"{admin} quitó acceso a {username}",
-                "fecha": serialize_datetime(datetime.now())
-            }
-        )
-
-        socketio.emit(
-            "actualizar_dashboard",
-            {
-                "tipo": "usuarios"
-            }
-        )
-
-        socketio.emit(
-            "activity_feed",
-            {
-                "mensaje": f"{admin} quitó acceso a {username}",
-                "hora": datetime.now().strftime("%H:%M")
-            }
-        )
+        emitir_actividad(f"{admin} quitó acceso a {username}", "usuarios")
 
         return jsonify({"status": "ok"})
 
     except Exception as exc:
 
-        db.rollback()
-
-        print("ERROR API PUNTOS:", str(exc))
-
-        return jsonify({
-            "status": "error",
-            "msg": str(exc)
-        }), 500
+        return handle_exception("ERROR API PUNTOS", exc, db)
 
 
 @app.route("/api/notificaciones")
@@ -1700,9 +1405,7 @@ def leer_notificaciones():
         db.commit()
         return jsonify({"status": "ok"})
     except Exception as exc:
-        db.rollback()
-        print("ERROR API PUNTOS:", str(exc))
-        return jsonify({"status": "error", "msg": str(exc)}), 500
+        return handle_exception("ERROR API PUNTOS", exc, db)
 
 
 @app.route("/api/notificaciones/<int:notif_id>/leer", methods=["POST"])
@@ -1716,9 +1419,7 @@ def leer_notificacion(notif_id):
             db.commit()
         return jsonify({"status": "ok"})
     except Exception as exc:
-        db.rollback()
-        print("ERROR API PUNTOS:", str(exc))
-        return jsonify({"status": "error", "msg": str(exc)}), 500
+        return handle_exception("ERROR API PUNTOS", exc, db)
 
 
 @app.route("/api/notificaciones/clear", methods=["POST"])
@@ -1730,9 +1431,7 @@ def limpiar_notificaciones():
         db.commit()
         return jsonify({"status": "ok"})
     except Exception as exc:
-        db.rollback()
-        print("ERROR API PUNTOS:", str(exc))
-        return jsonify({"status": "error", "msg": str(exc)}), 500
+        return handle_exception("ERROR API PUNTOS", exc, db)
 
 
 @app.route("/api/usuarios_activos")
@@ -1777,64 +1476,23 @@ def buscar_paciente():
     if not valor.isdigit():
         return jsonify([])
 
-    conn = None
-    cur = None
-
     try:
 
-        conn = oracle_pool.acquire()
-        cur = conn.cursor()
+        params = {"valor": int(valor)}
 
-        # =====================================
-        # 1. Buscar por IDCLIENTE
-        # =====================================
-
-        cur.execute("""
-            SELECT
-                IDCLIENTE,
-                NOMBRE,
-                APATERNO,
-                AMATERNO
-            FROM SISTSIO.CLIENTES
-            WHERE IDCLIENTE = :valor
-        """, {
-            "valor": int(valor)
-        })
-
-        row = cur.fetchone()
-
-        # =====================================
-        # 2. Si no existe, buscar por IDCITA
-        # =====================================
+        # 1. Buscar por IDCLIENTE y, si no existe, por IDCITA
+        row = oracle_client.fetch_one(
+            oracle_pool,
+            SQL_PACIENTE_POR_IDCLIENTE,
+            params
+        )
 
         if not row:
-
-            cur.execute("""
-                SELECT IDCLIENTE
-                FROM SISTSIO.RIOREWARDS_DETALLE
-                WHERE IDCITA = :valor
-            """, {
-                "valor": int(valor)
-            })
-
-            prueba = cur.fetchone()
-
-            cur.execute("""
-                SELECT
-                    c.IDCLIENTE,
-                    c.NOMBRE,
-                    c.APATERNO,
-                    c.AMATERNO
-                FROM SISTSIO.CLIENTES c,
-                    SISTSIO.RIOREWARDS_DETALLE r
-                WHERE r.IDCLIENTE = c.IDCLIENTE
-                AND r.IDCITA = :valor
-                AND ROWNUM = 1
-            """, {
-                "valor": int(valor)
-            })
-
-            row = cur.fetchone()
+            row = oracle_client.fetch_one(
+                oracle_pool,
+                SQL_PACIENTE_POR_IDCITA,
+                params
+            )
 
         if not row:
             return jsonify([])
@@ -1871,16 +1529,16 @@ def modificar_puntos():
         try:
             cantidad = int(data.get("cantidad"))
         except Exception:
-            return jsonify({"status": "error", "msg": "Cantidad invalida"}), 400
+            return error_json("Cantidad invalida")
 
         if "usuario" not in session:
-            return jsonify({"status": "error", "msg": "Sesion expirada"}), 401
+            return error_json("Sesion expirada", 401)
         if not idcliente or not tipo:
-            return jsonify({"status": "error", "msg": "Datos incompletos"}), 400
+            return error_json("Datos incompletos")
         if cantidad <= 0:
-            return jsonify({"status": "error", "msg": "Cantidad invalida"}), 400
+            return error_json("Cantidad invalida")
         if tipo not in {"suma", "resta"}:
-            return jsonify({"status": "error", "msg": "Tipo invalido"}), 400
+            return error_json("Tipo invalido")
         categoria = data.get("categoria", "ajuste")
 
         # 🔒 solo admin/superadmin pueden quitar reseñas
@@ -1897,10 +1555,10 @@ def modificar_puntos():
             and categoria == "reseña"
             and rol_usuario not in ["admin", "superadmin"]
         ):
-            return jsonify({
-                "status": "error",
-                "msg": "No tienes permisos para retirar puntos de reseña"
-            }), 403
+            return error_json(
+                "No tienes permisos para retirar puntos de reseña",
+                403
+            )
 
 
         # 💰 Validación saldo
@@ -1915,12 +1573,9 @@ def modificar_puntos():
 
         if tipo == "suma" and categoria == "reseña":
 
-            if paciente_tiene_resena_oracle(idcliente):
+            if tiene_resena_oracle(idcliente):
 
-                return jsonify({
-                    "status": "error",
-                    "msg": "Este paciente ya tiene una reseña aplicada"
-                }), 400
+                return error_json("Este paciente ya tiene una reseña aplicada")
         # 💾 Guardar
         nuevo = MovimientoPuntos(
             paciente_id=str(idcliente),
@@ -1940,18 +1595,15 @@ def modificar_puntos():
                 insertar_puntos_oracle(
                     idcliente=idcliente,
                     idcita=idcita,
-                    cantidad=cantidad,
-                    categoria=categoria,
-                    usuario=session.get("usuario")
+                    cantidad=cantidad
                 )
             if tipo == "resta" and categoria == "reseña":
 
                 insertar_cancelacion_resena_oracle(
                     idcliente=idcliente,
                     idcita=idcita,
-                    cantidad=cantidad,
-                    usuario=session.get("usuario")
-                )    
+                    cantidad=cantidad
+                )
             db.commit()
             if tipo == "suma" and categoria == "reseña":
                 print(
@@ -1970,32 +1622,11 @@ def modificar_puntos():
                 else f"{session.get('usuario')} retiró {cantidad} puntos"
             )
 
-            notif = Notificacion(
-                mensaje=mensaje,
-                usuario=session.get("usuario"),
-                leido=0,
-                fecha=datetime.now()
-            )
-
-            db.add(notif)
-            db.commit()
+            registrar_notificacion(db, mensaje, session.get("usuario"))
 
             # 🔥 socket tiempo real
-            socketio.emit(
-                "nueva_notificacion",
-                {
-                    "mensaje": mensaje,
-                    "fecha": serialize_datetime(datetime.now())
-                }
-            )
+            emitir_actividad(mensaje, "puntos")
 
-            socketio.emit(
-                "actualizar_dashboard",
-                {
-                    "tipo": "puntos"
-                },
-                
-            )
             socketio.emit(
                 "nuevo_movimiento",
                 {
@@ -2014,52 +1645,19 @@ def modificar_puntos():
             )
 
             socketio.emit(
-                "activity_feed",
-                {
-                    "mensaje":
-                        (
-                            f"{session.get('usuario')} agregó {cantidad} puntos"
-                            if tipo == "suma"
-                            else f"{session.get('usuario')} retiró {cantidad} puntos"
-                        ),
-                    "hora":
-                        datetime.now().strftime("%H:%M")
-                }
-            )
-            nuevo_total = sum(
-                (
-                    mov.cantidad
-                    if mov.tipo == "suma"
-                    else -mov.cantidad
-                )
-                for mov in db.query(
-                    MovimientoPuntos
-                ).all()
-            )
-
-            total_movimientos = db.query(
-                MovimientoPuntos
-            ).count()
-            
-            socketio.emit(
                 "kpi_update",
                 {
-                    "puntos": nuevo_total,
-                    "movimientos": total_movimientos
+                    "puntos": calcular_puntos_netos(db),
+                    "movimientos": db.query(MovimientoPuntos).count()
                 }
             )
 
         except IntegrityError:
             db.rollback()
-            return jsonify({
-                "status": "error",
-                "msg": "Esta cita ya tiene reseña aplicada (bloqueo BD)"
-            }), 400
+            return error_json("Esta cita ya tiene reseña aplicada (bloqueo BD)")
 
         # 🔄 limpiar cache
         CACHE_PUNTOS.pop(str(idcliente), None)
-
-        saldo_nuevo = get_operational_points(db, idcliente)
 
         saldo_nuevo = get_operational_points(db, idcliente)
 
@@ -2069,9 +1667,7 @@ def modificar_puntos():
             "movimiento": serialize_movimiento(nuevo)
         })
     except Exception as exc:
-        db.rollback()
-        print("ERROR API PUNTOS:", str(exc))
-        return jsonify({"status": "error", "msg": str(exc)}), 500
+        return handle_exception("ERROR API PUNTOS", exc, db)
 
 
 @app.route("/api/historial/<idcliente>")
@@ -2101,10 +1697,7 @@ def api_paciente(idcliente):
 
         print("ERROR API PACIENTE:", exc)
 
-        return jsonify({
-            "error": True,
-            "msg": str(exc)
-        }), 500
+        return error_flag_json(exc)
 
 def get_puntos_cache(idcliente):
     return get_oracle_points(idcliente)
@@ -2168,25 +1761,12 @@ def transcripcion():
 @app.route("/api/transcripcion/estado")
 def estado_transcripcion():
 
-    conn = None
-    cursor = None
-
     try:
 
-        conn = oracle_pool.acquire()
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            SELECT
-                CLAVE,
-                MODO,
-                IDCITA,
-                FECHA_MOD,
-                USUARIO_MOD
-            FROM SISTSIO.V_SEMAFORO_UNIFICADO_ESTADO
-        """)
-
-        row = cursor.fetchone()
+        row = oracle_client.fetch_one(
+            oracle_pool,
+            SQL_ESTADO_TRANSCRIPCION
+        )
 
         if not row:
 
@@ -2204,22 +1784,11 @@ def estado_transcripcion():
             "usuario_mod": row[4]
         })
 
-    except Exception as e:
+    except Exception as exc:
 
-        print("ERROR ESTADO:", e)
+        print("ERROR ESTADO:", exc)
 
-        return jsonify({
-            "status": "error",
-            "msg": str(e)
-        }), 500
-
-    finally:
-
-        if cursor:
-            cursor.close()
-
-        if conn:
-            conn.close()
+        return error_json(exc, 500)
 
 @socketio.on("connect")
 def socket_connect():

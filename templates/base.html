@@ -281,12 +281,13 @@
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <div id="toastContainer"></div>
 
+    <!-- utils.js define los helpers compartidos (showToast, formatearFecha) -->
+    <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
     <script src="{{ url_for('static', filename='js/api.js') }}"></script>
     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
     <script src="{{ url_for('static', filename='js/notificaciones.js') }}"></script>
     <script src="{{ url_for('static', filename='js/socket.js') }}"></script>
     <script src="{{ url_for('static', filename='js/accordion.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
     <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
     <script src="{{ url_for('static', filename='js/command.js') }}"></script>
   </body>
