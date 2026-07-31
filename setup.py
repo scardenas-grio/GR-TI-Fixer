@@ -1,4 +1,5 @@
 import os
+import secrets
 import mysql.connector
 from getpass import getpass
 import bcrypt
@@ -74,17 +75,17 @@ conn.commit()
 conn.close()
 print("Administrador creado correctamente ✅")
 
-# --- Crear archivo config.py ---
-config_content = f"""
-DB_HOST = 'localhost'
-DB_USER = '{db_user}'
-DB_PASSWORD = '{db_password}'
-DB_NAME = 'sistema_puntos_v5'
-SECRET_KEY = 'clave_super_secreta'
+# --- Crear archivo .env ---
+env_content = f"""MYSQL_HOST=localhost
+MYSQL_USER={db_user}
+MYSQL_PASSWORD={db_password}
+MYSQL_DB=sistema_puntos_v5
+SECRET_KEY={secrets.token_hex(32)}
 """
-with open("config.py","w") as f:
-    f.write(config_content)
-print("Archivo config.py generado ✅")
+with open(".env", "w") as f:
+    f.write(env_content)
+os.chmod(".env", 0o600)
+print("Archivo .env generado ✅")
 
 # --- Ejecutar servidor Flask ---
 print("\nIniciando servidor Flask en http://127.0.0.1:5000 ...")

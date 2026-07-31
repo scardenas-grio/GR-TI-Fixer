@@ -17,3 +17,7 @@ logs/
 
 # Archivos temporales
 uploads/
+# Bases de datos
+*.sqlite
+*.sqlite3
+database/*.db
