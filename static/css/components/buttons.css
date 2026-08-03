@@ -205,7 +205,9 @@ body.dark .btn-outline:hover {
                 USUARIOS
 ====================================================*/
 
-.btn-editar-usuarios {
+.btn-editar-usuarios,
+.usuarios-card .btn,
+.usuarios-card .btn-delete {
   min-width: 120px;
 }
 

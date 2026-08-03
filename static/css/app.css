@@ -4,7 +4,6 @@
 
 @import url("./core/variables.css");
 @import url("./core/reset.css");
-@import url("./core/typography.css");
 
 /* =========================
    LAYOUT
@@ -41,7 +40,6 @@
 @import url("./utilities/glass.css");
 @import url("./utilities/scrollbar.css");
 @import url("./utilities/shadows.css");
-@import url("./utilities/spacing.css");
 
 /* =========================
    PAGES

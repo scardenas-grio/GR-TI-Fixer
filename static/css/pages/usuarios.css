@@ -27,7 +27,7 @@
 
   display: grid;
 
-  grid-template-columns: 1.25fr .75fr;
+  grid-template-columns: 1fr 1fr;
 
   gap: 28px;
 
@@ -261,6 +261,8 @@
 }
 
 #tablaLDAP th:last-child,
-#tablaLDAP td:last-child {
+#tablaLDAP td:last-child,
+#tablaActivos th:last-child,
+#tablaActivos td:last-child {
   width: 170px;
 }

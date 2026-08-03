@@ -105,46 +105,28 @@ socket.on("activity_feed", (data) => {
 
   if (!feed) return;
 
-  const vacio =
-  lista.querySelector(
-    ".notif-empty"
-  );
+  const vacio = feed.querySelector(".notif-empty");
 
   if (vacio) {
     vacio.remove();
   }
 
-const li =
-  document.createElement("li");
-
+  const li = document.createElement("li");
   li.classList.add("feed-item");
-
-li.innerHTML = `
-
-  <div class="feed-header">
-
-    <div class="feed-avatar">
-      <i class="fa-solid fa-bolt"></i>
-    </div>
-
-    <div>
-
-      <div class="feed-msg">
-        ${data.mensaje}
+  li.innerHTML = `
+    <div class="feed-header">
+      <div class="feed-avatar">
+        <i class="fa-solid fa-bolt"></i>
       </div>
-
-      <div class="feed-time">
-        ${data.hora}
+      <div>
+        <div class="feed-msg">${escapeHTML(data.mensaje)}</div>
+        <div class="feed-time">${escapeHTML(data.hora)}</div>
       </div>
-
     </div>
-
-  </div>
-`;
+  `;
 
   feed.prepend(li);
 
-  // máximo 20 items
   while (feed.children.length > 20) {
     feed.removeChild(feed.lastChild);
   }

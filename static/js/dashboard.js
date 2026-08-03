@@ -12,6 +12,9 @@ let ultimaActividad = [];
 
 let ultimaFechaActividad = null;
 
+let actividadPaginaActual = 1;
+const ACTIVIDAD_POR_PAGINA = 3;
+
 /*=========================================
 =                UI
 =========================================*/
@@ -54,6 +57,7 @@ function initDashboard() {
   ui.totalAdmins = document.getElementById("totalAdmins");
 
   ui.actividadFeed = document.getElementById("actividadFeed");
+  ui.actividadPagination = document.getElementById("actividadPagination");
 
   ui.estadoSistema = document.getElementById("estadoSistema");
 
@@ -73,6 +77,14 @@ function initDashboard() {
 
   crearGraficaDashboard(valores);
 
+  const actividadScript = document.getElementById("actividad-data");
+  const actividadInicial = actividadScript
+    ? JSON.parse(actividadScript.textContent)
+    : [];
+
+  renderFeedActividad(actividadInicial, actividadPaginaActual);
+
+  actualizarDashboard();
   setInterval(actualizarDashboard, 10000);
 }
 
@@ -327,22 +339,61 @@ function crearTarjetaActividad(a, esNuevo) {
     `;
 }
 
-function renderFeedActividad(actividad) {
+function renderFeedActividad(actividad, pagina = 1) {
   const feed = ui.actividadFeed;
 
   if (!feed) return;
 
+  const totalItems = actividad.length;
+  const totalPaginas = Math.max(1, Math.ceil(totalItems / ACTIVIDAD_POR_PAGINA));
+  const paginaClamped = Math.min(Math.max(1, pagina), totalPaginas);
+
+  const inicio = (paginaClamped - 1) * ACTIVIDAD_POR_PAGINA;
+  const fin = inicio + ACTIVIDAD_POR_PAGINA;
+  const actividadesPagina = actividad.slice(inicio, fin);
+
   feed.innerHTML = "";
 
-  actividad.forEach((a) => {
+  actividadesPagina.forEach((a) => {
     const esNuevo = !ultimaActividad.find((x) => x.fecha === a.fecha);
 
     feed.innerHTML += crearTarjetaActividad(a, esNuevo);
   });
 
   ultimaActividad = actividad;
-
   ultimaFechaActividad = actividad.length > 0 ? actividad[0].fecha : null;
+  actividadPaginaActual = paginaClamped;
+
+  renderActividadPaginacion(totalItems, paginaClamped);
+}
+
+function renderActividadPaginacion(totalItems, paginaActual) {
+  const container = ui.actividadPagination;
+
+  if (!container) return;
+
+  const totalPaginas = Math.max(1, Math.ceil(totalItems / ACTIVIDAD_POR_PAGINA));
+
+  if (totalPaginas <= 1) {
+    container.innerHTML = "";
+    return;
+  }
+
+  let html = "";
+
+  for (let i = 1; i <= totalPaginas; i += 1) {
+    html += `<button class="${i === paginaActual ? "activo" : ""}" data-pagina="${i}">${i}</button>`;
+  }
+
+  container.innerHTML = html;
+
+  container.querySelectorAll("button[data-pagina]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const pagina = Number(button.dataset.pagina);
+      actividadPaginaActual = pagina;
+      renderFeedActividad(ultimaActividad, pagina);
+    });
+  });
 }
 
 function actualizarEstadoSistema(conectado = true) {
@@ -417,7 +468,8 @@ async function actualizarDashboard() {
     const nuevaFecha = data.actividad?.length ? data.actividad[0].fecha : null;
 
     if (nuevaFecha !== ultimaFechaActividad) {
-      renderFeedActividad(data.actividad);
+      actividadPaginaActual = 1;
+      renderFeedActividad(data.actividad, actividadPaginaActual);
     }
   } catch (e) {
     actualizarEstadoSistema(false);

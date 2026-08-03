@@ -17,3 +17,6 @@ logs/
 
 # Archivos temporales
 uploads/
+
+# Archivo para ejecutar en Linux
+*.tar.gz

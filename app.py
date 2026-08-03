@@ -9,6 +9,7 @@ import sys
 
 from collections import Counter
 from datetime import date, datetime, timedelta
+from functools import wraps
 from math import ceil
 from time import time
 from urllib.parse import quote_plus
@@ -41,14 +42,30 @@ usuarios_online = {}
 CACHE_PUNTOS = {}
 CACHE_TTL = 60
 
+
+def requiere_sesion(funcion):
+    from functools import wraps
+
+    @wraps(funcion)
+    def wrapped(*args, **kwargs):
+        if "usuario" not in session:
+            return jsonify({"status": "error", "msg": "No autenticado"}), 401
+        return funcion(*args, **kwargs)
+
+    wrapped.__name__ = funcion.__name__
+    return wrapped
+
 # ============================================================
 # CONFIGURACIÓN ORACLE
 # ============================================================
 
-os.environ["LD_LIBRARY_PATH"] = "/opt/oracle/instantclient"
-oracledb.init_oracle_client(
-    lib_dir="/opt/oracle/instantclient"
-)
+ORACLE_CLIENT_DIR = os.getenv("ORACLE_CLIENT_DIR", "/opt/oracle/instantclient")
+os.environ["LD_LIBRARY_PATH"] = ORACLE_CLIENT_DIR
+
+if os.path.exists(ORACLE_CLIENT_DIR):
+    oracledb.init_oracle_client(lib_dir=ORACLE_CLIENT_DIR)
+else:
+    print(f"Oracle client library not found at {ORACLE_CLIENT_DIR}; Oracle features will be disabled.")
 
 ORACLE_USER = os.getenv("ORACLE_USER")
 ORACLE_PASSWORD = os.getenv("ORACLE_PASSWORD")
@@ -127,8 +144,21 @@ Base = declarative_base()
 # ============================================================
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = os.getenv("SECRET_KEY") or "clave_super_secreta"
-socketio = SocketIO(app, cors_allowed_origins="*",async_mode="gevent") # agregar dominio ahorita slo tiene un simbolo
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY no está definida. Configúrala en el archivo .env antes de iniciar la aplicación.")
+app.config["SECRET_KEY"] = SECRET_KEY
+allowed_origins = [origin.strip() for origin in os.getenv("ALLOWED_ORIGINS", "").split(",") if origin.strip()]
+
+socketio_async_mode = "threading"
+try:
+    import gevent  # noqa: F401
+except Exception:
+    socketio_async_mode = "threading"
+else:
+    socketio_async_mode = "gevent"
+
+socketio = SocketIO(app, cors_allowed_origins=allowed_origins or ["*"], async_mode=socketio_async_mode)
 
 
 def get_oracle_points(idcliente):
@@ -1154,13 +1184,18 @@ def log_auditoria(admin, accion, usuario, detalle):
 
 def requiere_permiso(permiso):
     def decorator(funcion):
+        @wraps(funcion)
         def wrapped(*args, **kwargs):
             db = get_db()
             if "usuario" not in session:
+                if request.path.startswith("/api/"):
+                    return jsonify({"status": "error", "msg": "No autenticado"}), 401
                 return redirect("/")
 
             usuario = db.query(Usuario).filter_by(username=session["usuario"]).first()
             if not usuario:
+                if request.path.startswith("/api/"):
+                    return jsonify({"status": "error", "msg": "No autenticado"}), 401
                 return redirect("/")
 
             if usuario.rol == "superadmin":
@@ -1172,6 +1207,8 @@ def requiere_permiso(permiso):
             permisos_finales = {valor.strip() for valor in permisos_rol + permisos_usuario if valor}
 
             if permiso not in permisos_finales:
+                if request.path.startswith("/api/"):
+                    return jsonify({"status": "error", "msg": "No tienes permiso"}), 403
                 return "No tienes permiso", 403
             return funcion(*args, **kwargs)
 
@@ -1312,25 +1349,36 @@ def dashboard():
         total_db = db.query(Usuario).count()
         total_admins = db.query(Usuario).filter(Usuario.rol.in_(["admin", "superadmin"])).count()
         actividad = db.query(Auditoria).order_by(Auditoria.id.desc()).limit(10).all()
+        actividad_json = [
+            {
+                "admin": registro.usuario_admin,
+                "accion": registro.accion,
+                "usuario": registro.usuario_afectado,
+                "detalle": registro.detalle,
+                "fecha": serialize_datetime(registro.fecha),
+            }
+            for registro in actividad
+        ]
         print("Hora Python:", datetime.now())
     except Exception as exc:
         print("DASHBOARD ERROR:", exc)
         total_ldap = 0
         total_db = 0
         total_admins = 0
-        actividad = []
+        actividad_json = []
 
     return render_template(
         "dashboard.html",
         total_ldap=total_ldap,
         total_db=total_db,
         total_admins=total_admins,
-        actividad=actividad,
+        actividad_json=actividad_json,
         now=datetime.now(),
         notificaciones=get_unread_notifications_count(db, session.get("usuario")),
     )
 
 @app.route("/api/dashboard")
+@requiere_sesion
 def api_dashboard():
     db = get_db()
     try:
@@ -1360,6 +1408,7 @@ def api_dashboard():
 
 
 @app.route("/api/reportes")
+@requiere_permiso("reportes")
 def api_reportes():
     db = get_db()
 
@@ -1429,6 +1478,7 @@ def usuarios():
 
 
 @app.route("/guardar_usuario", methods=["POST"])
+@requiere_permiso("usuarios")
 def guardar_usuario():
     db = get_db()
     try:
@@ -1536,6 +1586,7 @@ def guardar_usuario():
 
 
 @app.route("/api/usuario/<username>")
+@requiere_sesion
 def api_usuario(username):
     db = get_db()
     try:
@@ -1550,6 +1601,7 @@ def api_usuario(username):
 
 
 @app.route("/reportes", methods=["GET", "POST"])
+@requiere_permiso("reportes")
 def reportes():
     db = get_db()
     if "usuario" not in session:
@@ -1560,6 +1612,7 @@ def reportes():
 
 
 @app.route("/exportar_reportes", methods=["GET", "POST"])
+@requiere_permiso("reportes")
 def exportar_reportes():
     db = get_db()
     filtros = get_report_filters(request.values)
@@ -1577,6 +1630,7 @@ def logout():
 
 
 @app.route("/eliminar_usuario/<username>", methods=["POST"])
+@requiere_permiso("usuarios")
 def eliminar_usuario(username):
 
     db = get_db()
@@ -1663,6 +1717,7 @@ def eliminar_usuario(username):
 
 
 @app.route("/api/notificaciones")
+@requiere_sesion
 def api_notificaciones():
     db = get_db()
     try:
@@ -1687,6 +1742,7 @@ def api_notificaciones():
 
 
 @app.route("/api/notificaciones/leer", methods=["POST"])
+@requiere_sesion
 def leer_notificaciones():
     db = get_db()
     usuario = session.get("usuario")
@@ -1706,6 +1762,7 @@ def leer_notificaciones():
 
 
 @app.route("/api/notificaciones/<int:notif_id>/leer", methods=["POST"])
+@requiere_sesion
 def leer_notificacion(notif_id):
     db = get_db()
     usuario = session.get("usuario")
@@ -1722,6 +1779,7 @@ def leer_notificacion(notif_id):
 
 
 @app.route("/api/notificaciones/clear", methods=["POST"])
+@requiere_sesion
 def limpiar_notificaciones():
     db = get_db()
     usuario = session.get("usuario")
@@ -1736,6 +1794,7 @@ def limpiar_notificaciones():
 
 
 @app.route("/api/usuarios_activos")
+@requiere_permiso("usuarios")
 def api_usuarios_activos():
     db = get_db()
     try:
@@ -1754,6 +1813,7 @@ def api_usuarios_activos():
 
 
 @app.route("/api/buscar_ldap")
+@requiere_sesion
 def api_buscar_ldap():
     q = (request.args.get("q") or "").lower()
     usuarios_ldap = obtener_usuarios_ldap_cache()
@@ -1770,6 +1830,7 @@ def puntos():
 
 
 @app.route("/api/buscar_paciente")
+@requiere_sesion
 def buscar_paciente():
     
     valor = request.args.get("q", "").strip()
@@ -1852,6 +1913,12 @@ def buscar_paciente():
         traceback.print_exc()
 
         return jsonify([])
+
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
 
 @app.route("/api/puntos", methods=["POST"])
 def modificar_puntos():
@@ -2061,8 +2128,6 @@ def modificar_puntos():
 
         saldo_nuevo = get_operational_points(db, idcliente)
 
-        saldo_nuevo = get_operational_points(db, idcliente)
-
         return jsonify({
             "status": "ok",
             "saldo": saldo_nuevo,
@@ -2075,12 +2140,14 @@ def modificar_puntos():
 
 
 @app.route("/api/historial/<idcliente>")
+@requiere_sesion
 def historial(idcliente):
     return jsonify(
         obtener_historial_oracle(idcliente)
     )
 
 @app.route("/api/paciente/<idcliente>")
+@requiere_sesion
 def api_paciente(idcliente):
 
     db = get_db()
@@ -2111,11 +2178,13 @@ def get_puntos_cache(idcliente):
 
 
 @app.route("/api/tiene_resena/<idcliente>")
+@requiere_sesion
 def api_tiene_resena(idcliente):
     return jsonify({"tiene": tiene_resena(idcliente)})
 
 
 @app.route("/api/grafica/puntos")
+@requiere_sesion
 def api_grafica_puntos():
     db = get_db()
     filtros = get_report_filters(request.args)
@@ -2130,6 +2199,7 @@ def api_grafica_puntos():
 
 
 @app.route("/api/dashboard/kpi")
+@requiere_sesion
 def api_dashboard_kpi():
     db = get_db()
     filtros = get_report_filters(request.args)
@@ -2145,6 +2215,7 @@ def api_dashboard_kpi():
 
 
 @app.route("/api/reportes/detalle")
+@requiere_permiso("reportes")
 def detalle_reporte():
     db = get_db()
     tipo = (request.args.get("tipo") or "").lower()
@@ -2166,6 +2237,7 @@ def transcripcion():
     return render_template("transcripcion.html")
 
 @app.route("/api/transcripcion/estado")
+@requiere_sesion
 def estado_transcripcion():
 
     conn = None
@@ -2220,6 +2292,18 @@ def estado_transcripcion():
 
         if conn:
             conn.close()
+
+
+@app.route("/vacaciones")
+def vacaciones():
+    return render_template(
+        "vacaciones.html",
+        notificaciones=get_unread_notifications_count(
+            get_db(),
+            session.get("usuario")
+        )
+    )
+            
 
 @socketio.on("connect")
 def socket_connect():
@@ -2286,3 +2370,5 @@ if __name__ == "__main__":
     debug=False,
     use_reloader=False
 )
+
+

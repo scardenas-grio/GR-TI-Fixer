@@ -1,21 +1,31 @@
+function escapeHTML(str) {
+  const div = document.createElement("div");
+  div.textContent = str ?? "";
+  return div.innerHTML;
+}
+
 async function cargarNotificaciones() {
   try {
-    const res = await fetch("/api/notificaciones");
-    const data = await res.json();
+    const data = await apiFetch("/api/notificaciones");
 
-    // 🔴 actualizar badge
-    document.getElementById("badgeNotificaciones").innerText = data.total;
+    if (!data) return;
 
-    // 📩 lista
+    const badge = document.getElementById("badgeNotificaciones");
+    if (badge) badge.innerText = data.total || 0;
+
     const lista = document.getElementById("listaNotificaciones");
+    if (!lista) return;
+
     lista.innerHTML = "";
 
-    data.data.forEach((n) => {
+    (data.data || []).forEach((n) => {
       const li = document.createElement("li");
       li.innerHTML = `
-          <strong>${n.mensaje}</strong><br>
-          <small>${n.fecha}</small>
-        `;
+        <div class="notif-item">
+          <div class="notif-msg">${escapeHTML(n.mensaje)}</div>
+          <div class="notif-date">${escapeHTML(n.fecha)}</div>
+        </div>
+      `;
       lista.appendChild(li);
     });
   } catch (err) {
@@ -37,8 +47,6 @@ async function limpiarNotificaciones() {
     badge.style.display = "none";
   }
 }
-
-window.addEventListener("load", cargarNotificaciones);
 
 function formatearFecha(fecha) {
   const now = new Date();
@@ -135,6 +143,25 @@ async function abrirNotificaciones() {
   }
 }
 
+function cerrarNotificaciones() {
+  const panel = document.getElementById("panelNotificaciones");
+  if (!panel || !panel.classList.contains("activo")) return;
+  panel.classList.remove("activo");
+}
+
+window.addEventListener("click", (event) => {
+  const notificacion = document.querySelector(".notificacion");
+  const panel = document.getElementById("panelNotificaciones");
+
+  if (!notificacion || !panel || !panel.classList.contains("activo")) {
+    return;
+  }
+
+  if (!notificacion.contains(event.target)) {
+    cerrarNotificaciones();
+  }
+});
+
 async function limpiarTodas() {
   await fetch("/api/notificaciones/clear", { method: "POST" });
 
@@ -188,37 +215,7 @@ async function actualizarBadgeNotificaciones() {
   badge.style.display = data.total > 0 ? "flex" : "none";
 }
 
-async function cargarNotificaciones() {
-  const data = await apiFetch("/api/notificaciones");
-
-  if (!data) return;
-
-  const lista = document.getElementById("listaNotificaciones");
-
-  if (!lista) return;
-
-  lista.innerHTML = "";
-
-  (data.data || []).forEach((n) => {
-    lista.innerHTML += `
-
-      <div class="notif-item">
-
-        <div class="notif-msg">
-          ${n.mensaje}
-        </div>
-
-        <div class="notif-date">
-          ${n.fecha}
-        </div>
-
-      </div>
-    `;
-  });
-}
-
 window.addEventListener("load", () => {
   actualizarBadgeNotificaciones();
-
   cargarNotificaciones();
 });

@@ -22,6 +22,10 @@
   --color-warning: #f59e0b;
   --color-danger: #ef4444;
   --color-info: #0ea5e9;
+  --success: var(--color-success);
+  --danger: var(--color-danger);
+  --warning: var(--color-warning);
+  --info: var(--color-info);
 
   /*====================================
     BACKGROUND
@@ -77,15 +81,15 @@
   ====================================*/
 
   --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-7: 32px;
-  --space-8: 40px;
-  --space-9: 48px;
-  --space-10: 64px;
+  --space-2: 7px;
+  --space-3: 11px;
+  --space-4: 14px;
+  --space-5: 18px;
+  --space-6: 22px;
+  --space-7: 29px;
+  --space-8: 36px;
+  --space-9: 43px;
+  --space-10: 58px;
 
   /*====================================
     TRANSITIONS
@@ -99,9 +103,9 @@
     LAYOUT
   ====================================*/
 
-  --sidebar-width: 280px;
-  --topbar-height: 70px;
-  --content-width: 1600px;
+  --sidebar-width: 252px;
+  --topbar-height: 63px;
+  --content-width: 1440px;
   --z-dropdown:100;
   --z-modal:500;
   --z-toast:700;
@@ -110,14 +114,14 @@
     COMPONENTS
   ====================================*/
 
-  --button-height: 48px;
-  --button-radius: 16px;
+  --button-height: 43px;
+  --button-radius: 14px;
 
-  --input-height: 52px;
-  --input-radius: 16px;
+  --input-height: 47px;
+  --input-radius: 14px;
 
-  --card-radius: 24px;
-  --card-padding: 24px;
+  --card-radius: 22px;
+  --card-padding: 22px;
 }
 
 body.dark {

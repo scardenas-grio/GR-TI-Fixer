@@ -121,6 +121,7 @@
               <div
                 class="dropdown-selected"
                 onclick="toggleDropdown('Agregar')"
+                tabindex="0"
               >
                 Selecciona tipo
               </div>
@@ -143,7 +144,7 @@
           <p class="text-muted">Descuenta puntos del saldo</p>
           <div class="input-pro">
             <div class="dropdown-pro" id="dropdownQuitar">
-              <div class="dropdown-selected" onclick="toggleDropdown('Quitar')">
+              <div class="dropdown-selected" onclick="toggleDropdown('Quitar')" tabindex="0">
                 Selecciona tipo
               </div>
               <div class="dropdown-options">
@@ -210,6 +211,7 @@
           </div>
         </li>
       </ul>
+      <div id="historialPaginacion" class="paginacion"></div>
     </article>
   </section>
 </div>

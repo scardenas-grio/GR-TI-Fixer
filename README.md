@@ -170,7 +170,37 @@ Próximamente...
 
 ---
 
-## 🚀 Evolución del proyecto
+## � Despliegue en Ubuntu con Docker Compose
+
+1. Copia el archivo de ejemplo de variables de entorno:
+
+```bash
+cp .env.example .env
+```
+
+2. Ajusta los valores de conexión a base de datos y Oracle en el archivo `.env`.
+
+3. Construye y levanta el contenedor:
+
+```bash
+docker compose up -d --build
+```
+
+4. Revisa logs:
+
+```bash
+docker compose logs -f ti_fixer
+```
+
+5. La app quedará disponible en:
+
+```text
+http://<IP_DEL_SERVER>:5000
+```
+
+---
+
+## �🚀 Evolución del proyecto
 
 ### Versión 1.0
 

@@ -74,17 +74,16 @@ conn.commit()
 conn.close()
 print("Administrador creado correctamente ✅")
 
-# --- Crear archivo config.py ---
-config_content = f"""
-DB_HOST = 'localhost'
-DB_USER = '{db_user}'
-DB_PASSWORD = '{db_password}'
-DB_NAME = 'sistema_puntos_v5'
-SECRET_KEY = 'clave_super_secreta'
+# --- Crear archivo .env.example ---
+config_content = f"""SECRET_KEY=clave_super_secreta
+DB_HOST=localhost
+DB_USER={db_user}
+DB_PASSWORD={db_password}
+DB_NAME=sistema_puntos_v5
 """
-with open("config.py","w") as f:
+with open(".env.example","w") as f:
     f.write(config_content)
-print("Archivo config.py generado ✅")
+print("Archivo .env.example generado ✅")
 
 # --- Ejecutar servidor Flask ---
 print("\nIniciando servidor Flask en http://127.0.0.1:5000 ...")

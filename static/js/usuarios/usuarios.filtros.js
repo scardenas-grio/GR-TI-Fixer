@@ -17,11 +17,11 @@ function filtrarActivos() {
 }
 
 function filtrarPorRol() {
-  const rol = document.getElementById("filtroRol").value;
+  const rol = document.getElementById("filtroRol").value.toLowerCase();
 
   document.querySelectorAll("#tablaActivos tbody tr").forEach((tr) => {
-    const rolActual = tr.querySelector(".rol-badge")?.textContent.toLowerCase();
-    tr.style.display = !rol || r === rol ? "" : "none";
+    const rolActual = tr.querySelector(".rol-badge")?.textContent.trim().toLowerCase();
+    tr.style.display = !rol || rolActual === rol ? "" : "none";
   });
 }
 

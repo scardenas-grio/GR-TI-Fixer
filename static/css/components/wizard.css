@@ -1,0 +1,119 @@
+
+/* ===============================
+   WIZARD
+================================*/
+
+.wizard-card {
+
+    background: white;
+
+    border-radius: 22px;
+
+    padding: 30px;
+
+    box-shadow: 0 15px 35px rgba(0, 0, 0, .08);
+
+}
+
+.wizard-header {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin-bottom: 30px;
+
+}
+
+.wizard-header small {
+
+    color: #7f8c8d;
+
+}
+
+.wizard-header h2 {
+
+    margin-top: 6px;
+
+    color: #14213d;
+
+}
+
+/*=========================================
+  WIZARD PROGRESS
+=========================================*/
+
+.wizard-progress{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+    margin-top:20px;
+
+}
+
+.wizard-progress span {
+
+    width: 14px;
+
+    height: 14px;
+
+    border-radius: 50%;
+
+    background: #d8dee9;
+
+}
+
+.wizard-progress .active {
+
+    background: #2f80ed;
+
+}
+
+.progress-step {
+
+    width: 18px;
+
+    height: 18px;
+
+    border-radius: 50%;
+
+    background: #d9e2ec;
+
+    transition: .35s ease;
+
+}
+
+.progress-step.active {
+
+    background: var(--color-primary);
+
+    transform: scale(1.1);
+
+}
+
+
+.progress-line {
+
+    width: 55px;
+
+    height: 4px;
+
+    border-radius: 999px;
+
+    background: #d9e2ec;
+
+    transition: .35s ease;
+
+}
+
+.progress-line.active {
+
+    background: var(--color-primary);
+
+}

@@ -16,5 +16,7 @@ SQLAlchemy
 psycopg2-binary
 openpyxl
 Werkzeug
-gevent
+gevent==26.7.0
+zope.interface==8.5
+zope.event==6.2
 gevent-websocket

@@ -1,9 +1,10 @@
 services:
-
   ti_fixer:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ti-fixer:latest
     container_name: ti_fixer
-
     working_dir: /app
 
     ports:
@@ -14,8 +15,11 @@ services:
 
     environment:
       TZ: America/Mexico_City
+      PYTHONUNBUFFERED: "1"
 
     volumes:
-      - .:/app
+      - ./database:/app/database
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
 
-    restart: always
+    restart: unless-stopped

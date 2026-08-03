@@ -42,8 +42,9 @@
 .topbar-right {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 18px;
   margin-left: auto;
+  margin-top: 8px;
 }
 /* toggle button */
 

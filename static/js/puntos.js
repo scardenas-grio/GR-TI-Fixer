@@ -2,6 +2,9 @@ let pacienteActual = null;
 let timerBusqueda = null;
 let chartPuntos = null;
 let historialGlobal = [];
+let historialPaginaActual = 1;
+const HISTORIAL_POR_PAGINA = 3;
+let puntosAplicadosActual = 0;
 
 /* =========================
    DOM
@@ -17,6 +20,7 @@ const ui = {
   buscarPaciente: document.getElementById("buscarPaciente"),
   resultadosBusqueda: document.getElementById("resultadosBusqueda"),
   listaHistorial: document.getElementById("listaHistorial"),
+  historialPaginacion: document.getElementById("historialPaginacion"),
   toastPanel: document.getElementById("toastPanel"),
   grafica: document.getElementById("graficaPuntos"),
 };
@@ -30,7 +34,6 @@ function renderGrafica(historial) {
     return;
   }
 
-  // 🔥 ordenar cronológicamente
   const historialOrdenado = [...historial].sort(
     (a, b) => new Date(a.fecha) - new Date(b.fecha),
   );
@@ -59,8 +62,8 @@ function renderGrafica(historial) {
   const gradient = ctx.createLinearGradient(0, 0, 0, 320);
 
   gradient.addColorStop(0, "rgba(37,99,235,.28)");
-
   gradient.addColorStop(1, "rgba(37,99,235,0)");
+
   chartPuntos = new Chart(canvas, {
     type: "line",
     data: {
@@ -88,10 +91,8 @@ function renderGrafica(historial) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-
       animation: {
         duration: 900,
-
         easing: "easeOutQuart",
       },
       plugins: {
@@ -113,7 +114,6 @@ function renderGrafica(historial) {
           },
         },
       },
-
       scales: {
         x: {
           ticks: {
@@ -125,23 +125,19 @@ function renderGrafica(historial) {
               weight: "600",
             },
           },
-
           grid: {
             color: "rgba(148,163,184,.12)",
             drawBorder: false,
           },
         },
-
         y: {
           ticks: {
             color: textColor,
-
             font: {
               size: 11,
               weight: "600",
             },
           },
-
           grid: {
             color: "rgba(148,163,184,.12)",
             drawBorder: false,
@@ -201,7 +197,7 @@ function showToastPuntos(msg, tipo = "success") {
   };
 }
 
-function renderHistorial(historial) {
+function renderHistorial(historial, pagina = 1) {
   const lista = ui.listaHistorial;
 
   lista.innerHTML = "";
@@ -215,10 +211,19 @@ function renderHistorial(historial) {
             </li>
         `;
 
+    if (ui.historialPaginacion) ui.historialPaginacion.innerHTML = "";
     return;
   }
 
-  historial.forEach((h) => {
+  const totalItems = historial.length;
+  const totalPaginas = Math.max(1, Math.ceil(totalItems / HISTORIAL_POR_PAGINA));
+  const paginaClamped = Math.min(Math.max(1, pagina), totalPaginas);
+  historialPaginaActual = paginaClamped;
+  const inicio = (paginaClamped - 1) * HISTORIAL_POR_PAGINA;
+  const fin = inicio + HISTORIAL_POR_PAGINA;
+  const historialPagina = historial.slice(inicio, fin);
+
+  historialPagina.forEach((h) => {
     const esResena = (h.motivo || "").toLowerCase().includes("rese");
 
     const li = document.createElement("li");
@@ -288,6 +293,39 @@ function renderHistorial(historial) {
 
     lista.appendChild(li);
   });
+
+  if (ui.historialPaginacion) {
+    renderHistorialPaginacion(totalItems, paginaClamped);
+  }
+}
+
+function renderHistorialPaginacion(totalItems, paginaActual) {
+  const container = ui.historialPaginacion;
+
+  if (!container) return;
+
+  const totalPaginas = Math.max(1, Math.ceil(totalItems / HISTORIAL_POR_PAGINA));
+
+  if (totalPaginas <= 1) {
+    container.innerHTML = "";
+    return;
+  }
+
+  let html = "";
+
+  for (let i = 1; i <= totalPaginas; i += 1) {
+    html += `<button class="${i === paginaActual ? "activo" : ""}" data-pagina="${i}">${i}</button>`;
+  }
+
+  container.innerHTML = html;
+
+  container.querySelectorAll("button[data-pagina]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const pagina = Number(button.dataset.pagina);
+      historialPaginaActual = pagina;
+      renderHistorial(historialGlobal, pagina);
+    });
+  });
 }
 
 function formatearFecha(fecha) {
@@ -313,13 +351,14 @@ function actualizarPacienteUI() {
 
 }
 
-function actualizarSaldoUI(data) {
+function actualizarSaldoUI(data, puntosAplicados = 0) {
 
     ui.puntosActuales.textContent = data.puntos;
 
     ui.puntosAntes.textContent = data.puntos;
 
-    ui.puntosOtorgados.textContent = "0";
+    puntosAplicadosActual = puntosAplicados;
+    ui.puntosOtorgados.textContent = puntosAplicadosActual;
 
 }
 
@@ -353,6 +392,8 @@ function actualizarEstadoResena(data) {
 
 async function seleccionarPaciente(paciente) {
   pacienteActual = paciente;
+  // limpiar resultados de búsqueda para que la tarjeta seleccionada no siga apareciendo
+  if (ui.resultadosBusqueda) ui.resultadosBusqueda.innerHTML = "";
   const tarjeta = document.querySelector(".saldo-board");
   tarjeta.classList.add("loading");
   ui.buscarPaciente.value =
@@ -395,7 +436,7 @@ async function seleccionarPaciente(paciente) {
     historial.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
     actualizarPacienteUI();
-    actualizarSaldoUI(data);
+    actualizarSaldoUI(data, puntosAplicadosActual);
     actualizarHistorialUI(historial);
     actualizarEstadoResena(data);
 
@@ -404,6 +445,11 @@ async function seleccionarPaciente(paciente) {
     animarCargaCompleta();
     tarjeta.classList.remove("loading");
     tarjeta.classList.add("ready");
+    // mover foco al formulario de puntos para mejorar flujo de trabajo
+    const focusTarget = document.querySelector("#dropdownAgregar .dropdown-selected") || document.querySelector(".btn-sumar-puntos");
+    if (focusTarget && typeof focusTarget.focus === "function") {
+      focusTarget.focus();
+    }
     setTimeout(() => {
       tarjeta.classList.remove("ready");
     }, 250);
@@ -526,6 +572,9 @@ async function enviarMovimiento(tipo) {
       showToastPuntos(data.msg || "Error", "error");
       return;
     }
+
+    puntosAplicadosActual = tipo === "suma" ? cantidad : -cantidad;
+    ui.puntosOtorgados.textContent = puntosAplicadosActual;
 
     await seleccionarPaciente(pacienteActual);
 

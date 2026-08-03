@@ -4,5 +4,10 @@ __pycache__
 *.pyo
 *.pyd
 .env
+.env.*
 .git
 .vscode
+.gitignore
+README.md
+logs/
+*.log
