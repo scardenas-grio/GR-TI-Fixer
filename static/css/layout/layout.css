@@ -86,8 +86,19 @@
 =========================================*/
 
 @media (max-width: 900px) {
+  .app {
+    min-width: 0;
+    width: 100%;
+  }
+
   .main {
     margin-left: 0;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .topbar {
+    padding-left: 60px;
   }
 }
 

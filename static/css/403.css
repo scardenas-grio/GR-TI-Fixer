@@ -1,0 +1,139 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at 20% 20%,
+            rgba(79, 140, 255, 0.20),
+            transparent 35%),
+        radial-gradient(circle at 80% 80%,
+            rgba(124, 58, 237, 0.20),
+            transparent 35%),
+        #0b1020;
+
+    color: #ffffff;
+}
+
+.error-page {
+    min-height: 100vh;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 30px;
+}
+
+.error-card {
+    width: min(560px, 100%);
+
+    text-align: center;
+
+    padding: 55px 40px;
+
+    border-radius: 24px;
+
+    background: rgba(255, 255, 255, 0.08);
+
+    border: 1px solid rgba(255, 255, 255, 0.12);
+
+    box-shadow:
+        0 25px 70px rgba(0, 0, 0, 0.45),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+    backdrop-filter: blur(14px);
+}
+
+.error-number {
+    font-size: 110px;
+
+    font-weight: 800;
+
+    line-height: 1;
+
+    margin-bottom: 10px;
+
+    background: linear-gradient(135deg,
+            #4f8cff,
+            #8b5cf6);
+
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.error-icon {
+    font-size: 55px;
+
+    margin: 10px 0 20px;
+}
+
+.error-card h1 {
+    font-size: 32px;
+
+    margin-bottom: 15px;
+}
+
+.error-card p {
+    color: #cbd5e1;
+
+    font-size: 16px;
+
+    line-height: 1.6;
+
+    margin: 0 auto 30px;
+
+    max-width: 420px;
+}
+
+.btn-volver {
+    border: none;
+
+    padding: 12px 24px;
+
+    border-radius: 10px;
+
+    background: linear-gradient(135deg,
+            #4f8cff,
+            #6366f1);
+
+    color: #ffffff;
+
+    font-size: 15px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.btn-volver:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 8px 25px rgba(79, 140, 255, 0.35);
+}
+
+@media (max-width: 600px) {
+
+    .error-card {
+        padding: 40px 25px;
+    }
+
+    .error-number {
+        font-size: 85px;
+    }
+
+    .error-card h1 {
+        font-size: 26px;
+    }
+
+}

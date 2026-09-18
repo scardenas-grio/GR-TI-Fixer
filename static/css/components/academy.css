@@ -1,0 +1,782 @@
+/* =========================================
+   TI ACADEMY — DRAWER
+========================================= */
+
+.academy-drawer {
+
+    position: fixed;
+
+    top: 0;
+    right: -420px;
+
+    width: 420px;
+    max-width: 100vw;
+    height: 100%;
+
+    background: #ffffff;
+
+    box-shadow:
+        -12px 0 35px rgba(15, 23, 42, 0.14);
+
+    transition:
+        right 0.35s ease;
+
+    z-index: 5000;
+
+    overflow-y: auto;
+
+    box-sizing: border-box;
+
+}
+
+
+.academy-drawer.open {
+
+    right: 0;
+
+}
+
+
+/* =========================================
+   SCROLL
+========================================= */
+
+.academy-drawer::-webkit-scrollbar {
+
+    width: 6px;
+
+}
+
+.academy-drawer::-webkit-scrollbar-thumb {
+
+    background: #d9e1ee;
+
+    border-radius: 999px;
+
+}
+
+
+/* =========================================
+   OVERLAY
+========================================= */
+
+.academy-overlay {
+
+    position: fixed;
+
+    inset: 0;
+
+    background:
+        rgba(15, 23, 42, 0.38);
+
+    opacity: 0;
+
+    visibility: hidden;
+
+    transition:
+        opacity 0.35s ease,
+        visibility 0.35s ease;
+
+    z-index: 4999;
+
+}
+
+
+.academy-overlay.open {
+
+    opacity: 1;
+
+    visibility: visible;
+
+}
+
+
+/* =========================================
+   HEADER
+========================================= */
+
+.academy-header {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    padding: 24px;
+
+    border-bottom:
+        1px solid #eef2f7;
+
+    background: #ffffff;
+
+}
+
+
+.academy-title {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+
+    min-width: 0;
+
+}
+
+
+/* =========================================
+   ICONO HEADER
+========================================= */
+
+.academy-icon {
+
+    width: 56px;
+
+    height: 56px;
+
+    min-width: 56px;
+
+    border-radius: 16px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    background:
+        linear-gradient(135deg,
+            #4F8CFF,
+            #7B61FF);
+
+    color: #ffffff;
+
+    font-size: 24px;
+
+    box-shadow:
+        0 10px 22px rgba(79, 140, 255, 0.25);
+
+}
+
+
+.academy-icon i {
+
+    color: #ffffff;
+
+}
+
+
+/* =========================================
+   TITULO HEADER
+========================================= */
+
+.academy-title h2 {
+
+    margin: 0;
+
+    font-size: 24px;
+
+    font-weight: 700;
+
+    line-height: 1.15;
+
+    color: #0f172a;
+
+}
+
+
+.academy-title span {
+
+    display: block;
+
+    margin-top: 5px;
+
+    color: #7b8ba1;
+
+    font-size: 13px;
+
+    line-height: 1.3;
+
+}
+
+
+/* =========================================
+   BOTÓN CERRAR
+========================================= */
+
+.academy-close {
+
+    width: 42px;
+
+    height: 42px;
+
+    min-width: 42px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    background: #f4f6fb;
+
+    color: #334155;
+
+    cursor: pointer;
+
+    transition:
+        background 0.25s ease,
+        transform 0.2s ease;
+
+}
+
+
+.academy-close:hover {
+
+    background: #e9edf6;
+
+    transform:
+        rotate(4deg);
+
+}
+
+
+.academy-close i {
+
+    font-size: 17px;
+
+}
+
+
+/* =========================================
+   CONTENIDO
+========================================= */
+
+.academy-content {
+
+    padding: 24px;
+
+    box-sizing: border-box;
+
+}
+
+
+/* =========================================
+   TARJETA DE BIENVENIDA
+========================================= */
+
+.academy-welcome-card {
+
+    position: relative;
+
+    overflow: hidden;
+
+    background:
+        linear-gradient(135deg,
+            #4F8CFF,
+            #7B61FF);
+
+    color: #ffffff;
+
+    border-radius: 20px;
+
+    padding: 24px;
+
+    box-shadow:
+        0 15px 35px rgba(79, 140, 255, 0.25);
+
+}
+
+
+/* Brillo decorativo */
+
+.academy-welcome-card::after {
+
+    content: "";
+
+    position: absolute;
+
+    width: 150px;
+
+    height: 150px;
+
+    right: -65px;
+
+    top: -65px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(255, 255, 255, 0.10);
+
+    pointer-events: none;
+
+}
+
+
+/* =========================================
+   ICONO BIENVENIDA
+========================================= */
+
+.academy-welcome-icon {
+
+    font-size: 30px;
+
+    margin-bottom: 10px;
+
+}
+
+
+/* =========================================
+   TEXTOS BIENVENIDA
+========================================= */
+
+.academy-welcome-card h3 {
+
+    position: relative;
+
+    z-index: 1;
+
+    margin: 0;
+
+    font-size: 17px;
+
+    font-weight: 600;
+
+}
+
+
+.academy-welcome-card h2 {
+
+    position: relative;
+
+    z-index: 1;
+
+    margin: 6px 0;
+
+    font-size: 30px;
+
+    font-weight: 700;
+
+    line-height: 1.15;
+
+}
+
+
+.academy-welcome-card p {
+
+    position: relative;
+
+    z-index: 1;
+
+    margin: 16px 0;
+
+    line-height: 1.55;
+
+    font-size: 14px;
+
+    opacity: 0.94;
+
+}
+
+
+/* =========================================
+   PROGRESO
+========================================= */
+
+.academy-progress {
+
+    position: relative;
+
+    z-index: 1;
+
+    margin-top: 20px;
+
+}
+
+
+.academy-progress-track {
+
+    width: 100%;
+
+    height: 9px;
+
+    border-radius: 999px;
+
+    background:
+        rgba(255, 255, 255, 0.24);
+
+    overflow: hidden;
+
+}
+
+
+.academy-progress-fill {
+
+    width: 0%;
+
+    height: 100%;
+
+    background: #ffffff;
+
+    border-radius: 999px;
+
+    transition:
+        width 0.45s ease;
+
+}
+
+
+.academy-progress span {
+
+    display: block;
+
+    margin-top: 9px;
+
+    font-size: 13px;
+
+    font-weight: 500;
+
+    color: #ffffff;
+
+}
+
+
+/* =========================================
+   BOTÓN COMENZAR
+========================================= */
+
+.academy-start {
+
+    position: relative;
+
+    z-index: 1;
+
+    margin-top: 20px;
+
+    width: 100%;
+
+    border: none;
+
+    border-radius: 14px;
+
+    padding: 14px;
+
+    font-size: 14px;
+
+    font-weight: 700;
+
+    background: #ffffff;
+
+    color: #3f6df5;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease;
+
+}
+
+
+.academy-start:hover {
+
+    transform:
+        translateY(-2px);
+
+    box-shadow:
+        0 10px 22px rgba(0, 0, 0, 0.16);
+
+}
+
+
+.academy-start:active {
+
+    transform:
+        scale(0.98);
+
+}
+
+
+/* =========================================
+   SECCIÓN DE CURSOS
+========================================= */
+
+.academy-section {
+
+    margin-top: 28px;
+
+}
+
+
+.academy-section-title {
+
+    margin: 0 0 16px;
+
+    font-size: 18px;
+
+    font-weight: 700;
+
+    line-height: 1.3;
+
+    color: #0f172a;
+
+}
+
+
+/* =========================================
+   TARJETA DE CURSO
+========================================= */
+
+.academy-course {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    gap: 16px;
+
+    padding: 18px;
+
+    margin-bottom: 14px;
+
+    background: #ffffff;
+
+    border:
+        1px solid #edf1f7;
+
+    border-radius: 16px;
+
+    box-shadow:
+        0 6px 18px rgba(15, 23, 42, 0.05);
+
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease,
+        border-color 0.25s ease;
+
+}
+
+
+.academy-course:hover {
+
+    transform:
+        translateY(-2px);
+
+    border-color:
+        #dce5f3;
+
+    box-shadow:
+        0 10px 25px rgba(15, 23, 42, 0.08);
+
+}
+
+
+/* =========================================
+   INFORMACIÓN CURSO
+========================================= */
+
+.academy-course>div {
+
+    min-width: 0;
+
+    flex: 1;
+
+}
+
+
+.academy-course h4 {
+
+    margin: 0 0 7px;
+
+    font-size: 15px;
+
+    font-weight: 700;
+
+    line-height: 1.3;
+
+    color: #0f172a;
+
+}
+
+/* =========================================
+   ENCABEZADO DE CURSO
+========================================= */
+
+.academy-course-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.academy-course-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.academy-course-header h4 {
+    margin: 0 0 7px;
+}
+
+
+/* =========================================
+   ESTADO DEL CURSO
+========================================= */
+
+.academy-course-status {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 5px;
+
+    flex-shrink: 0;
+
+    padding: 5px 8px;
+
+    border-radius: 999px;
+
+    font-size: 10px;
+
+    font-weight: 700;
+
+    line-height: 1;
+
+    white-space: nowrap;
+}
+
+
+/* Pendiente */
+
+.academy-course-status.pending {
+    color: #64748b;
+
+    background: #f1f5f9;
+}
+
+
+/* En progreso */
+
+.academy-course-status.progress {
+    color: #2563eb;
+
+    background: #eff6ff;
+}
+
+
+/* Completado */
+
+.academy-course-status.completed {
+    color: #15803d;
+
+    background: #ecfdf5;
+}
+
+
+/* Icono */
+
+.academy-course-status-icon {
+    font-size: 11px;
+
+    font-weight: 800;
+}
+
+
+.academy-course p {
+
+    margin: 0 0 8px;
+
+    color: #6f7d93;
+
+    font-size: 13px;
+
+    line-height: 1.45;
+
+}
+
+
+.academy-course small {
+
+    color: #8c98aa;
+
+    font-size: 11px;
+
+}
+
+
+/* =========================================
+   BOTÓN CURSO
+========================================= */
+
+.academy-course-btn {
+
+    flex-shrink: 0;
+
+    border: none;
+
+    background:
+        #4F8CFF;
+
+    color: #ffffff;
+
+    padding: 10px 15px;
+
+    border-radius: 12px;
+
+    cursor: pointer;
+
+    font-size: 12px;
+
+    font-weight: 600;
+
+    white-space: nowrap;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+
+}
+
+
+.academy-course-btn:hover {
+
+    background:
+        #3c77e8;
+
+    transform:
+        translateY(-1px);
+
+    box-shadow:
+        0 6px 14px rgba(79, 140, 255, 0.22);
+
+}
+
+
+/* =========================================
+   CURSO COMPLETADO
+========================================= */
+
+.academy-course-btn.completed {
+
+    background:
+        #22c55e;
+
+}
+
+
+.academy-course-btn.completed:hover {
+
+    background:
+        #16a34a;
+
+}

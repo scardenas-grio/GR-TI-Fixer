@@ -91,8 +91,8 @@
               </td>
 
               <td>
-                {% if u != "admin_root" %}
-
+                {% if u != "admin_root" %} {% if session.rol in ("admin",
+                "superadmin") %}
                 <div class="acciones acciones-vertical">
                   <button
                     class="btn btn-primary btn-editar-usuarios"
@@ -105,8 +105,9 @@
                     🗑️ Eliminar
                   </button>
                 </div>
-
-                {% else %} 🔒 {% endif %}
+                {% else %}
+                <span class="acciones-bloqueadas">🔒</span>
+                {% endif %} {% else %} 🔒 {% endif %}
               </td>
             </tr>
 
@@ -208,14 +209,25 @@
                 </div>
               </td>
               <td>
+                {% if session.rol in ("admin", "superadmin") %}
                 <div class="acciones">
-                  <button class="btn btn-primary btn-editar" data-user="{{ u.username }}">
+                  <button
+                    class="btn btn-primary btn-editar"
+                    data-user="{{ u.username }}"
+                  >
                     ✏️ Editar
                   </button>
-                  <button class="btn btn-danger btn-delete" data-user="{{ u.username }}">
+
+                  <button
+                    class="btn btn-danger btn-delete"
+                    data-user="{{ u.username }}"
+                  >
                     🗑️ Eliminar
                   </button>
                 </div>
+                {% else %}
+                <span class="acciones-bloqueadas">🔒</span>
+                {% endif %}
               </td>
             </tr>
             {% endfor %}

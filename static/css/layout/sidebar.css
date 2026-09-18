@@ -5,21 +5,31 @@
 .menu-lateral {
 
   position: fixed;
+
   top: 0;
   left: 0;
+
   width: 250px;
   height: 100vh;
+
   background: var(--bg-card);
   color: var(--text-main);
+
   backdrop-filter: blur(16px);
+
   border-right: 1px solid var(--border-color);
+
   z-index: 2000;
+
   transition:
     width .3s ease,
     transform .3s ease;
+
   box-shadow: var(--shadow);
+
   overflow-y: auto;
 }
+
 
 /* =========================
    LINKS MENU
@@ -28,64 +38,77 @@
 .menu-lateral a {
 
   display: flex;
+
   align-items: center;
+
   gap: 12px;
-  padding:
-    14px 18px;
-  margin:
-    6px 12px;
+
+  padding: 14px 18px;
+
+  margin: 6px 12px;
+
   border-radius: 14px;
+
   color: var(--text-main);
+
   font-weight: 500;
-  transition:
-    all .25s ease;
+
+  transition: all .25s ease;
+
 }
 
-/* hover */
+
+/* Hover */
 
 .menu-lateral a:hover {
 
   background:
-    rgba(59,130,246,.18);
+    rgba(59, 130, 246, .18);
 
   color: var(--text-main);
 
   transform:
     translateX(4px);
+
 }
 
-/* activo */
+
+/* Activo */
 
 .menu-lateral a.active {
 
   background:
-    linear-gradient(
-      135deg,
-      rgba(59,130,246,.30),
-      rgba(139,92,246,.25)
-    );
+    linear-gradient(135deg,
+      rgba(59, 130, 246, .30),
+      rgba(139, 92, 246, .25));
 
   border:
-    1px solid rgba(255,255,255,.08);
+    1px solid rgba(255, 255, 255, .08);
 
   color: var(--text-main);
+
 }
+
 
 /* =========================
    SCROLL SIDEBAR
 ========================= */
 
 .menu-lateral::-webkit-scrollbar {
+
   width: 6px;
+
 }
 
 .menu-lateral::-webkit-scrollbar-thumb {
 
   background:
-    rgba(255,255,255,.15);
+    rgba(255, 255, 255, .15);
 
   border-radius: 999px;
+
 }
+
 
 /* =========================
    RESPONSIVE
@@ -95,28 +118,88 @@
 
   .menu-lateral {
 
-    transform:
-      translateX(-100%);
+    width: min(78vw, 300px);
+
+    transform: translateX(-110%);
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    border-right: none;
+
+    border-radius: 0 22px 22px 0;
+
+    box-shadow:
+      18px 0 40px rgba(15, 23, 42, 0.25);
+
   }
 
-  .menu-lateral.open {
 
-    transform:
-      translateX(0);
+  .menu-lateral.open,
+  .menu-lateral.activo {
+
+    transform: translateX(0);
+
+    opacity: 1;
+
+    pointer-events: auto;
+
+    box-shadow:
+      18px 0 40px rgba(15, 23, 42, 0.28);
+
   }
+
+
+  .menu-toggle {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    width: 42px;
+    height: 42px;
+
+    border-radius: 12px;
+
+  }
+
 
   .topbar {
 
     left: 0;
+
   }
+
 
   .contenido {
 
     margin-left: 0;
 
     padding: 20px;
+
   }
+
+
+  body.menu-open::before {
+
+    content: "";
+
+    position: fixed;
+
+    inset: 0;
+
+    background:
+      rgba(15, 23, 42, 0.42);
+
+    z-index: 1500;
+
+  }
+
 }
+
 
 /* =========================
    SIDEBAR COLLAPSE
@@ -125,56 +208,43 @@
 .menu-lateral.collapsed {
 
   width: 90px;
+
 }
 
-/* contenido */
 
-.menu-lateral.collapsed + .topbar {
+/* Topbar */
+
+.menu-lateral.collapsed+.topbar {
 
   left: 90px;
+
 }
 
-.menu-lateral.collapsed ~ .contenido {
+
+/* Contenido */
+
+.menu-lateral.collapsed~.contenido {
 
   margin-left: 90px;
+
 }
 
-/* ocultar texto */
 
-.menu-lateral.collapsed .menu-text {
+/*
+   Compatibilidad con estructura
+   alternativa del layout
+*/
 
-  opacity: 0;
-
-  visibility: hidden;
-
-  width: 0;
-}
-
-/* centrar iconos */
-
-.menu-lateral.collapsed a {
-
-  justify-content: center;
-}
-
-/* =========================
-   SIDEBAR COLLAPSED
-========================= */
-
-.menu-lateral.collapsed {
-
-  width: 90px;
-}
-
-/* topbar */
-
-.menu-lateral.collapsed ~ .main .topbar {
+.menu-lateral.collapsed~.main .topbar {
 
   left: 90px;
+
 }
 
 
-/* ocultar textos */
+/* =========================
+   OCULTAR TEXTOS COLLAPSED
+========================= */
 
 .menu-lateral.collapsed .menu-text,
 .menu-lateral.collapsed .menu-seccion-title span,
@@ -188,28 +258,41 @@
   width: 0;
 
   overflow: hidden;
+
 }
 
-/* centrar iconos */
+
+/* =========================
+   CENTRAR ICONOS COLLAPSED
+========================= */
 
 .menu-lateral.collapsed a,
 .menu-lateral.collapsed .accordion-btn {
 
   justify-content: center;
+
 }
 
-/* ocultar título */
+
+/* =========================
+   OCULTAR TÍTULO
+========================= */
 
 .menu-lateral.collapsed .menu-titulo {
 
   font-size: 0;
+
 }
 
-/* usuario */
+
+/* =========================
+   USUARIO COLLAPSED
+========================= */
 
 .menu-lateral.collapsed .usuario-info {
 
   justify-content: center;
+
 }
 
 
@@ -222,20 +305,20 @@
   position: relative;
 
   background:
-    linear-gradient(
-      135deg,
-      rgba(59,130,246,.22),
-      rgba(139,92,246,.18)
-    );
+    linear-gradient(135deg,
+      rgba(59, 130, 246, .22),
+      rgba(139, 92, 246, .18));
 
   border:
-    1px solid rgba(255,255,255,.08);
+    1px solid rgba(255, 255, 255, .08);
 
   box-shadow:
-    0 0 20px rgba(59,130,246,.18);
+    0 0 20px rgba(59, 130, 246, .18);
+
 }
 
-/* glow line */
+
+/* Glow line */
 
 .menu-lateral a.active-link::before {
 
@@ -254,14 +337,16 @@
   border-radius: 999px;
 
   background:
-    linear-gradient(
-      180deg,
+    linear-gradient(180deg,
       #3b82f6,
-      #8b5cf6
-    );
+      #8b5cf6);
+
 }
 
-/* hover icon */
+
+/* =========================
+   HOVER ICON
+========================= */
 
 .menu-lateral a:hover .menu-icon i {
 
@@ -269,80 +354,129 @@
     scale(1.15);
 
   color: #60a5fa;
+
 }
 
-/* iconos */
+
+/* =========================
+   ICONOS
+========================= */
 
 .menu-icon i {
 
   transition:
     transform .25s ease,
     color .25s ease;
+
 }
 
-/* ================= MENU ================= */
+
+/* =========================
+   MENU
+========================= */
 
 .menu-titulo {
+
   padding: 20px;
+
   font-weight: 600;
+
 }
 
+
 .usuario-info {
+
   padding: 25px;
+
   color: var(--text-main);
+
   text-transform: uppercase;
+
   margin-bottom: 8px;
+
 }
+
 
 /* =========================
    MENU RIO
 ========================= */
 
 .menu-rio {
+
   display: flex;
+
   flex-direction: column;
 
   gap: 14px;
 
   padding: 0;
+
   margin: 0;
 
   list-style: none;
+
 }
 
-.menu-seccion-principal {
-  margin-top: 26px;
-  margin-bottom: 8px;
-}
 
 /* =========================
-   TITULO
+   SECCIÓN PRINCIPAL
+========================= */
+
+.menu-seccion-principal {
+
+  margin-top: 26px;
+
+  margin-bottom: 8px;
+
+}
+
+
+/* =========================
+   TÍTULO SECCIÓN
 ========================= */
 
 .menu-seccion-title {
+
   display: flex;
+
   align-items: center;
+
   gap: 12px;
+
   color: var(--text-soft);
+
   font-size: 14px;
+
   font-weight: 700;
+
   letter-spacing: 0.08em;
+
   text-transform: uppercase;
+
   margin-top: 8px;
+
   margin-bottom: 8px;
+
   padding-left: 10px;
+
 }
+
 
 /* =========================
    LOGOUT
 ========================= */
 
 .menu-logout-item {
+
   margin-top: 18px;
+
 }
 
+
 .logout-link {
+
   display: flex;
+
   align-items: center;
 
   gap: 12px;
@@ -358,39 +492,484 @@
   font-weight: 700;
 
   transition: 0.2s ease;
+
 }
+
 
 .logout-link:hover {
-  background: rgba(239, 68, 68, 0.12);
+
+  background:
+    rgba(239, 68, 68, 0.12);
+
 }
+
+
+/* =========================
+   MENU TOGGLE
+========================= */
 
 .menu-toggle {
+
   display: none;
+
   position: fixed;
+
   top: 15px;
   left: 15px;
+
   background: var(--bg-card);
+
   color: var(--text-main);
+
   border: 1px solid var(--border-color);
+
   padding: 10px;
+
   border-radius: 6px;
+
   cursor: pointer;
+
   z-index: 1100;
+
 }
 
-/* MODO CLARO */
-body:not(.dark) .accordion-btn {
-    color: #334155 !important;
+
+/* =========================================
+   TI ACADEMY — ACCESO PREMIUM
+========================================= */
+
+.menu-academy-item {
+
+  list-style: none;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  margin-top: 95px;
+
+  padding-bottom: 25px;
+
 }
+
+
+/* =========================================
+   BOTÓN — ESTADO CONTRAÍDO
+========================================= */
+
+.menu-academy-item .academy-menu-btn {
+
+  width: 54px;
+
+  min-width: 54px;
+
+  max-width: 54px;
+
+  height: 54px;
+
+  min-height: 54px;
+
+  padding: 0;
+
+  margin: 0;
+
+  border: 1px solid rgba(255, 255, 255, 0.14);
+
+  border-radius: 17px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 0;
+
+  cursor: pointer;
+
+  background:
+    linear-gradient(135deg,
+      #4F8CFF,
+      #7B61FF);
+
+  color: #ffffff;
+
+  box-sizing: border-box;
+
+  overflow: hidden;
+
+  white-space: nowrap;
+
+  box-shadow:
+    0 8px 20px rgba(79, 140, 255, 0.22),
+    0 3px 8px rgba(0, 0, 0, 0.18);
+
+  transition:
+    width 0.3s ease,
+    min-width 0.3s ease,
+    max-width 0.3s ease,
+    height 0.25s ease,
+    padding 0.3s ease,
+    border-radius 0.25s ease,
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+
+}
+
+
+/* =========================================
+   ICONO — ESTADO CONTRAÍDO
+========================================= */
+
+.menu-academy-item .academy-menu-icon {
+
+  width: 42px !important;
+
+  height: 42px !important;
+
+  min-width: 42px !important;
+
+  max-width: 42px !important;
+
+  flex: 0 0 42px !important;
+
+  flex-shrink: 0 !important;
+
+  margin: 0 !important;
+
+  padding: 0 !important;
+
+  border-radius: 13px;
+
+  display: flex !important;
+
+  align-items: center !important;
+
+  justify-content: center !important;
+
+  position: relative;
+
+  left: auto !important;
+
+  right: auto !important;
+
+  transform: none;
+
+  background:
+    rgba(255, 255, 255, 0.16);
+
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.12);
+
+}
+
+.menu-academy-item .academy-menu-icon i {
+
+  display: flex !important;
+
+  align-items: center;
+
+  justify-content: center;
+
+  width: auto !important;
+
+  height: auto !important;
+
+  margin: 0 !important;
+
+  padding: 0 !important;
+
+  position: static !important;
+
+  transform: none;
+
+  font-size: 20px;
+
+  line-height: 1;
+
+  color: #ffffff;
+
+}
+
+/* =========================================
+   TEXTO — ESTADO CONTRAÍDO
+========================================= */
+
+.menu-academy-item .academy-menu-text {
+
+  display: flex;
+
+  flex: 0 0 0;
+
+  width: 0;
+
+  min-width: 0;
+
+  height: auto;
+
+  flex-direction: column;
+
+  align-items: flex-start;
+
+  justify-content: center;
+
+  gap: 3px;
+
+  margin: 0;
+
+  padding: 0;
+
+  text-align: left;
+
+  line-height: 1.1;
+
+  opacity: 0;
+
+  visibility: hidden;
+
+  overflow: hidden;
+
+  white-space: nowrap;
+
+  transition:
+    flex 0.3s ease,
+    width 0.3s ease,
+    opacity 0.18s ease,
+    visibility 0.18s ease;
+
+}
+
+
+.menu-academy-item .academy-menu-text strong {
+
+  display: block;
+
+  margin: 0;
+
+  padding: 0;
+
+  color: #ffffff;
+
+  font-size: 14px;
+
+  font-weight: 700;
+
+  line-height: 1.2;
+
+  white-space: nowrap;
+
+}
+
+
+.menu-academy-item .academy-menu-text small {
+
+  display: block;
+
+  margin: 0;
+
+  padding: 0;
+
+  color:
+    rgba(255, 255, 255, 0.78);
+
+  font-size: 11px;
+
+  font-weight: 500;
+
+  line-height: 1.2;
+
+  white-space: nowrap;
+
+}
+
+
+/* =========================================
+   FLECHA
+========================================= */
+
+.menu-academy-item .academy-menu-btn::after {
+
+  content: "→";
+
+  flex-shrink: 0;
+
+  width: 0;
+
+  margin-left: 0;
+
+  overflow: hidden;
+
+  font-size: 18px;
+
+  font-weight: 600;
+
+  line-height: 1;
+
+  color:
+    rgba(255, 255, 255, 0.75);
+
+  opacity: 0;
+
+  visibility: hidden;
+
+  transform: translateX(-4px);
+
+  transition:
+    width 0.25s ease,
+    margin-left 0.25s ease,
+    opacity 0.2s ease,
+    visibility 0.2s ease,
+    transform 0.25s ease,
+    color 0.2s ease;
+
+}
+
+
+/* =========================================
+   HOVER — EXPANDIR
+========================================= */
+
+.menu-academy-item .academy-menu-btn:hover {
+
+  width: 210px;
+
+  min-width: 210px;
+
+  max-width: 210px;
+
+  padding: 7px 12px;
+
+  justify-content: flex-start;
+
+  gap: 12px;
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 12px 28px rgba(79, 140, 255, 0.30),
+    0 5px 12px rgba(0, 0, 0, 0.20);
+
+}
+
+
+.menu-academy-item .academy-menu-btn:hover .academy-menu-text {
+
+  flex: 1 1 auto;
+
+  width: auto;
+
+  opacity: 1;
+
+  visibility: visible;
+
+}
+
+
+.menu-academy-item .academy-menu-btn:hover .academy-menu-icon i {
+
+  transform:
+    scale(1.08) rotate(-5deg);
+
+}
+
+
+.menu-academy-item .academy-menu-btn:hover::after {
+
+  width: 18px;
+
+  margin-left: auto;
+
+  opacity: 1;
+
+  visibility: visible;
+
+  transform:
+    translateX(0);
+
+  color: #ffffff;
+
+}
+
+
+/* =========================================
+   CLICK
+========================================= */
+
+.menu-academy-item .academy-menu-btn:active {
+
+  transform:
+    scale(0.97);
+
+}
+
+
+/* =========================================
+   FOCUS
+========================================= */
+
+.menu-academy-item .academy-menu-btn:focus-visible {
+
+  outline:
+    2px solid #7B61FF;
+
+  outline-offset: 3px;
+
+}
+
+
+/* =========================================
+   MODO OSCURO
+========================================= */
+
+body.dark .menu-academy-item .academy-menu-btn {
+
+  border-color:
+    rgba(255, 255, 255, 0.16);
+
+  box-shadow:
+    0 8px 24px rgba(79, 140, 255, 0.25),
+    0 3px 10px rgba(0, 0, 0, 0.35);
+
+}
+
+
+body.dark .menu-academy-item .academy-menu-btn:hover {
+
+  box-shadow:
+    0 12px 30px rgba(79, 140, 255, 0.35),
+    0 5px 14px rgba(0, 0, 0, 0.40);
+
+}
+
+/* =========================================
+   MODO CLARO — ACORDEONES
+========================================= */
+
+body:not(.dark) .accordion-btn {
+
+  color: #334155 !important;
+
+}
+
 
 body:not(.dark) .accordion-btn span {
-    color: #334155 !important;
+
+  color: #334155 !important;
+
 }
+
 
 body:not(.dark) .accordion-btn i {
-    color: #334155 !important;
+
+  color: #334155 !important;
+
 }
 
+
 body:not(.dark) .accordion-btn.active {
-    color: #1e293b !important;
+
+  color: #1e293b !important;
+
 }

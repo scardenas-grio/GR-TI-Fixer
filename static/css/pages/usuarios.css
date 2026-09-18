@@ -260,6 +260,100 @@
   gap: 8px;
 }
 
+@media (max-width: 900px) {
+  .usuarios-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .usuarios-card {
+    padding: 18px 14px;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .card-header {
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+  }
+
+  .filtros-top-usuarios {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .usuarios-card .search-box,
+  .usuarios-toolbar .search-box {
+    width: 100%;
+    max-width: none;
+    margin-bottom: 0;
+  }
+
+  .tabla-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tabla-scroll {
+    min-width: 100%;
+  }
+
+  .tabla {
+    min-width: 560px;
+    width: max-content;
+    border-spacing: 0 8px;
+  }
+
+  .usuarios-card .tabla td {
+    padding: 10px 9px;
+    white-space: normal;
+  }
+
+  .avatar {
+    min-width: 180px;
+  }
+
+  .permisos-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .usuarios-card h3 {
+    font-size: 18px;
+  }
+
+  .usuarios-header h1 {
+    font-size: 26px;
+  }
+
+  .tabla {
+    min-width: 500px;
+  }
+
+  .avatar-circle {
+    width: 38px;
+    height: 38px;
+    font-size: 13px;
+  }
+
+  .avatar-title {
+    font-size: 12px;
+  }
+
+  .avatar-subtitle {
+    font-size: 11px;
+  }
+
+  .rol-badge {
+    display: inline-flex;
+    padding: 5px 8px;
+  }
+}
+
 #tablaLDAP th:last-child,
 #tablaLDAP td:last-child,
 #tablaActivos th:last-child,

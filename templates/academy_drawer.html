@@ -1,0 +1,52 @@
+<div id="academyOverlay" class="academy-overlay"></div>
+
+<aside id="academyDrawer" class="academy-drawer">
+  <div class="academy-header">
+    <div class="academy-title">
+      <div class="academy-icon">
+        <i class="fa-solid fa-graduation-cap"></i>
+      </div>
+
+      <div>
+        <h2>TI Academy</h2>
+        <span>Aprende TI-Fixer paso a paso</span>
+      </div>
+    </div>
+
+    <button id="academyClose" class="academy-close" type="button">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+
+  <div class="academy-content">
+    <div class="academy-welcome-card">
+      <div class="academy-welcome-icon">👋</div>
+
+      <h3>Bienvenido</h3>
+
+      <h2>{{ session.usuario }}</h2>
+
+      <p>
+        Aprende TI-Fixer mediante tutoriales interactivos. Tu progreso se
+        guardará automáticamente.
+      </p>
+
+      <div class="academy-progress">
+        <div class="academy-progress-track">
+          <div class="academy-progress-fill" style="width: 0%"></div>
+        </div>
+
+        <span>0 % completado</span>
+      </div>
+
+      <button id="academyStart" class="academy-start" type="button">
+        ▶ Comenzar recorrido
+      </button>
+    </div>
+    <div class="academy-section">
+      <h3 class="academy-section-title">📚 Continúa aprendiendo</h3>
+
+      <div id="academyCourses"></div>
+    </div>
+  </div>
+</aside>

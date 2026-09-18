@@ -1,6 +1,7 @@
 // =======================================
 // REFERENCIAS
 // =======================================
+
 const panel = {
   overlay: document.getElementById("overlay"),
   contenedor: document.getElementById("panelUsuario"),
@@ -45,13 +46,31 @@ function limpiarPermisos() {
 // =======================================
 
 async function abrirPanel(username) {
+  // ==========================================
+  // PROTECCIÓN DE INTERFAZ
+  // ==========================================
+
+  const rolSesion = window.academyUser?.rol;
+
+  if (!["admin", "superadmin"].includes(rolSesion)) {
+    mostrarToast("No tienes permisos administrativos", "error");
+    return;
+  }
+
+  // ==========================================
+  // USUARIO PROTEGIDO
+  // ==========================================
+
   if (username === "admin_root") {
     mostrarToast("El usuario principal está protegido", "warning");
-
     return;
   }
 
   panel.username.value = username;
+
+  // ==========================================
+  // OBTENER INFORMACIÓN DEL USUARIO
+  // ==========================================
 
   const data = await apiFetch(`/api/usuario/${username}`);
 
@@ -67,6 +86,10 @@ async function abrirPanel(username) {
 
   panel.rol.value = data.rol;
 
+  // ==========================================
+  // PERMISOS
+  // ==========================================
+
   limpiarPermisos();
 
   if (data.permisos) {
@@ -79,14 +102,22 @@ async function abrirPanel(username) {
     });
   }
 
-  panel.contenedor.classList.add("open");
+  // ==========================================
+  // MOSTRAR PANEL
+  // ==========================================
 
+  panel.contenedor.classList.add("open");
   panel.overlay.classList.add("open");
 }
+
+// =======================================
+// CERRAR PANEL
+// =======================================
 
 function cerrarPanel() {
   panel.contenedor.classList.remove("open");
   panel.overlay.classList.remove("open");
+
   limpiarPermisos();
 }
 
@@ -103,9 +134,13 @@ async function guardarUsuario() {
   );
 
   const formData = new FormData();
+
   formData.append("username", username);
   formData.append("rol", rol);
-  permisos.forEach((p) => formData.append("permisos[]", p));
+
+  permisos.forEach((p) => {
+    formData.append("permisos[]", p);
+  });
 
   const data = await apiFetch("/guardar_usuario", {
     method: "POST",
@@ -116,9 +151,10 @@ async function guardarUsuario() {
 
   if (data.status === "ok") {
     mostrarToast("Guardado correctamente", "ok");
+
     cerrarPanel();
 
-    actualizarTablaActivos(); // 🔥 nueva función
+    actualizarTablaActivos();
   }
 }
 

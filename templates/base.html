@@ -17,6 +17,19 @@
       href="{{ url_for('static',
           filename='css/darkmode.css') }}"
     />
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static',
+      filename='css/components/coachmark.css') }}"
+    />
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', 
+      filename='css/components/academy.css') }}"
+    />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
 
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -154,6 +167,26 @@
               <span>Salir</span>
             </a>
           </li>
+
+          <!-- TI ACADEMY -->
+          <li class="menu-academy-item">
+            <button
+              type="button"
+              id="academyOpen"
+              class="academy-menu-btn"
+              title="Abrir TI Academy"
+              aria-label="Abrir TI Academy"
+            >
+              <span class="academy-menu-icon">
+                <i class="fa-solid fa-graduation-cap"></i>
+              </span>
+
+              <span class="academy-menu-text">
+                <strong>TI Academy</strong>
+                <small>Aprende el sistema</small>
+              </span>
+            </button>
+          </li>
         </ul>
       </aside>
 
@@ -162,7 +195,7 @@
         <!-- TOPBAR -->
         <div class="topbar">
           <div class="left">
-            <button class="menu-toggle" onclick="toggleMenu()">
+            <button class="menu-toggle" type="button" aria-label="Abrir menú">
               <i class="fas fa-bars"></i>
             </button>
           </div>
@@ -241,6 +274,9 @@
         </div>
       </div>
     </div>
+
+    <div id="toastContainer"></div>
+    {% include 'academy_drawer.html' %}
     <!-- JS -->
 
     <script>
@@ -279,7 +315,6 @@
     </script>
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <div id="toastContainer"></div>
 
     <script src="{{ url_for('static', filename='js/api.js') }}"></script>
     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
@@ -288,6 +323,28 @@
     <script src="{{ url_for('static', filename='js/accordion.js') }}"></script>
     <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
     <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/core/app.js') }}"></script>
     <script src="{{ url_for('static', filename='js/command.js') }}"></script>
+    <script id="academyUserData" type="application/json">
+      {
+        "rol": {{ session.rol | tojson }},
+        "permisos": {{ session.permisos | tojson }}
+      }
+    </script>
+
+    <script>
+      window.academyUser = JSON.parse(
+        document.getElementById("academyUserData").textContent,
+      );
+    </script>
+    <script src="{{ url_for('static', filename='js/academy/academy.courses.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/components/academy.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/learning/tutorial.manager.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/learning/tutorial.engine.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/pages/usuarios/usuarios.tutorial.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/pages/reportes/reportes.tutorial.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/pages/puntos/puntos.tutorial.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/learning/learning.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/components/coachmark.js') }}"></script>
   </body>
 </html>

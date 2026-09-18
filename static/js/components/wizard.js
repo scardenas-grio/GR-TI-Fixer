@@ -21,9 +21,12 @@ const wizardConfig = {
 };
 
 class Wizard {
-  constructor(totalSteps = 4) {
-    this.currentStep = 1;
-    this.totalSteps = totalSteps;
+  constructor(options = {}) {
+    this.currentStep = options.startStep || 1;
+
+    this.totalSteps = options.totalSteps || 4;
+
+    this.config = options.config || {};
 
     this.currentStepElement = document.getElementById("wizardCurrentStep");
     this.totalStepsElement = document.getElementById("wizardTotalSteps");
@@ -35,17 +38,15 @@ class Wizard {
 
     this.progressSteps = document.querySelectorAll(".progress-step");
     this.progressLines = document.querySelectorAll(".progress-line");
-
-    this.dynamicForm = document.getElementById("dynamicForm");
   }
 
   init() {
     this.update();
 
-    this.events();
+    this.bindEvents();
   }
 
-  events() {
+  bindEvents() {
     console.log("Events initialized");
     this.nextButton.addEventListener("click", () => {
       console.log("Next button clicked");
@@ -59,30 +60,45 @@ class Wizard {
   }
 
   update() {
-    // Actualiza el paso actual
-    this.currentStepElement.textContent = this.currentStep;
-
-    this.totalStepsElement.textContent = this.totalSteps;
-
-    // Obtiene la configuración del paso
-    const step = wizardConfig[this.currentStep];
-
-    if (step) {
-      this.titleElement.textContent = step.title;
-
-      this.subtitleElement.textContent = step.subtitle;
-    }
-
     // Actualiza botones
-    this.previousButton.disabled = this.currentStep === 1;
+    this.render();
+  }
 
-    this.nextButton.disabled = this.currentStep === this.totalSteps;
+  render() {
+    this.renderHeader();
 
-    this.updateProgress();
+    this.renderProgress();
+
+    this.renderButtons();
+
     this.renderStep();
   }
 
-  updateProgress() {
+  renderHeader() {
+    // Actualiza el paso actual
+    if (!this.currentStepElement) return;
+
+    this.currentStepElement.textContent = this.currentStep;
+
+    if (this.totalStepsElement) {
+      this.totalStepsElement.textContent = this.totalSteps;
+    }
+
+    // Obtiene la configuración del paso
+    const step = this.config[this.currentStep];
+
+    if (step) {
+      if (this.titleElement && step) {
+        this.titleElement.textContent = step.title;
+      }
+
+      if (this.subtitleElement && step) {
+        this.subtitleElement.textContent = step.subtitle;
+      }
+    }
+  }
+
+  renderProgress() {
     this.progressSteps.forEach((step, index) => {
       if (index < this.currentStep) {
         step.classList.add("active");
@@ -99,17 +115,20 @@ class Wizard {
     });
   }
 
-  renderStep() {
-    switch (this.currentStep) {
-      case 1:
-        this.dynamicForm.innerHTML = formularioVacaciones();
-        actualizarBarra(saldoDisponible);
-        break;
+  renderButtons() {
+    this.previousButton.disabled = this.currentStep === 1;
 
-      case 2:
-        this.dynamicForm.innerHTML = resumenVacaciones();
-        break;
-    }
+    this.nextButton.disabled = this.currentStep === this.totalSteps;
+  }
+
+  renderStep() {
+    document.dispatchEvent(
+      new CustomEvent("wizard:render", {
+        detail: {
+          step: this.currentStep,
+        },
+      }),
+    );
   }
 
   next() {
@@ -138,7 +157,13 @@ class Wizard {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  window.wizard = new Wizard();
+  window.wizard = new Wizard({
+    totalSteps: 4,
+
+    startStep: 1,
+
+    config: wizardConfig,
+  });
 
   window.wizard.init();
 });

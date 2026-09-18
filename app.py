@@ -1067,7 +1067,7 @@ def exportar_reportes_csv(context):
 def crear_base(db):
     permisos_base = ["dashboard", "usuarios", "reportes", "puntos"]
     roles_base = {
-        "usuario": "dashboard",
+        "usuario": "",
         "admin": "dashboard,usuarios,reportes,puntos",
         "superadmin": "all",
     }
@@ -1078,10 +1078,14 @@ def crear_base(db):
 
     for nombre, permisos in roles_base.items():
         rol = db.query(Rol).filter_by(nombre=nombre).first()
+
         if not rol:
-            db.add(Rol(nombre=nombre, permisos=permisos))
-        elif nombre != "superadmin" and "puntos" not in (rol.permisos or ""):
-            rol.permisos = permisos
+            db.add(
+                Rol(
+                    nombre=nombre,
+                    permisos=permisos
+                )
+            )
 
     db.commit()
 
@@ -1209,13 +1213,53 @@ def requiere_permiso(permiso):
             if permiso not in permisos_finales:
                 if request.path.startswith("/api/"):
                     return jsonify({"status": "error", "msg": "No tienes permiso"}), 403
-                return "No tienes permiso", 403
+                return render_template("403.html"), 403
             return funcion(*args, **kwargs)
 
         wrapped.__name__ = funcion.__name__
         return wrapped
 
     return decorator
+
+
+def requiere_admin(funcion):
+    @wraps(funcion)
+    def wrapped(*args, **kwargs):
+        db = get_db()
+
+        if "usuario" not in session:
+            if request.path.startswith("/api/"):
+                return jsonify({
+                    "status": "error",
+                    "msg": "No autenticado"
+                }), 401
+            return redirect("/")
+
+        usuario = db.query(Usuario).filter_by(
+            username=session["usuario"]
+        ).first()
+
+        if not usuario:
+            if request.path.startswith("/api/"):
+                return jsonify({
+                    "status": "error",
+                    "msg": "No autenticado"
+                }), 401
+            return redirect("/")
+
+        if usuario.rol not in ("admin", "superadmin"):
+            if request.path.startswith("/api/"):
+                return jsonify({
+                    "status": "error",
+                    "msg": "No tienes permisos administrativos"
+                }), 403
+
+            return "No tienes permisos administrativos", 403
+
+        return funcion(*args, **kwargs)
+
+    wrapped.__name__ = funcion.__name__
+    return wrapped
 
 
 def obtener_usuarios_ldap_cache():
@@ -1339,10 +1383,9 @@ def obtener_pagina_inicio():
 
 
 @app.route("/dashboard")
+@requiere_permiso("dashboard")
 def dashboard():
     db = get_db()
-    if "usuario" not in session:
-        return redirect("/")
 
     try:
         total_ldap = len(obtener_usuarios_ldap_cache())
@@ -1378,7 +1421,7 @@ def dashboard():
     )
 
 @app.route("/api/dashboard")
-@requiere_sesion
+@requiere_permiso("dashboard")
 def api_dashboard():
     db = get_db()
     try:
@@ -1478,7 +1521,7 @@ def usuarios():
 
 
 @app.route("/guardar_usuario", methods=["POST"])
-@requiere_permiso("usuarios")
+@requiere_admin
 def guardar_usuario():
     db = get_db()
     try:
@@ -1530,6 +1573,18 @@ def guardar_usuario():
             return jsonify({
                 "status": "error",
                 "msg": "No puedes modificar un superadmin"
+            }), 403
+
+        # Un admin no puede cambiar el nivel de otro admin
+        if (
+            user
+            and user.rol == "admin"
+            and admin_actual.rol == "admin"
+            and rol != "admin"
+        ):
+            return jsonify({
+                "status": "error",
+                "msg": "Un admin no puede cambiar el nivel de otro admin"
             }), 403
 
         if user:
@@ -1630,7 +1685,7 @@ def logout():
 
 
 @app.route("/eliminar_usuario/<username>", methods=["POST"])
-@requiere_permiso("usuarios")
+@requiere_admin
 def eliminar_usuario(username):
 
     db = get_db()
@@ -1668,6 +1723,16 @@ def eliminar_usuario(username):
             return jsonify({
                 "status": "error",
                 "msg": "No puedes eliminar un superadmin"
+            }), 403
+
+        # 🔒 Un admin no puede quitar el nivel de otro admin
+        if (
+            user.rol == "admin"
+            and admin_actual.rol == "admin"
+        ):
+            return jsonify({
+                "status": "error",
+                "msg": "Un admin no puede quitar el nivel de otro admin"
             }), 403
 
         # ==========================
@@ -1823,14 +1888,19 @@ def api_buscar_ldap():
 
 
 @app.route("/puntos")
+@requiere_permiso("puntos")
 def puntos():
-    if "usuario" not in session:
-        return redirect("/")
-    return render_template("puntos.html", notificaciones=get_unread_notifications_count(get_db(), session.get("usuario")))
+    return render_template(
+        "puntos.html",
+        notificaciones=get_unread_notifications_count(
+            get_db(),
+            session.get("usuario")
+        )
+    )
 
 
 @app.route("/api/buscar_paciente")
-@requiere_sesion
+@requiere_permiso("puntos")
 def buscar_paciente():
     
     valor = request.args.get("q", "").strip()
@@ -1921,6 +1991,7 @@ def buscar_paciente():
             conn.close()
 
 @app.route("/api/puntos", methods=["POST"])
+@requiere_permiso("puntos")
 def modificar_puntos():
     db = get_db()
     data = request.json or {}
@@ -2140,14 +2211,14 @@ def modificar_puntos():
 
 
 @app.route("/api/historial/<idcliente>")
-@requiere_sesion
+@requiere_permiso("puntos")
 def historial(idcliente):
     return jsonify(
         obtener_historial_oracle(idcliente)
     )
 
 @app.route("/api/paciente/<idcliente>")
-@requiere_sesion
+@requiere_permiso("puntos")
 def api_paciente(idcliente):
 
     db = get_db()
@@ -2178,13 +2249,13 @@ def get_puntos_cache(idcliente):
 
 
 @app.route("/api/tiene_resena/<idcliente>")
-@requiere_sesion
+@requiere_permiso("puntos")
 def api_tiene_resena(idcliente):
     return jsonify({"tiene": tiene_resena(idcliente)})
 
 
 @app.route("/api/grafica/puntos")
-@requiere_sesion
+@requiere_permiso("dashboard")
 def api_grafica_puntos():
     db = get_db()
     filtros = get_report_filters(request.args)
@@ -2199,7 +2270,7 @@ def api_grafica_puntos():
 
 
 @app.route("/api/dashboard/kpi")
-@requiere_sesion
+@requiere_permiso("dashboard")
 def api_dashboard_kpi():
     db = get_db()
     filtros = get_report_filters(request.args)
@@ -2363,12 +2434,13 @@ def socket_disconnect():
 
 
 if __name__ == "__main__":
+    port = int(os.getenv("PORT", "5000"))
     socketio.run(
-    app,
-    host="0.0.0.0",
-    port=5000,
-    debug=False,
-    use_reloader=False
-)
+        app,
+        host="0.0.0.0",
+        port=port,
+        debug=False,
+        use_reloader=False
+    )
 
 

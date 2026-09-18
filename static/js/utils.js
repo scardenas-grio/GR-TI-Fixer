@@ -18,7 +18,22 @@ function handleLogin() {
 }
 
 function toggleMenu() {
-  document.getElementById("menu").classList.toggle("activo");
+  const menu = document.getElementById("menu");
+  if (!menu) return;
+
+  const isMobile = window.innerWidth <= 900;
+
+  if (isMobile) {
+    const willOpen =
+      !menu.classList.contains("open") && !menu.classList.contains("activo");
+    menu.classList.toggle("open", willOpen);
+    menu.classList.toggle("activo", willOpen);
+    return;
+  }
+
+  const nextState = !menu.classList.contains("collapsed");
+  menu.classList.toggle("collapsed", nextState);
+  localStorage.setItem("sidebarCollapsed", String(nextState));
 }
 
 function formatearFecha(fecha) {
@@ -61,18 +76,24 @@ function showToast(message, type = "info") {
   toast.className = `toast toast-${type}`;
 
   toast.innerHTML = `
-    <div class="toast-title">
-      ${
-        type === "success"
-          ? "Éxito"
-          : type === "error"
-            ? "Error"
-            : "Información"
-      }
-    </div>
+    <div class="toast-content">
 
-    <div class="toast-message">
-      ${message}
+      <div class="toast-title">
+        ${
+          type === "success"
+            ? "Éxito"
+            : type === "error"
+              ? "Error"
+              : type === "warning"
+                ? "Advertencia"
+                : "Información"
+        }
+      </div>
+
+      <div class="toast-message">
+        ${message}
+      </div>
+
     </div>
 
     <div class="toast-progress"></div>

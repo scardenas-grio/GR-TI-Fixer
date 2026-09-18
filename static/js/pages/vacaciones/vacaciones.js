@@ -3,7 +3,7 @@
   Vacaciones - Página Principal
 ================================================*/
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener("DOMContentLoaded", function () {
   initForm();
   initCalendar();
 });
@@ -13,28 +13,28 @@ document.addEventListener('DOMContentLoaded', function() {
 // ========================================
 
 function initForm() {
-  const formSolicitud = document.getElementById('formSolicitud');
-  const observaciones = document.getElementById('observaciones');
-  const charCount = document.getElementById('charCount');
-  const tipoPermiso = document.getElementById('tipoPermiso');
+  const formSolicitud = document.getElementById("formSolicitud");
+  const observaciones = document.getElementById("observaciones");
+  const charCount = document.getElementById("charCount");
+  const tipoPermiso = document.getElementById("tipoPermiso");
 
   // Contador de caracteres
   if (observaciones && charCount) {
-    observaciones.addEventListener('input', function() {
+    observaciones.addEventListener("input", function () {
       charCount.textContent = this.value.length;
     });
   }
 
   // Cambio de tipo de permiso
   if (tipoPermiso) {
-    tipoPermiso.addEventListener('change', function() {
+    tipoPermiso.addEventListener("change", function () {
       updateDescripcion(this.value);
     });
   }
 
   // Submit del formulario
   if (formSolicitud) {
-    formSolicitud.addEventListener('submit', function(e) {
+    formSolicitud.addEventListener("submit", function (e) {
       e.preventDefault();
       submitForm();
     });
@@ -43,29 +43,29 @@ function initForm() {
 
 function updateDescripcion(tipo) {
   const descripciones = {
-    'vacaciones': {
-      title: 'Solicitud de Vacaciones',
-      desc: 'Selecciona los días que deseas tomar de vacaciones.',
-      icon: 'umbrella-beach'
+    vacaciones: {
+      title: "Solicitud de Vacaciones",
+      desc: "Selecciona los días que deseas tomar de vacaciones.",
+      icon: "umbrella-beach",
     },
-    'permiso': {
-      title: 'Solicitud de Permiso',
-      desc: 'Registra tu permiso personal o laboral.',
-      icon: 'file-check'
+    permiso: {
+      title: "Solicitud de Permiso",
+      desc: "Registra tu permiso personal o laboral.",
+      icon: "file-check",
     },
-    'horas': {
-      title: 'Campos para Horas extras',
-      desc: 'Registra el tiempo laborado fuera de tu horario habitual.',
-      icon: 'clock'
+    horas: {
+      title: "Campos para Horas extras",
+      desc: "Registra el tiempo laborado fuera de tu horario habitual.",
+      icon: "clock",
     },
-    'incapacidad': {
-      title: 'Solicitud de Incapacidad',
-      desc: 'Adjunta el documento médico correspondiente.',
-      icon: 'bandage'
-    }
+    incapacidad: {
+      title: "Solicitud de Incapacidad",
+      desc: "Adjunta el documento médico correspondiente.",
+      icon: "bandage",
+    },
   };
 
-  const grupoDes = document.getElementById('descripcionGroup');
+  const grupoDes = document.getElementById("descripcionGroup");
   if (grupoDes && descripciones[tipo]) {
     const info = descripciones[tipo];
     grupoDes.innerHTML = `
@@ -84,10 +84,14 @@ function updateDescripcion(tipo) {
 
 function submitForm() {
   // Aquí iría el submit del formulario (cuando el backend esté listo)
-  console.log('Formulario enviado');
-  
+  console.log("Formulario enviado");
+
   // Por ahora, mostrar notificación
-  showNotification('Solicitud en captura', 'La solicitud ha sido capturada localmente.', 'info');
+  showNotification(
+    "Solicitud en captura",
+    "La solicitud ha sido capturada localmente.",
+    "info",
+  );
 }
 
 // ========================================
@@ -95,19 +99,19 @@ function submitForm() {
 // ========================================
 
 function initCalendar() {
-  const meses = document.querySelectorAll('.calendar-month');
-  
+  const meses = document.querySelectorAll(".calendar-month");
+
   meses.forEach((mes, index) => {
     // Marcar julio como activo
     if (index === 6) {
-      mes.classList.add('active');
+      mes.classList.add("active");
     }
 
-    mes.addEventListener('click', function() {
+    mes.addEventListener("click", function () {
       // Remover active de todos
-      meses.forEach(m => m.classList.remove('active'));
+      meses.forEach((m) => m.classList.remove("active"));
       // Agregar active al clickeado
-      this.classList.add('active');
+      this.classList.add("active");
     });
   });
 }
@@ -116,9 +120,9 @@ function initCalendar() {
 // NOTIFICACIONES
 // ========================================
 
-function showNotification(titulo, mensaje, tipo = 'success') {
+function showNotification(titulo, mensaje, tipo = "success") {
   // Crear elemento de notificación
-  const notif = document.createElement('div');
+  const notif = document.createElement("div");
   notif.className = `notification notification-${tipo}`;
   notif.innerHTML = `
     <div class="notif-content">
@@ -142,11 +146,40 @@ function showNotification(titulo, mensaje, tipo = 'success') {
 // INTERACCIONES DE TABLA
 // ========================================
 
-document.addEventListener('click', function(e) {
+document.addEventListener("click", function (e) {
   // Click en fila de tabla
-  if (e.target.closest('.tabla tbody tr')) {
-    const fila = e.target.closest('tr');
-    console.log('Fila clickeada:', fila);
+  if (e.target.closest(".tabla tbody tr")) {
+    const fila = e.target.closest("tr");
+    console.log("Fila clickeada:", fila);
   }
 });
-//actualizarBarra(saldoDisponible);
+
+document.addEventListener("wizard:render", (event) => {
+  const step = event.detail.step;
+
+  switch (step) {
+    case 1:
+      document.getElementById("dynamicForm").innerHTML = formularioVacaciones();
+
+      actualizarBarra(saldoDisponible);
+
+      break;
+
+    case 2:
+      document.getElementById("dynamicForm").innerHTML = resumenVacaciones();
+
+      break;
+  }
+});
+
+const coach = new CoachMark({
+  steps: [
+    {
+      title: "Nueva solicitud",
+
+      description: "Aquí podrás crear solicitudes de vacaciones.",
+    },
+  ],
+});
+
+coach.start();

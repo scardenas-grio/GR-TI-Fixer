@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>403 - Acceso restringido</title>
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/403.css') }}"
+    />
+  </head>
+
+  <body>
+    <main class="error-page">
+      <div class="error-card">
+        <div class="error-number">403</div>
+
+        <div class="error-icon">🚀</div>
+
+        <h1>Acceso restringido</h1>
+
+        <p>
+          No tienes los permisos necesarios para acceder a esta sección de
+          TI-Fixer.
+        </p>
+
+        <button type="button" onclick="history.back()" class="btn-volver">
+          ← Regresar
+        </button>
+      </div>
+    </main>
+  </body>
+</html>

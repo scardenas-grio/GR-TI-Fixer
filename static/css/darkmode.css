@@ -52,13 +52,18 @@
 .tabla-reportes tr:hover {
 
   background:
-    rgba(59,130,246,0.05);
+    rgba(59, 130, 246, 0.05);
 }
 
 
 /* =========================
    DARK MODE OVERRIDES
 ========================= */
+
+
+/* =========================================
+   TEXTOS GENERALES
+========================================= */
 
 body.dark .dashboard-header h1,
 body.dark .card h1,
@@ -68,37 +73,233 @@ body.dark .grafica-titulo {
   color: #f8fafc;
 }
 
+
 body.dark .dashboard-header p,
 body.dark .card p,
 body.dark .card h3,
 body.dark .reporte-card-kpi p,
 body.dark .reporte-card-kpi span,
 body.dark #insights p,
-body.dark .feed-time ,body.dark .feed-msg ,body.dark #tablaActividad td:nth-child(4)  {
-  color: rgba(255,255,255,.65);
+body.dark .feed-time,
+body.dark .feed-msg,
+body.dark #tablaActividad td:nth-child(4) {
+  color: rgba(255, 255, 255, 0.65);
 }
 
-/* =========================
-   DASHBOARD - RESUMEN EJECUTIVO
-========================= */
+
+/* =========================================
+   DASHBOARD — RESUMEN EJECUTIVO
+========================================= */
 
 body.dark .chart-item {
-    border-color: rgba(255, 255, 255, 0.103);
+  border-color: rgba(255, 255, 255, 0.10);
 }
 
-body.dark .chart-item:nth-of-type(1) {
-    background: rgba(70, 138, 247, 0.12);
+
+/* Usuarios LDAP */
+
+body.dark .chart-item:nth-child(1) {
+  background: rgba(70, 138, 247, 0.12);
 }
 
-body.dark .chart-item:nth-of-type(2) {
-    background: rgba(168,85,247,.12);
+
+/* Usuarios con acceso */
+
+body.dark .chart-item:nth-child(2) {
+  background: rgba(168, 85, 247, 0.12);
 }
 
-body.dark .chart-item:nth-of-type(3) {
-    background: rgba(245,158,11,.12);
+
+/* Administradores */
+
+body.dark .chart-item:nth-child(3) {
+  background: rgba(245, 158, 11, 0.12);
 }
+
+
+/* Cuarto indicador */
+
+body.dark .chart-item:nth-child(4) {
+  background: rgba(34, 197, 94, 0.12);
+}
+
 
 body.dark .chart-info small,
 body.dark .chart-info strong {
-    color: #f8fafc;
+  color: #f8fafc;
+}
+
+
+/* =========================================
+   TI ACADEMY — DRAWER EN MODO OSCURO
+   El drawer conserva fondo claro
+========================================= */
+
+body.dark .academy-drawer {
+  background: #ffffff;
+
+  color: #0f172a;
+}
+
+
+/* =========================================
+   TI ACADEMY — HEADER
+========================================= */
+
+body.dark .academy-title h2 {
+  color: #0f172a !important;
+}
+
+
+body.dark .academy-title span {
+  color: #7b8ba1 !important;
+}
+
+
+body.dark .academy-close {
+  background: #f4f6fb;
+
+  color: #0f172a !important;
+}
+
+
+body.dark .academy-close:hover {
+  background: #e9edf6;
+}
+
+
+/* =========================================
+   TI ACADEMY — CONTENIDO
+========================================= */
+
+body.dark .academy-content {
+  color: #0f172a;
+}
+
+
+/* =========================================
+   TI ACADEMY — CURSOS
+========================================= */
+
+body.dark .academy-section-title {
+  color: #0f172a !important;
+}
+
+
+body.dark .academy-course {
+  background: #ffffff;
+
+  color: #0f172a;
+
+  border-color: #edf1f7;
+}
+
+
+body.dark .academy-course h4 {
+  color: #0f172a !important;
+}
+
+
+body.dark .academy-course p {
+  color: #6f7d93 !important;
+}
+
+
+body.dark .academy-course small {
+  color: #8c98aa !important;
+}
+
+
+/* =========================================
+   TI ACADEMY — BOTONES DE CURSOS
+========================================= */
+
+/* Pendiente / En progreso */
+
+body.dark .academy-course-btn {
+  background: #4F8CFF;
+
+  color: #ffffff !important;
+}
+
+
+body.dark .academy-course-btn:hover {
+  background: #3c77e8;
+}
+
+
+/* Completado */
+
+body.dark .academy-course-btn.completed {
+  background: #22c55e;
+
+  color: #ffffff !important;
+}
+
+
+body.dark .academy-course-btn.completed:hover {
+  background: #16a34a;
+}
+
+
+/* =========================================
+   TI ACADEMY — ESTADOS
+========================================= */
+
+body.dark .academy-course-status.pending {
+  color: #64748b;
+
+  background: #f1f5f9;
+}
+
+
+body.dark .academy-course-status.progress {
+  color: #2563eb;
+
+  background: #eff6ff;
+}
+
+
+body.dark .academy-course-status.completed {
+  color: #15803d;
+
+  background: #ecfdf5;
+}
+
+
+/* =========================================
+   DASHBOARD — KPI EN MODO OSCURO
+========================================= */
+
+body.dark .dashboard-kpi {
+  background:
+    linear-gradient(180deg,
+      rgba(15, 23, 42, 0.95),
+      rgba(15, 23, 42, 1));
+
+  border-color: var(--border-color);
+}
+
+
+body.dark .dashboard-kpi .kpi-info span,
+body.dark .dashboard-kpi .kpi-info h2,
+body.dark .dashboard-kpi .kpi-info small {
+  color: var(--text-main);
+}
+
+
+/* =========================================
+   DASHBOARD — ICONOS KPI
+========================================= */
+
+body.dark .dashboard-kpi .kpi-bg-icon {
+  opacity: 0.32;
+
+  filter:
+    drop-shadow(0 2px 6px rgba(255, 255, 255, 0.08));
+}
+
+
+body.dark .dashboard-kpi:hover .kpi-bg-icon {
+  opacity: 0.42;
 }

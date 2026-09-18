@@ -18,8 +18,9 @@ services:
       PYTHONUNBUFFERED: "1"
 
     volumes:
-      - ./database:/app/database
-      - ./uploads:/app/uploads
-      - ./logs:/app/logs
+       - ./:/app
+      #- ./database:/app/database
+      #- ./uploads:/app/uploads
+      #- ./logs:/app/logs
 
     restart: unless-stopped
