@@ -1,5 +1,5 @@
 const academyCourses = [
-    {
+  {
     id: "dashboard",
 
     icon: "📊",
@@ -78,5 +78,26 @@ const academyCourses = [
     permiso: "puntos",
 
     ruta: "/puntos",
+  },
+
+  {
+    id: "vacaciones",
+
+    icon: "🏖️",
+
+    title: "Vacaciones",
+
+    description:
+      "Aprende a crear y consultar solicitudes de vacaciones y permisos.",
+
+    level: "Básico",
+
+    duration: "4 min",
+
+    status: "pending",
+
+    permiso: "vacaciones",
+
+    ruta: "/vacaciones",
   },
 ];

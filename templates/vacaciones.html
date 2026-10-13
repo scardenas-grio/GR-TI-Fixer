@@ -27,6 +27,41 @@
   </section>
 
   <!-- ===========================
+     MENÚ DE VACACIONES
+============================ -->
+
+  <nav class="vacaciones-tabs" aria-label="Navegación de Vacaciones">
+    <button type="button" id="tabSolicitud" class="vacaciones-tab active">
+      <i class="fa-solid fa-file-pen"></i>
+      <span>Solicitud</span>
+    </button>
+
+    <button type="button" id="tabHistorial" class="vacaciones-tab">
+      <i class="fa-solid fa-clock-rotate-left"></i>
+      <span>Historial</span>
+    </button>
+
+    {% if "vacaciones_admin" in session.get("permisos", []) %}
+
+    <button type="button" id="tabAutorizaciones" class="vacaciones-tab">
+      <i class="fa-solid fa-list-check"></i>
+      <span>Autorizaciones</span>
+    </button>
+
+    <button type="button" class="vacaciones-tab">
+      <i class="fa-solid fa-chart-column"></i>
+      <span>Reportes</span>
+    </button>
+
+    <button type="button" class="vacaciones-tab">
+      <i class="fa-solid fa-gear"></i>
+      <span>Configuración</span>
+    </button>
+
+    {% endif %}
+  </nav>
+
+  <!-- ===========================
        KPI CARDS
   ============================ -->
 
@@ -76,105 +111,80 @@
        WORKSPACE
   ============================ -->
 
-  <section class="vacaciones-workspace">
+  <section class="vacaciones-workspace" id="vacacionesSolicitudView">
     <!-- Panel izquierdo: Nueva solicitud y solicitudes recientes -->
     <div class="workspace-left">
-      <!-- Nueva solicitud -->
-      <div class="card workspace-card">
-        <div class="card-header">
-          <h2>Nueva solicitud</h2>
+      <!-- ===========================
+     WIZARD - NUEVA SOLICITUD
+============================ -->
+
+      <div class="card workspace-card wizard-card-container">
+        <!-- HEADER DEL WIZARD -->
+        <div class="wizard-header">
+          <div class="wizard-header-info">
+            <span class="wizard-label">Nueva solicitud</span>
+
+            <h2 id="wizardTitle">Información de la solicitud</h2>
+
+            <p id="wizardSubtitle">Completa los datos para continuar.</p>
+          </div>
+
+          <div class="wizard-counter">
+            Paso
+            <strong id="wizardCurrentStep">1</strong>
+            de
+            <strong id="wizardTotalSteps">4</strong>
+          </div>
         </div>
 
-        <div class="workspace-body">
-          <form id="formSolicitud" class="solicitud-form">
-            <!-- Tipo de permiso -->
-            <div class="form-group">
-              <label>Tipo de permiso</label>
-              <select id="tipoPermiso" class="form-control">
-                <option value="">Seleccionar tipo...</option>
-                <option value="vacaciones">Vacaciones</option>
-                <option value="permiso">Permiso</option>
-                <option value="horas">Horas extras</option>
-                <option value="incapacidad">Incapacidad</option>
-              </select>
-            </div>
+        <!-- PROGRESO -->
+        <div class="wizard-progress">
+          <div class="progress-step active">
+            <span>1</span>
+            <small>Solicitud</small>
+          </div>
 
-            <!-- Motivo de permiso -->
-            <div class="form-group">
-              <label>Motivo de permiso</label>
-              <select id="motivoPermiso" class="form-control">
-                <option value="">Seleccionar motivo...</option>
-                <option value="descanso">Descanso anual</option>
-                <option value="vacante">Cubrir vacante en el área</option>
-                <option value="personal">Asunto personal</option>
-              </select>
-            </div>
+          <div class="progress-line"></div>
 
-            <!-- Descripción dinámica -->
-            <div class="form-group" id="descripcionGroup">
-              <div class="desc-box">
-                <div class="desc-icon">
-                  <i class="fa-solid fa-clock"></i>
-                </div>
-                <div class="desc-content">
-                  <h4>Campos para Horas extras</h4>
-                  <p>Registra el tiempo laborado fuera de tu horario habitual.</p>
-                </div>
-              </div>
-            </div>
+          <div class="progress-step">
+            <span>2</span>
+            <small>Información</small>
+          </div>
 
-            <!-- Fecha -->
-            <div class="form-group">
-              <label>Fecha</label>
-              <input type="date" id="fecha" class="form-control" />
-            </div>
+          <div class="progress-line"></div>
 
-            <!-- Hora inicio y fin -->
-            <div class="form-row">
-              <div class="form-group">
-                <label>Hora inicio</label>
-                <input type="time" id="horaInicio" class="form-control" />
-              </div>
-              <div class="form-group">
-                <label>Hora fin</label>
-                <input type="time" id="horaFin" class="form-control" />
-              </div>
-            </div>
+          <div class="progress-step">
+            <span>3</span>
+            <small>Revisión</small>
+          </div>
 
-            <!-- Pago -->
-            <div class="form-group">
-              <label>Pago</label>
-              <select id="pago" class="form-control">
-                <option value="">Seleccionar opción...</option>
-                <option value="con_sueldo">Con sueldo</option>
-                <option value="sin_sueldo">Sin sueldo</option>
-              </select>
-            </div>
+          <div class="progress-line"></div>
 
-            <!-- Observaciones -->
-            <div class="form-group">
-              <label>Observaciones (opcional)</label>
-              <textarea
-                id="observaciones"
-                class="form-control"
-                placeholder="Escriba una observación o comentario adicional..."
-                rows="3"
-              ></textarea>
-              <span class="char-count"><span id="charCount">0</span> / 250</span>
-            </div>
+          <div class="progress-step">
+            <span>4</span>
+            <small>Confirmación</small>
+          </div>
+        </div>
 
-            <!-- Botón solicitar -->
-            <button type="submit" class="btn btn-primary btn-block">
-              <i class="fa-solid fa-paper-plane"></i>
-              Solicitar
-            </button>
+        <!-- CONTENIDO DINÁMICO -->
+        <div id="dynamicForm" class="wizard-content"></div>
 
-            <!-- Nota de información -->
-            <div class="form-note">
-              <i class="fa-solid fa-info-circle"></i>
-              <small>Tu solicitud será enviada a Recursos Humanos y a tu jefe directo para su autorización.</small>
-            </div>
-          </form>
+        <!-- BOTONES -->
+        <div class="wizard-actions">
+          <button
+            type="button"
+            id="btnAnterior"
+            class="btn btn-secondary"
+            disabled
+          >
+            <i class="fa-solid fa-arrow-left"></i>
+            Anterior
+          </button>
+
+          <button type="button" id="btnSiguiente" class="btn btn-primary">
+            Siguiente
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
         </div>
       </div>
 
@@ -340,9 +350,17 @@
               </div>
             </div>
             <div class="detail-info">
-              <p><i class="fa-solid fa-user"></i> Autorizado por: Guadalupe Zúñiga (RH)</p>
-              <p><i class="fa-solid fa-clock"></i> Registro: 24 Jul 2026 09:01</p>
-              <p><i class="fa-solid fa-note-sticky"></i> Observación: Cubrir vacante en el área</p>
+              <p>
+                <i class="fa-solid fa-user"></i> Autorizado por: Guadalupe
+                Zúñiga (RH)
+              </p>
+              <p>
+                <i class="fa-solid fa-clock"></i> Registro: 24 Jul 2026 09:01
+              </p>
+              <p>
+                <i class="fa-solid fa-note-sticky"></i> Observación: Cubrir
+                vacante en el área
+              </p>
               <p><i class="fa-solid fa-wallet"></i> Pago: Con sueldo</p>
             </div>
           </div>
@@ -433,6 +451,409 @@
   </section>
 </div>
 
+<!-- ===========================
+     VISTA: AUTORIZACIONES
+=========================== -->
+
+<section id="vacacionesAutorizacionesView" class="vacaciones-admin-view">
+  <!-- ENCABEZADO -->
+
+  <div class="vacaciones-admin-header">
+    <div>
+      <span class="admin-eyebrow"> Gestión administrativa </span>
+
+      <h2>
+        <i class="fa-solid fa-list-check"></i>
+        Autorizaciones
+      </h2>
+
+      <p>
+        Revisa y gestiona las solicitudes laborales pendientes de autorización.
+      </p>
+    </div>
+
+    <div class="admin-stats">
+      <div class="admin-stat-card pending">
+        <span>Pendientes</span>
+        <strong id="adminPendingCount">0</strong>
+      </div>
+
+      <div class="admin-stat-card approved">
+        <span>Aprobadas</span>
+        <strong id="adminApprovedCount">0</strong>
+      </div>
+
+      <div class="admin-stat-card rejected">
+        <span>Rechazadas</span>
+        <strong id="adminRejectedCount">0</strong>
+      </div>
+
+      <div class="admin-stat-card total">
+        <span>Total</span>
+        <strong id="adminTotalCount">0</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILTROS -->
+
+  <div class="card vacaciones-admin-filters">
+    <div class="admin-search">
+      <label for="adminSearch"> Buscar </label>
+
+      <div class="admin-search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+
+        <input
+          type="text"
+          id="adminSearch"
+          placeholder="Buscar empleado, motivo..."
+        />
+      </div>
+    </div>
+
+    <div class="admin-filter">
+      <label for="adminTipo"> Tipo </label>
+
+      <select id="adminTipo">
+        <option value="todos">Todos</option>
+        <option value="vacaciones">Vacaciones</option>
+        <option value="permiso">Permiso</option>
+        <option value="horas">Horas extras</option>
+        <option value="incapacidad">Incapacidad</option>
+      </select>
+    </div>
+
+    <div class="admin-filter">
+      <label for="adminEstado"> Estado </label>
+
+      <select id="adminEstado">
+        <option value="todos">Todos</option>
+        <option value="pendiente">Pendiente</option>
+        <option value="aprobado">Aprobado</option>
+        <option value="rechazado">Rechazado</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- TABLA -->
+
+  <div class="card vacaciones-admin-table-card">
+    <div class="admin-table-header">
+      <div>
+        <h3>Solicitudes</h3>
+
+        <span id="adminResultCount"> 4 solicitudes encontradas </span>
+      </div>
+
+      <button type="button" class="admin-refresh-btn" id="adminRefresh">
+        <i class="fa-solid fa-rotate"></i>
+        Actualizar
+      </button>
+    </div>
+
+    <div class="tabla-wrapper">
+      <table class="tabla vacaciones-admin-table">
+        <thead>
+          <tr>
+            <th>Empleado</th>
+            <th>Tipo</th>
+            <th>Motivo</th>
+            <th>Fecha</th>
+            <th>Duración</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody id="adminSolicitudesBody"></tbody>
+      </table>
+    </div>
+
+    <!-- SIN RESULTADOS -->
+
+    <div id="adminNoResults" class="admin-no-results" hidden>
+      <div class="admin-no-results-icon">
+        <i class="fa-solid fa-inbox"></i>
+      </div>
+
+      <h3>No se encontraron solicitudes</h3>
+
+      <p>Prueba modificando los filtros de búsqueda.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===========================
+     MODAL - CALENDARIO MENSUAL
+=========================== -->
+
+<div
+  id="calendarioMensualModal"
+  class="calendar-month-modal"
+  aria-hidden="true"
+>
+  <div class="calendar-month-modal-overlay"></div>
+
+  <div
+    class="calendar-month-modal-card"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="calendarModalTitle"
+  >
+    <!-- HEADER -->
+
+    <div class="calendar-month-modal-header">
+      <div>
+        <span class="calendar-modal-eyebrow"> Calendario laboral </span>
+
+        <h2 id="calendarModalTitle">Julio 2026</h2>
+      </div>
+
+      <button
+        type="button"
+        id="calendarModalClose"
+        class="calendar-month-modal-close"
+        aria-label="Cerrar calendario"
+      >
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- NAVEGACIÓN -->
+
+    <div class="calendar-modal-navigation">
+      <button
+        type="button"
+        id="calendarModalPrev"
+        class="calendar-modal-nav-btn"
+      >
+        <i class="fa-solid fa-chevron-left"></i>
+        Anterior
+      </button>
+
+      <button
+        type="button"
+        id="calendarModalToday"
+        class="calendar-modal-today-btn"
+      >
+        Hoy
+      </button>
+
+      <button
+        type="button"
+        id="calendarModalNext"
+        class="calendar-modal-nav-btn"
+      >
+        Siguiente
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
+
+    <!-- CALENDARIO -->
+
+    <div class="calendar-modal-calendar">
+      <div class="calendar-modal-weekdays">
+        <span>Lun</span>
+        <span>Mar</span>
+        <span>Mié</span>
+        <span>Jue</span>
+        <span>Vie</span>
+        <span>Sáb</span>
+        <span>Dom</span>
+      </div>
+
+      <div id="calendarModalGrid" class="calendar-modal-grid"></div>
+    </div>
+
+    <!-- DETALLE DEL DÍA -->
+
+    <div id="calendarModalDetail" class="calendar-modal-detail">
+      <div class="calendar-modal-detail-empty">
+        <i class="fa-regular fa-calendar"></i>
+
+        <div>
+          <strong>Selecciona un día</strong>
+
+          <p>Selecciona una fecha para consultar los eventos registrados.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEYENDA -->
+
+    <div class="calendar-modal-legend">
+      <div class="legend-item">
+        <span class="legend-dot ausencia"></span>
+        <small>Ausencia</small>
+      </div>
+
+      <div class="legend-item">
+        <span class="legend-dot cumple"></span>
+        <small>Cumpleaños</small>
+      </div>
+
+      <div class="legend-item">
+        <span class="legend-dot descanso"></span>
+        <small>Descanso</small>
+      </div>
+
+      <div class="legend-item">
+        <span class="legend-dot falta"></span>
+        <small>Falta injustificada</small>
+      </div>
+
+      <div class="legend-item">
+        <span class="legend-dot horas"></span>
+        <small>Horas extras</small>
+      </div>
+
+      <div class="legend-item">
+        <span class="legend-dot incapacidad"></span>
+        <small>Incapacidad</small>
+      </div>
+
+      <div class="legend-item">
+        <span class="legend-dot permiso"></span>
+        <small>Permiso</small>
+      </div>
+
+      <div class="legend-item">
+        <span class="legend-dot autorizar"></span>
+        <small>Por autorizar</small>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+
+    <div class="calendar-month-modal-footer">
+      <button
+        type="button"
+        id="calendarModalCloseFooter"
+        class="btn btn-secondary"
+      >
+        Cerrar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===========================
+     MODAL - DETALLE SOLICITUD
+=========================== -->
+
+<div id="adminSolicitudModal" class="admin-modal" aria-hidden="true">
+  <div class="admin-modal-overlay"></div>
+
+  <div
+    class="admin-modal-card"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="adminModalTitle"
+  >
+    <div class="admin-modal-header">
+      <div>
+        <span class="admin-modal-eyebrow"> Detalle de solicitud </span>
+
+        <h2 id="adminModalTitle">Solicitud #1</h2>
+      </div>
+
+      <button
+        type="button"
+        id="adminModalClose"
+        class="admin-modal-close"
+        aria-label="Cerrar"
+      >
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="admin-modal-body">
+      <!-- EMPLEADO -->
+
+      <div class="admin-detail-employee">
+        <div class="admin-detail-avatar" id="adminModalAvatar">JU</div>
+
+        <div>
+          <strong id="adminModalEmployee"> Juan Pérez </strong>
+
+          <span id="adminModalRequest"> Solicitud #1 </span>
+        </div>
+      </div>
+
+      <!-- ESTADO -->
+
+      <div class="admin-detail-status-row">
+        <span class="admin-detail-label"> Estado </span>
+
+        <span id="adminModalStatus" class="admin-status pendiente">
+          Pendiente
+        </span>
+      </div>
+
+      <!-- INFORMACIÓN -->
+
+      <div class="admin-detail-grid">
+        <div class="admin-detail-item">
+          <span>Tipo de solicitud</span>
+
+          <strong id="adminModalTipo"> Vacaciones </strong>
+        </div>
+
+        <div class="admin-detail-item">
+          <span>Fecha</span>
+
+          <strong id="adminModalFecha"> 24 Sep 2026 </strong>
+        </div>
+
+        <div class="admin-detail-item">
+          <span>Duración</span>
+
+          <strong id="adminModalDuracion"> 5 días </strong>
+        </div>
+
+        <div class="admin-detail-item">
+          <span>Motivo</span>
+
+          <strong id="adminModalMotivo"> Descanso anual </strong>
+        </div>
+      </div>
+
+      <!-- OBSERVACIONES -->
+
+      <div class="admin-detail-observations">
+        <span> Observaciones </span>
+
+        <p id="adminModalObservaciones">
+          Solicita los días correspondientes a su periodo vacacional.
+        </p>
+      </div>
+    </div>
+
+    <!-- ACCIONES -->
+
+    <div id="adminModalActions" class="admin-modal-actions">
+      <button
+        type="button"
+        id="adminModalReject"
+        class="admin-modal-btn reject"
+      >
+        <i class="fa-solid fa-xmark"></i>
+        Rechazar
+      </button>
+
+      <button
+        type="button"
+        id="adminModalApprove"
+        class="admin-modal-btn approve"
+      >
+        <i class="fa-solid fa-check"></i>
+        Aprobar
+      </button>
+    </div>
+  </div>
+</div>
+
 <script src="{{ url_for('static', filename='js/components/wizard.js') }}"></script>
 
 <script src="{{ url_for('static', filename='js/components/coachmark.js') }}"></script>
@@ -440,5 +861,7 @@
 <script src="{{ url_for('static', filename='js/pages/vacaciones/vacaciones.form.js') }}"></script>
 
 <script src="{{ url_for('static', filename='js/pages/vacaciones/vacaciones.js') }}"></script>
+
+<script src="{{ url_for('static', filename='js/pages/vacaciones/vacaciones.admin.js') }}"></script>
 
 {% endblock %}

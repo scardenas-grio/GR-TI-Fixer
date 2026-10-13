@@ -14,3 +14,5 @@ tutorialManager.register(dashboardTutorial.id, dashboardTutorial);
 tutorialManager.register(reportesTutorial.id, reportesTutorial);
 
 tutorialManager.register(puntosTutorial.id, puntosTutorial);
+
+tutorialManager.register(vacacionesTutorial.id, vacacionesTutorial);

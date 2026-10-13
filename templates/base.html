@@ -130,6 +130,41 @@
           </li>
 
           <!-- =========================
+              VACACIONES
+          ========================== -->
+          {% if session.rol == "superadmin" or "vacaciones" in session.permisos
+          %}
+          <li class="accordion-item">
+            <button
+              class="accordion-btn {% if request.path == '/vacaciones' %} active {% endif %}"
+            >
+              <div>
+                <i class="fa-solid fa-umbrella-beach"></i>
+
+                <span>VACACIONES</span>
+              </div>
+
+              <i class="fa-solid fa-chevron-down"></i>
+            </button>
+
+            <div
+              class="accordion-content {% if request.path == '/vacaciones' %} open {% endif %}"
+            >
+              <a
+                href="/vacaciones"
+                class="{% if request.path == '/vacaciones' %} active-link {% endif %}"
+              >
+                <span class="menu-icon">
+                  <i class="fa-solid fa-calendar-days"></i>
+                </span>
+
+                <span class="menu-text">Solicitar vacaciones</span>
+              </a>
+            </div>
+          </li>
+          {% endif %}
+
+          <!-- =========================
               SEMAFORO
           ========================== -->
           {% if es_admin or "transcripcion" in session.permisos %}
@@ -344,6 +379,7 @@
     <script src="{{ url_for('static', filename='js/pages/usuarios/usuarios.tutorial.js') }}"></script>
     <script src="{{ url_for('static', filename='js/pages/reportes/reportes.tutorial.js') }}"></script>
     <script src="{{ url_for('static', filename='js/pages/puntos/puntos.tutorial.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/pages/vacaciones/vacaciones.tutorial.js') }}"></script>
     <script src="{{ url_for('static', filename='js/learning/learning.js') }}"></script>
     <script src="{{ url_for('static', filename='js/components/coachmark.js') }}"></script>
   </body>

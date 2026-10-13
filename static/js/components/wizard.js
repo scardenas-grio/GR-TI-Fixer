@@ -1,17 +1,17 @@
 const wizardConfig = {
   1: {
     title: "Información de la solicitud",
-    subtitle: "Completa los datos para continuar.",
+    subtitle: "Selecciona el tipo de solicitud que deseas realizar.",
   },
 
   2: {
-    title: "Revisión",
-    subtitle: "Verifica que toda la información sea correcta.",
+    title: "Información",
+    subtitle: "Completa los datos para continuar.",
   },
 
   3: {
-    title: "Confirmación",
-    subtitle: "Confirma que deseas enviar la solicitud.",
+    title: "Revisión",
+    subtitle: "Verifica que toda la información sea correcta.",
   },
 
   4: {
@@ -118,7 +118,25 @@ class Wizard {
   renderButtons() {
     this.previousButton.disabled = this.currentStep === 1;
 
-    this.nextButton.disabled = this.currentStep === this.totalSteps;
+    if (this.currentStep === this.totalSteps) {
+      this.nextButton.disabled = false;
+
+      this.nextButton.innerHTML = `
+      Nueva solicitud
+      <i class="fa-solid fa-plus"></i>
+    `;
+
+      this.nextButton.classList.add("wizard-new-request");
+    } else {
+      this.nextButton.disabled = false;
+
+      this.nextButton.innerHTML = `
+      Siguiente
+      <i class="fa-solid fa-arrow-right"></i>
+    `;
+
+      this.nextButton.classList.remove("wizard-new-request");
+    }
   }
 
   renderStep() {
@@ -132,7 +150,31 @@ class Wizard {
   }
 
   next() {
-    if (this.currentStep >= this.totalSteps) return;
+    // ========================================
+    // PASO FINAL
+    // ========================================
+
+    if (this.currentStep >= this.totalSteps) {
+      this.restart();
+
+      return;
+    }
+
+    // ========================================
+    // VALIDACIÓN PASO 1
+    // ========================================
+
+    if (this.currentStep === 1) {
+      if (!tipoSolicitudSeleccionada) {
+        showNotification(
+          "Selecciona una solicitud",
+          "Debes seleccionar el tipo de solicitud para continuar.",
+          "info",
+        );
+
+        return;
+      }
+    }
 
     this.currentStep++;
 
@@ -153,6 +195,24 @@ class Wizard {
     this.currentStep--;
 
     this.update();
+  }
+
+  restart() {
+    console.log("🔄 Iniciando una nueva solicitud");
+
+    this.currentStep = 1;
+
+    document.dispatchEvent(new CustomEvent("wizard:restart"));
+
+    this.update();
+
+    document.dispatchEvent(
+      new CustomEvent("wizard:change", {
+        detail: {
+          step: 1,
+        },
+      }),
+    );
   }
 }
 

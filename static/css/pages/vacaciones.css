@@ -757,3 +757,2305 @@ textarea.form-control {
     grid-template-columns: 1fr;
   }
 }
+
+/* ===========================
+   WIZARD
+=========================== */
+
+.wizard-card-container {
+  position: relative;
+}
+
+
+/* HEADER */
+
+.wizard-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.wizard-header-info {
+  min-width: 0;
+}
+
+.wizard-label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.wizard-header h2 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.wizard-header p {
+  margin: 5px 0 0;
+  font-size: 12px;
+  color: var(--text-soft);
+}
+
+
+/* CONTADOR */
+
+.wizard-counter {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--bg-secondary);
+  color: var(--text-soft);
+  font-size: 11px;
+}
+
+.wizard-counter strong {
+  color: var(--text-main);
+  font-weight: 700;
+}
+
+
+/* PROGRESO */
+
+.wizard-progress {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.progress-step {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+}
+
+.progress-step span {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-soft);
+  font-size: 11px;
+  font-weight: 700;
+  transition: all 0.25s ease;
+}
+
+.progress-step small {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-soft);
+  white-space: nowrap;
+}
+
+.progress-step.active span {
+  background: #2f80ed;
+  border-color: #2f80ed;
+  color: white;
+}
+
+.progress-step.active small {
+  color: #2f80ed;
+}
+
+.progress-line {
+  flex: 1;
+  height: 2px;
+  margin: 0 10px;
+  background: var(--border-color);
+  transition: background 0.25s ease;
+}
+
+.progress-line.active {
+  background: #2f80ed;
+}
+
+
+/* CONTENIDO */
+
+.wizard-content {
+  min-height: 280px;
+  padding: 4px 0;
+}
+
+
+/* ACCIONES */
+
+.wizard-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.wizard-actions .btn {
+  min-width: 120px;
+}
+
+.wizard-actions .btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+
+/* ===========================
+   SELECCIÓN DE SOLICITUD
+=========================== */
+
+.solicitud-opciones {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.solicitud-opcion {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--bg-card);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.solicitud-opcion:hover {
+  border-color: rgba(47, 128, 237, 0.45);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+}
+
+.solicitud-opcion.selected {
+  border-color: #2f80ed;
+  background: rgba(47, 128, 237, 0.06);
+  box-shadow: 0 0 0 2px rgba(47, 128, 237, 0.08);
+}
+
+.solicitud-opcion-icon {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 11px;
+  background: rgba(47, 128, 237, 0.1);
+  color: #2f80ed;
+  font-size: 17px;
+}
+
+.solicitud-opcion-content {
+  min-width: 0;
+}
+
+.solicitud-opcion-content strong {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.solicitud-opcion-content span {
+  display: block;
+  color: var(--text-soft);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.solicitud-opcion-check {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 18px;
+  height: 18px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #2f80ed;
+  color: white;
+  font-size: 9px;
+}
+
+.solicitud-opcion.selected .solicitud-opcion-check {
+  display: flex;
+}
+
+/* ===========================
+   MENÚ DE VACACIONES
+=========================== */
+
+.vacaciones-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 0;
+}
+
+.vacaciones-tab {
+  border: 1px solid transparent;
+  background: #f1f3f5;
+  color: var(--text-main);
+  padding: 11px 16px;
+  border-radius: 10px 10px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vacaciones-tab i {
+  font-size: 13px;
+}
+
+.vacaciones-tab:hover {
+  background: #e8edf5;
+}
+
+.vacaciones-tab.active {
+  background: #ffffff;
+  color: #2563eb;
+  border-color: #e2e8f0;
+  border-bottom-color: #ffffff;
+  box-shadow: 0 -2px 8px rgba(15, 23, 42, 0.04);
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 768px) {
+
+  .wizard-header {
+    flex-direction: column;
+  }
+
+  .wizard-counter {
+    align-self: flex-start;
+  }
+
+  .progress-step small {
+    display: none;
+  }
+
+  .progress-line {
+    margin: 0 6px;
+  }
+
+  .solicitud-opciones {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+/* =========================================================
+   ADMINISTRACIÓN - AUTORIZACIONES
+========================================================= */
+
+.vacaciones-admin-view {
+  margin-top: 0;
+}
+
+.vacaciones-admin-view[hidden] {
+  display: none !important;
+}
+
+
+/* ===========================
+   HEADER
+=========================== */
+
+.vacaciones-admin-header {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+  padding: 22px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 16px;
+}
+
+.admin-eyebrow {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 7px;
+}
+
+.vacaciones-admin-header h2 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--text-main);
+  font-size: 21px;
+}
+
+.vacaciones-admin-header h2 i {
+  color: #2f80ed;
+}
+
+.vacaciones-admin-header p {
+  margin: 6px 0 0;
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+
+/* ===========================
+   PENDIENTES
+=========================== */
+
+.admin-pending-card {
+  min-width: 170px;
+  padding: 13px 18px;
+  border-radius: 14px;
+  background: rgba(47, 128, 237, 0.08);
+  border: 1px solid rgba(47, 128, 237, 0.14);
+  text-align: center;
+}
+
+.admin-pending-card span {
+  display: block;
+  color: var(--text-soft);
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+
+.admin-pending-card strong {
+  display: block;
+  color: #2f80ed;
+  font-size: 25px;
+  line-height: 1;
+}
+
+
+/* ===========================
+   FILTROS
+=========================== */
+
+.vacaciones-admin-filters {
+  padding: 18px;
+  display: grid;
+  grid-template-columns: minmax(260px, 1.6fr) minmax(160px, 0.7fr) minmax(160px, 0.7fr);
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.vacaciones-admin-filters label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-soft);
+  margin-bottom: 6px;
+}
+
+.admin-search-box {
+  position: relative;
+}
+
+.admin-search-box i {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.admin-search-box input,
+.vacaciones-admin-filters select {
+  width: 100%;
+  height: 40px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--bg-secondary);
+  color: var(--text-main);
+  font-size: 12px;
+  outline: none;
+}
+
+.admin-search-box input {
+  padding: 0 12px 0 36px;
+}
+
+.vacaciones-admin-filters select {
+  padding: 0 12px;
+}
+
+.admin-search-box input:focus,
+.vacaciones-admin-filters select:focus {
+  border-color: #2f80ed;
+  box-shadow: 0 0 0 3px rgba(47, 128, 237, 0.08);
+}
+
+
+/* ===========================
+   TABLA
+=========================== */
+
+.vacaciones-admin-table-card {
+  overflow: hidden;
+}
+
+.admin-table-header {
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.admin-table-header h3 {
+  margin: 0 0 3px;
+  font-size: 16px;
+  color: var(--text-main);
+}
+
+.admin-table-header span {
+  font-size: 11px;
+  color: var(--text-soft);
+}
+
+.admin-refresh-btn {
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-main);
+  border-radius: 9px;
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.admin-refresh-btn:hover {
+  border-color: #2f80ed;
+  color: #2f80ed;
+}
+
+
+/* ===========================
+   EMPLEADO
+=========================== */
+
+.admin-employee {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 150px;
+}
+
+.admin-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: rgba(47, 128, 237, 0.1);
+  color: #2f80ed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.admin-employee strong {
+  display: block;
+  font-size: 12px;
+  color: var(--text-main);
+}
+
+.admin-employee small {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-soft);
+  font-size: 9px;
+}
+
+
+/* ===========================
+   TIPO
+=========================== */
+
+.admin-type {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.admin-type-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2f80ed;
+  background: rgba(47, 128, 237, 0.08);
+  font-size: 12px;
+}
+
+
+/* ===========================
+   ESTADOS
+=========================== */
+
+.admin-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 9px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.admin-status.pendiente {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+}
+
+.admin-status.aprobado {
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
+}
+
+.admin-status.rechazado {
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+}
+
+
+/* ===========================
+   ACCIONES
+=========================== */
+
+.admin-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.admin-action-btn {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+}
+
+.admin-action-btn.view {
+  color: #475569;
+}
+
+.admin-action-btn.approve {
+  color: #059669;
+}
+
+.admin-action-btn.reject {
+  color: #dc2626;
+}
+
+.admin-action-btn:hover {
+  transform: translateY(-1px);
+}
+
+
+/* ===========================
+   SIN RESULTADOS
+=========================== */
+
+.admin-no-results {
+  padding: 55px 20px;
+  text-align: center;
+}
+
+.admin-no-results[hidden] {
+  display: none !important;
+}
+
+.admin-no-results-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(148, 163, 184, 0.1);
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+  font-size: 18px;
+}
+
+.admin-no-results h3 {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-main);
+}
+
+.admin-no-results p {
+  margin: 5px 0 0;
+  color: var(--text-soft);
+  font-size: 11px;
+}
+
+/* ===========================
+   CAMBIO DE VISTAS
+=========================== */
+
+.vista-oculta {
+  display: none !important;
+}
+
+/* =========================================================
+   MODAL - DETALLE DE SOLICITUD
+========================================================= */
+
+.admin-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.admin-modal.open {
+  display: flex;
+}
+
+.admin-modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(3px);
+}
+
+.admin-modal-card {
+  position: relative;
+  width: min(620px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+  box-shadow: 0 25px 70px rgba(15, 23, 42, 0.2);
+  z-index: 1;
+  animation: adminModalIn 0.18s ease-out;
+}
+
+@keyframes adminModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+
+/* ===========================
+   HEADER
+=========================== */
+
+.admin-modal-header {
+  padding: 20px 22px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 15px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.admin-modal-eyebrow {
+  display: block;
+  margin-bottom: 5px;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.admin-modal-header h2 {
+  margin: 0;
+  color: var(--text-main);
+  font-size: 19px;
+}
+
+.admin-modal-close {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border-color);
+  border-radius: 9px;
+  background: var(--bg-secondary);
+  color: var(--text-main);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-modal-close:hover {
+  color: #dc2626;
+  border-color: rgba(220, 38, 38, 0.25);
+}
+
+
+/* ===========================
+   BODY
+=========================== */
+
+.admin-modal-body {
+  padding: 22px;
+}
+
+.admin-detail-employee {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.admin-detail-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 13px;
+  background: rgba(47, 128, 237, 0.1);
+  color: #2f80ed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.admin-detail-employee strong {
+  display: block;
+  color: var(--text-main);
+  font-size: 14px;
+}
+
+.admin-detail-employee span {
+  display: block;
+  margin-top: 3px;
+  color: var(--text-soft);
+  font-size: 11px;
+}
+
+
+/* ===========================
+   ESTADO
+=========================== */
+
+.admin-detail-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.admin-detail-label {
+  color: var(--text-soft);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+
+/* ===========================
+   INFORMACIÓN
+=========================== */
+
+.admin-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  margin-top: 18px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+}
+
+.admin-detail-item {
+  padding: 13px 14px;
+  background: var(--bg-secondary);
+}
+
+.admin-detail-item span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--text-soft);
+  font-size: 10px;
+}
+
+.admin-detail-item strong {
+  display: block;
+  color: var(--text-main);
+  font-size: 12px;
+}
+
+
+/* ===========================
+   OBSERVACIONES
+=========================== */
+
+.admin-detail-observations {
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--bg-secondary);
+}
+
+.admin-detail-observations>span {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--text-soft);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.admin-detail-observations p {
+  margin: 0;
+  color: var(--text-main);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+
+/* ===========================
+   ACCIONES
+=========================== */
+
+.admin-modal-actions {
+  padding: 16px 22px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  border-top: 1px solid var(--border-color);
+}
+
+.admin-modal-btn {
+  min-width: 120px;
+  height: 38px;
+  border-radius: 9px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.admin-modal-btn.reject {
+  background: #ffffff;
+  color: #dc2626;
+  border-color: rgba(220, 38, 38, 0.25);
+}
+
+.admin-modal-btn.reject:hover {
+  background: rgba(220, 38, 38, 0.06);
+}
+
+.admin-modal-btn.approve {
+  background: #059669;
+  color: #ffffff;
+}
+
+.admin-modal-btn.approve:hover {
+  background: #047857;
+}
+
+/* =========================================================
+   ESTADÍSTICAS - AUTORIZACIONES
+========================================================= */
+
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(110px, 1fr));
+  gap: 10px;
+  min-width: 500px;
+}
+
+.admin-stat-card {
+  min-width: 0;
+  padding: 12px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--bg-card);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.admin-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
+.admin-stat-card span {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.admin-stat-card strong {
+  color: var(--text-main);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+
+/* ===========================
+   PENDIENTES
+=========================== */
+
+.admin-stat-card.pending {
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+.admin-stat-card.pending strong {
+  color: #d97706;
+}
+
+
+/* ===========================
+   APROBADAS
+=========================== */
+
+.admin-stat-card.approved {
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+.admin-stat-card.approved strong {
+  color: #059669;
+}
+
+
+/* ===========================
+   RECHAZADAS
+=========================== */
+
+.admin-stat-card.rejected {
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+.admin-stat-card.rejected strong {
+  color: #dc2626;
+}
+
+
+/* ===========================
+   TOTAL
+=========================== */
+
+.admin-stat-card.total {
+  border-color: rgba(47, 128, 237, 0.25);
+}
+
+.admin-stat-card.total strong {
+  color: #2f80ed;
+}
+
+/* =========================================================
+   CALENDARIO PERSONALIZADO - VACACIONES
+========================================================= */
+
+.vacaciones-form {
+  width: 100%;
+}
+
+.vacaciones-form-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.vacaciones-form-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: linear-gradient(135deg,
+      #e8f1ff,
+      #f0e8ff);
+
+  color: #2563eb;
+  font-size: 20px;
+}
+
+.vacaciones-form-header h2 {
+  margin: 0 0 4px;
+  font-size: 22px;
+}
+
+.vacaciones-form-header p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+
+/* =========================================================
+   RESUMEN SALDO
+========================================================= */
+
+.vacaciones-saldo-resumen {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr;
+
+  align-items: center;
+
+  padding: 16px 20px;
+  margin-bottom: 20px;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+
+  background: #f8fafc;
+}
+
+.saldo-resumen-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.saldo-resumen-item span {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.saldo-resumen-item strong {
+  font-size: 18px;
+  color: #0f172a;
+}
+
+.saldo-resumen-separador {
+  width: 1px;
+  height: 34px;
+  background: #dbe3ee;
+}
+
+
+/* =========================================================
+   CALENDARIO
+========================================================= */
+
+.vacaciones-calendar-container {
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+
+  background: #ffffff;
+
+  overflow: hidden;
+}
+
+.vacaciones-calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 20px 22px;
+
+  border-bottom: 1px solid #edf1f6;
+}
+
+.calendar-eyebrow {
+  display: block;
+
+  margin-bottom: 4px;
+
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+
+  color: #64748b;
+}
+
+.vacaciones-calendar-header h3 {
+  margin: 0;
+
+  font-size: 20px;
+  text-transform: capitalize;
+}
+
+.calendar-navigation {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.calendar-nav-btn,
+.calendar-today-btn {
+  border: 1px solid #dbe3ee;
+  background: #fff;
+
+  cursor: pointer;
+
+  transition: .2s ease;
+}
+
+.calendar-nav-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+}
+
+.calendar-today-btn {
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 9px;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.calendar-nav-btn:hover:not(:disabled),
+.calendar-today-btn:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.calendar-nav-btn:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   AYUDA
+========================================================= */
+
+.vacaciones-calendar-help {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  margin: 14px 20px;
+
+  padding: 10px 12px;
+
+  border-radius: 10px;
+
+  background: #f8fafc;
+
+  color: #64748b;
+
+  font-size: 12px;
+}
+
+.vacaciones-calendar-help i {
+  color: #3b82f6;
+}
+
+
+/* =========================================================
+   DÍAS DE LA SEMANA
+========================================================= */
+
+.vacaciones-calendar-weekdays,
+.vacaciones-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  column-gap: 6px;
+  row-gap: 4px;
+  padding: 0 18px;
+}
+
+.vacaciones-calendar-grid {
+  grid-auto-rows: 38px;
+  align-items: center;
+}
+
+.vacaciones-calendar-weekdays {
+  margin-bottom: 7px;
+}
+
+.vacaciones-calendar-weekdays span {
+  text-align: center;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  color: #94a3b8;
+}
+
+
+/* =========================================================
+   DÍAS
+========================================================= */
+
+.calendar-day {
+  width: 38px;
+  height: 38px;
+  min-height: 38px;
+  max-width: 38px;
+
+  justify-self: center;
+  align-self: center;
+
+  position: relative;
+
+  border: 1px solid transparent;
+  border-radius: 9px;
+
+  background: transparent;
+
+  color: #1e293b;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background .18s ease,
+    border .18s ease,
+    transform .18s ease;
+}
+
+.calendar-day:hover:not(:disabled) {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  transform: translateY(-1px);
+}
+
+.calendar-day.empty {
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.calendar-day.disabled {
+  color: #cbd5e1;
+  background: #f8fafc;
+  cursor: not-allowed;
+}
+
+.calendar-day.occupied {
+  color: #ef4444;
+  background: #fef2f2;
+  border-color: #fecaca;
+  cursor: not-allowed;
+}
+
+.calendar-day.occupied::after {
+  content: "";
+
+  position: absolute;
+
+  width: 5px;
+  height: 5px;
+
+  border-radius: 50%;
+
+  background: #ef4444;
+
+  bottom: 4px;
+  left: 50%;
+
+  transform: translateX(-50%);
+}
+
+.calendar-day.available::after {
+  content: "";
+
+  position: absolute;
+
+  width: 5px;
+  height: 5px;
+
+  border-radius: 50%;
+
+  background: #10b981;
+
+  bottom: 4px;
+  left: 50%;
+
+  transform: translateX(-50%);
+}
+
+.calendar-day.selected {
+  color: #fff;
+  background: #2563eb;
+  border-color: #2563eb;
+
+  box-shadow:
+    0 4px 10px rgba(37, 99, 235, .20);
+}
+
+.calendar-day.range-start {
+  border-radius: 9px 4px 4px 9px;
+}
+
+.calendar-day.range-end {
+  border-radius: 4px 9px 9px 4px;
+}
+
+.calendar-day.in-range {
+  color: #1d4ed8;
+  background: #dbeafe;
+  border-color: #dbeafe;
+  border-radius: 4px;
+}
+
+.calendar-day.selected:hover {
+  background: #1d4ed8;
+}
+
+/* =========================================================
+   LEYENDA
+========================================================= */
+
+.vacaciones-calendar-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+
+  padding: 18px 20px 20px;
+
+  margin-top: 14px;
+
+  border-top: 1px solid #edf1f6;
+}
+
+.calendar-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  font-size: 11px;
+  color: #64748b;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.legend-dot.available {
+  background: #10b981;
+}
+
+.legend-dot.selected {
+  background: #2563eb;
+}
+
+.legend-dot.occupied {
+  background: #ef4444;
+}
+
+.legend-dot.disabled {
+  background: #cbd5e1;
+}
+
+
+/* =========================================================
+   RESUMEN DEL PERIODO
+========================================================= */
+
+.vacaciones-periodo-resumen {
+  margin-top: 16px;
+
+  padding: 17px 20px;
+
+  border: 1px solid #dbeafe;
+  border-radius: 16px;
+
+  background: #f8fbff;
+}
+
+.periodo-resumen-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 15px;
+}
+
+.periodo-resumen-header strong {
+  font-size: 14px;
+}
+
+.periodo-dias-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 7px 10px;
+
+  border-radius: 9px;
+
+  background: #dbeafe;
+
+  color: #1d4ed8;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.periodo-fechas {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+
+  align-items: center;
+
+  gap: 14px;
+}
+
+.periodo-fecha {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.periodo-fecha span {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.periodo-fecha strong {
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.periodo-arrow {
+  color: #94a3b8;
+}
+
+/* ========================================
+   INDICADORES DE EVENTOS EN MESES
+======================================== */
+
+.calendar-month {
+  position: relative;
+}
+
+.calendar-month-events {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+
+  margin-top: 8px;
+
+  min-height: 6px;
+}
+
+.calendar-month-event-dot {
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+
+  display: inline-block;
+}
+
+/* Colores según la leyenda */
+
+.calendar-month-event-dot.ausencia {
+  background: #ef4444;
+}
+
+.calendar-month-event-dot.cumple {
+  background: #ec4899;
+}
+
+.calendar-month-event-dot.descanso {
+  background: #10b981;
+}
+
+.calendar-month-event-dot.falta {
+  background: #f59e0b;
+}
+
+.calendar-month-event-dot.horas {
+  background: #8b5cf6;
+}
+
+.calendar-month-event-dot.incapacidad {
+  background: #f59e0b;
+}
+
+.calendar-month-event-dot.permiso {
+  background: #3b82f6;
+}
+
+.calendar-month-event-dot.autorizar {
+  background: #6b7280;
+}
+
+/* ========================================
+   EVENTOS DENTRO DEL CALENDARIO
+======================================== */
+
+.calendar-day-events {
+  position: absolute;
+  left: 50%;
+  bottom: 5px;
+  transform: translateX(-50%);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+
+  min-height: 7px;
+  pointer-events: none;
+}
+
+.calendar-day-events .legend-dot {
+  display: block;
+
+  width: 6px;
+  height: 6px;
+
+  min-width: 6px;
+  min-height: 6px;
+
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.calendar-day {
+  position: relative;
+}
+
+/* =========================================================
+   MODAL - CALENDARIO MENSUAL
+========================================================= */
+
+.calendar-month-modal {
+  position: fixed;
+  inset: 0;
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+
+  z-index: 10000;
+}
+
+.calendar-month-modal.open {
+  display: flex;
+}
+
+
+/* =========================================================
+   FONDO
+========================================================= */
+
+.calendar-month-modal-overlay {
+  position: absolute;
+  inset: 0;
+
+  background: rgba(15, 23, 42, 0.58);
+
+  backdrop-filter: blur(4px);
+}
+
+
+/* =========================================================
+   TARJETA
+========================================================= */
+
+.calendar-month-modal-card {
+  position: relative;
+
+  z-index: 1;
+
+  width: min(860px, 100%);
+
+  max-height: calc(100vh - 48px);
+
+  overflow-y: auto;
+
+  background: #ffffff;
+
+  border: 1px solid #e2e8f0;
+
+  border-radius: 20px;
+
+  box-shadow:
+    0 25px 70px rgba(15, 23, 42, 0.22);
+
+  animation: calendarMonthModalIn 0.18s ease-out;
+}
+
+@keyframes calendarMonthModalIn {
+
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.calendar-month-modal-header {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  padding: 20px 22px;
+
+  border-bottom: 1px solid #edf1f6;
+}
+
+.calendar-modal-eyebrow {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #64748b;
+
+  font-size: 10px;
+
+  font-weight: 700;
+
+  letter-spacing: 0.08em;
+
+  text-transform: uppercase;
+}
+
+.calendar-month-modal-header h2 {
+  margin: 0;
+
+  color: #1e293b;
+
+  font-size: 21px;
+
+  font-weight: 700;
+
+  text-transform: capitalize;
+}
+
+.calendar-month-modal-close {
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid #dbe3ee;
+
+  border-radius: 9px;
+
+  background: #f8fafc;
+
+  color: #64748b;
+
+  cursor: pointer;
+
+  font-size: 15px;
+
+  transition: all 0.2s ease;
+}
+
+.calendar-month-modal-close:hover {
+  color: #dc2626;
+
+  border-color: rgba(220, 38, 38, 0.25);
+
+  background: rgba(220, 38, 38, 0.05);
+}
+
+
+/* =========================================================
+   NAVEGACIÓN
+========================================================= */
+
+.calendar-modal-navigation {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  padding: 16px 22px;
+
+  border-bottom: 1px solid #edf1f6;
+}
+
+.calendar-modal-nav-btn,
+.calendar-modal-today-btn {
+  height: 34px;
+
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  border: 1px solid #dbe3ee;
+
+  border-radius: 9px;
+
+  background: #ffffff;
+
+  color: #475569;
+
+  cursor: pointer;
+
+  font-size: 11px;
+
+  font-weight: 600;
+
+  transition: all 0.2s ease;
+}
+
+.calendar-modal-nav-btn {
+  padding: 0 12px;
+}
+
+.calendar-modal-today-btn {
+  padding: 0 14px;
+
+  color: #2563eb;
+}
+
+.calendar-modal-nav-btn:hover,
+.calendar-modal-today-btn:hover {
+  background: #f8fafc;
+
+  border-color: #bfdbfe;
+
+  color: #2563eb;
+}
+
+
+/* =========================================================
+   CALENDARIO MENSUAL
+========================================================= */
+
+.calendar-modal-calendar {
+  padding: 20px 22px 10px;
+}
+
+.calendar-modal-weekdays,
+.calendar-modal-grid {
+  display: grid;
+
+  grid-template-columns: repeat(7, 1fr);
+
+  column-gap: 8px;
+
+  row-gap: 7px;
+}
+
+.calendar-modal-weekdays {
+  margin-bottom: 8px;
+}
+
+.calendar-modal-weekdays span {
+  text-align: center;
+
+  color: #94a3b8;
+
+  font-size: 10px;
+
+  font-weight: 700;
+}
+
+.calendar-modal-grid {
+  grid-auto-rows: 76px;
+}
+
+
+/* =========================================================
+   DÍAS DEL MODAL
+========================================================= */
+
+.calendar-modal-day {
+  position: relative;
+
+  width: 100%;
+  height: 76px;
+
+  display: flex;
+
+  align-items: flex-start;
+  justify-content: flex-start;
+
+  padding: 9px;
+
+  border: 1px solid #edf1f6;
+
+  border-radius: 10px;
+
+  background: #ffffff;
+
+  color: #1e293b;
+
+  cursor: pointer;
+
+  font-family: inherit;
+
+  font-size: 12px;
+
+  font-weight: 600;
+
+  text-align: left;
+
+  transition: all 0.18s ease;
+}
+
+.calendar-modal-day:hover {
+  background: #f8fbff;
+
+  border-color: #bfdbfe;
+
+  transform: translateY(-1px);
+}
+
+.calendar-modal-day.empty {
+  border-color: transparent;
+
+  background: transparent;
+
+  cursor: default;
+
+  pointer-events: none;
+}
+
+.calendar-modal-day-number {
+  width: 28px;
+  height: 28px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 8px;
+
+  color: #334155;
+}
+
+.calendar-modal-day.today .calendar-modal-day-number {
+  background: #2563eb;
+
+  color: #ffffff;
+}
+
+.calendar-modal-day.selected {
+  border-color: #2563eb;
+
+  background: #f8fbff;
+
+  box-shadow:
+    0 0 0 2px rgba(37, 99, 235, 0.08);
+}
+
+.calendar-modal-day.selected .calendar-modal-day-number {
+  background: #2563eb;
+
+  color: #ffffff;
+}
+
+
+/* =========================================================
+   PUNTOS DE EVENTOS
+========================================================= */
+
+.calendar-modal-events {
+  position: absolute;
+
+  left: 9px;
+  right: 9px;
+
+  bottom: 9px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 4px;
+
+  min-height: 8px;
+
+  pointer-events: none;
+}
+
+.calendar-modal-event-dot {
+  width: 7px;
+  height: 7px;
+
+  min-width: 7px;
+
+  border-radius: 50%;
+}
+
+
+/* Usamos exactamente los colores
+   que ya tiene el calendario principal */
+
+.calendar-modal-event-dot.ausencia {
+  background: #ef4444;
+}
+
+.calendar-modal-event-dot.cumple {
+  background: #ec4899;
+}
+
+.calendar-modal-event-dot.descanso {
+  background: #10b981;
+}
+
+.calendar-modal-event-dot.falta {
+  background: #f59e0b;
+}
+
+.calendar-modal-event-dot.horas {
+  background: #8b5cf6;
+}
+
+.calendar-modal-event-dot.incapacidad {
+  background: #f59e0b;
+}
+
+.calendar-modal-event-dot.permiso {
+  background: #3b82f6;
+}
+
+.calendar-modal-event-dot.autorizar {
+  background: #6b7280;
+}
+
+
+/* =========================================================
+   DETALLE DEL DÍA
+========================================================= */
+
+.calendar-modal-detail {
+  margin: 10px 22px 0;
+
+  padding: 16px;
+
+  border: 1px solid #edf1f6;
+
+  border-radius: 12px;
+
+  background: #f8fafc;
+}
+
+.calendar-modal-detail-empty {
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+
+  color: #64748b;
+}
+
+.calendar-modal-detail-empty>i {
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 10px;
+
+  background: #ffffff;
+
+  color: #94a3b8;
+
+  font-size: 15px;
+}
+
+.calendar-modal-detail-empty strong {
+  display: block;
+
+  color: #334155;
+
+  font-size: 12px;
+}
+
+.calendar-modal-detail-empty p {
+  margin: 3px 0 0;
+
+  color: #94a3b8;
+
+  font-size: 11px;
+}
+
+
+/* =========================================================
+   EVENTO DEL DÍA
+========================================================= */
+
+.calendar-modal-event-detail {
+  display: flex;
+
+  align-items: flex-start;
+
+  gap: 12px;
+
+  padding: 11px 0;
+
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.calendar-modal-event-detail:last-child {
+  border-bottom: 0;
+}
+
+.calendar-modal-event-icon {
+  width: 38px;
+  height: 38px;
+
+  flex-shrink: 0;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 10px;
+
+  color: #ffffff;
+
+  font-size: 14px;
+}
+
+.calendar-modal-event-icon.horas {
+  background: #8b5cf6;
+}
+
+.calendar-modal-event-icon.permiso {
+  background: #3b82f6;
+}
+
+.calendar-modal-event-icon.descanso {
+  background: #10b981;
+}
+
+.calendar-modal-event-icon.cumple {
+  background: #ec4899;
+}
+
+.calendar-modal-event-icon.ausencia {
+  background: #ef4444;
+}
+
+.calendar-modal-event-icon.falta {
+  background: #f59e0b;
+}
+
+.calendar-modal-event-icon.incapacidad {
+  background: #f59e0b;
+}
+
+.calendar-modal-event-icon.autorizar {
+  background: #6b7280;
+}
+
+.calendar-modal-event-content {
+  min-width: 0;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+.calendar-modal-event-content strong {
+  color: #334155;
+
+  font-size: 13px;
+
+  font-weight: 700;
+}
+
+.calendar-modal-event-content span {
+  color: #64748b;
+
+  font-size: 11px;
+
+  line-height: 1.4;
+}
+
+.calendar-modal-event-content i {
+  margin-right: 3px;
+
+  color: #94a3b8;
+}
+
+.calendar-modal-event-badge {
+  width: fit-content;
+
+  display: inline-flex !important;
+
+  margin-top: 3px;
+
+  padding: 4px 8px;
+
+  border-radius: 7px;
+
+  background: rgba(16, 185, 129, 0.10);
+
+  color: #047857 !important;
+
+  font-size: 10px !important;
+
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   FOOTER / LEYENDA
+========================================================= */
+
+.calendar-modal-legend {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  align-items: center;
+
+  gap: 12px 16px;
+
+  margin: 16px 22px 0;
+
+  padding-top: 15px;
+
+  border-top: 1px solid #edf1f6;
+}
+
+.calendar-modal-legend .legend-item {
+  display: flex;
+
+  align-items: center;
+
+  gap: 6px;
+
+  color: #64748b;
+
+  font-size: 10px;
+}
+
+.calendar-modal-legend .legend-dot {
+  width: 7px;
+  height: 7px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+}
+
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.calendar-month-modal-footer {
+  display: flex;
+
+  justify-content: flex-end;
+
+  margin-top: 16px;
+
+  padding: 15px 22px;
+
+  border-top: 1px solid #edf1f6;
+}
+
+#btnSiguiente.saldo-insuficiente,
+#btnSiguiente:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.calendar-modal-birthday-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 22px;
+  height: 22px;
+
+  font-size: 16px;
+  line-height: 1;
+
+  margin-top: 2px;
+}

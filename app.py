@@ -23,7 +23,17 @@ import oracledb
 import json
 
 from dotenv import load_dotenv
-from flask import Flask, Response, current_app, g, jsonify, redirect, render_template, request, session
+from flask import (
+    Flask,
+    Response,
+    current_app,
+    g,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    session,
+)
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
@@ -55,6 +65,7 @@ def requiere_sesion(funcion):
     wrapped.__name__ = funcion.__name__
     return wrapped
 
+
 # ============================================================
 # CONFIGURACIÓN ORACLE
 # ============================================================
@@ -65,7 +76,9 @@ os.environ["LD_LIBRARY_PATH"] = ORACLE_CLIENT_DIR
 if os.path.exists(ORACLE_CLIENT_DIR):
     oracledb.init_oracle_client(lib_dir=ORACLE_CLIENT_DIR)
 else:
-    print(f"Oracle client library not found at {ORACLE_CLIENT_DIR}; Oracle features will be disabled.")
+    print(
+        f"Oracle client library not found at {ORACLE_CLIENT_DIR}; Oracle features will be disabled."
+    )
 
 ORACLE_USER = os.getenv("ORACLE_USER")
 ORACLE_PASSWORD = os.getenv("ORACLE_PASSWORD")
@@ -89,6 +102,7 @@ SUPERADMIN_PASSWORD_HASH = os.getenv("SUPERADMIN_PASSWORD_HASH")
 # BASE DE DATOS
 # ============================================================
 
+
 def build_engine():
     db_user = os.getenv("DB_USER")
     db_password = quote_plus(os.getenv("DB_PASSWORD") or "")
@@ -110,6 +124,7 @@ def build_engine():
     sqlite_path = os.path.join(base_dir, "database", "sistema.db")
     return create_engine(f"sqlite:///{sqlite_path}", future=True)
 
+
 def build_oracle_pool():
 
     try:
@@ -122,7 +137,7 @@ def build_oracle_pool():
             dsn=dsn,
             min=1,
             max=5,
-            increment=1
+            increment=1,
         )
 
         return pool
@@ -146,9 +161,15 @@ Base = declarative_base()
 app = Flask(__name__)
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
-    raise RuntimeError("SECRET_KEY no está definida. Configúrala en el archivo .env antes de iniciar la aplicación.")
+    raise RuntimeError(
+        "SECRET_KEY no está definida. Configúrala en el archivo .env antes de iniciar la aplicación."
+    )
 app.config["SECRET_KEY"] = SECRET_KEY
-allowed_origins = [origin.strip() for origin in os.getenv("ALLOWED_ORIGINS", "").split(",") if origin.strip()]
+allowed_origins = [
+    origin.strip()
+    for origin in os.getenv("ALLOWED_ORIGINS", "").split(",")
+    if origin.strip()
+]
 
 socketio_async_mode = "threading"
 try:
@@ -158,7 +179,9 @@ except Exception:
 else:
     socketio_async_mode = "gevent"
 
-socketio = SocketIO(app, cors_allowed_origins=allowed_origins or ["*"], async_mode=socketio_async_mode)
+socketio = SocketIO(
+    app, cors_allowed_origins=allowed_origins or ["*"], async_mode=socketio_async_mode
+)
 
 
 def get_oracle_points(idcliente):
@@ -174,13 +197,14 @@ def get_oracle_points(idcliente):
         conn = oracle_pool.acquire()
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT NVL(SUM(PUNTOS),0)
             FROM SISTSIO.RIOREWARDS_DETALLE
             WHERE IDCLIENTE = :idcliente
-        """, {
-            "idcliente": int(idcliente)
-        })
+        """,
+            {"idcliente": int(idcliente)},
+        )
 
         row = cursor.fetchone()
 
@@ -199,13 +223,8 @@ def get_oracle_points(idcliente):
         if conn:
             conn.close()
 
-def insertar_puntos_oracle(
-    idcliente,
-    idcita,
-    cantidad,
-    categoria,
-    usuario
-):
+
+def insertar_puntos_oracle(idcliente, idcita, cantidad, categoria, usuario):
     if not oracle_pool:
         return
 
@@ -217,7 +236,8 @@ def insertar_puntos_oracle(
         conn = oracle_pool.acquire()
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO SISTSIO.RIOREWARDS_DETALLE
             (
                 IDCLIENTE,
@@ -238,19 +258,19 @@ def insertar_puntos_oracle(
                 :comentario,
                 NULL
             )
-        """, {
-            "idcliente": int(idcliente),
-            "idcita": int(idcita) if idcita else None,
-            "puntos": int(cantidad),
-            "tipo": "Reseña",
-            "comentario": "Bonificación por reseña"
-        })
+        """,
+            {
+                "idcliente": int(idcliente),
+                "idcita": int(idcita) if idcita else None,
+                "puntos": int(cantidad),
+                "tipo": "Reseña",
+                "comentario": "Bonificación por reseña",
+            },
+        )
 
         conn.commit()
 
-        print(
-            f"ORACLE OK -> cliente={idcliente} puntos={cantidad}"
-        )
+        print(f"ORACLE OK -> cliente={idcliente} puntos={cantidad}")
 
     except Exception as exc:
 
@@ -266,12 +286,8 @@ def insertar_puntos_oracle(
         if conn:
             conn.close()
 
-def insertar_cancelacion_resena_oracle(
-    idcliente,
-    idcita,
-    cantidad,
-    usuario
-):
+
+def insertar_cancelacion_resena_oracle(idcliente, idcita, cantidad, usuario):
     if not oracle_pool:
         return
 
@@ -283,7 +299,8 @@ def insertar_cancelacion_resena_oracle(
         conn = oracle_pool.acquire()
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO SISTSIO.RIOREWARDS_DETALLE
             (
                 IDCLIENTE,
@@ -304,13 +321,15 @@ def insertar_cancelacion_resena_oracle(
                 :comentario,
                 NULL
             )
-        """, {
-            "idcliente": int(idcliente),
-            "idcita": int(idcita) if idcita else None,
-            "puntos": -abs(int(cantidad)),
-            "tipo": "Cancelación reseña",
-            "comentario": "Cancelación de bonificación por reseña"
-        })
+        """,
+            {
+                "idcliente": int(idcliente),
+                "idcita": int(idcita) if idcita else None,
+                "puntos": -abs(int(cantidad)),
+                "tipo": "Cancelación reseña",
+                "comentario": "Cancelación de bonificación por reseña",
+            },
+        )
 
         conn.commit()
 
@@ -327,6 +346,7 @@ def insertar_cancelacion_resena_oracle(
         if conn:
             conn.close()
 
+
 def paciente_tiene_resena_oracle(idcliente):
 
     if not oracle_pool:
@@ -340,7 +360,8 @@ def paciente_tiene_resena_oracle(idcliente):
         conn = oracle_pool.acquire()
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT NVL(SUM(PUNTOS),0)
             FROM SISTSIO.RIOREWARDS_DETALLE
             WHERE IDCLIENTE = :idcliente
@@ -348,9 +369,9 @@ def paciente_tiene_resena_oracle(idcliente):
                 UPPER('Reseña'),
                 UPPER('Cancelación reseña')
             )
-        """, {
-            "idcliente": int(idcliente)
-        })
+        """,
+            {"idcliente": int(idcliente)},
+        )
 
         row = cursor.fetchone()
 
@@ -371,6 +392,7 @@ def paciente_tiene_resena_oracle(idcliente):
         if conn:
             conn.close()
 
+
 def tiene_resena_oracle(idcliente):
 
     if not oracle_pool:
@@ -384,7 +406,8 @@ def tiene_resena_oracle(idcliente):
         conn = oracle_pool.acquire()
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT NVL(SUM(PUNTOS),0)
             FROM SISTSIO.RIOREWARDS_DETALLE
             WHERE IDCLIENTE = :idcliente
@@ -392,9 +415,9 @@ def tiene_resena_oracle(idcliente):
                     UPPER('Reseña'),
                     UPPER('Cancelación reseña')
               )
-        """, {
-            "idcliente": int(idcliente)
-        })
+        """,
+            {"idcliente": int(idcliente)},
+        )
 
         saldo = int(cursor.fetchone()[0] or 0)
 
@@ -407,6 +430,7 @@ def tiene_resena_oracle(idcliente):
 
         if conn:
             conn.close()
+
 
 oracle_pool = build_oracle_pool()
 print("ORACLE POOL CREADO:", oracle_pool)
@@ -513,24 +537,12 @@ def parse_date_param(value, end_of_day=False):
 def get_report_filters(source):
     return {
         "tipo": (source.get("tipo") or "puntos").strip().lower(),
-
         "usuario": (source.get("usuario") or "").strip(),
-
-        "fecha_inicio": (
-            source.get("fecha_inicio") or ""
-        ).strip(),
-
-        "fecha_fin": (
-            source.get("fecha_fin") or ""
-        ).strip(),
-
-        "movimiento_tipo": (
-            source.get("movimiento_tipo") or ""
-        ).strip().lower(),
-
+        "fecha_inicio": (source.get("fecha_inicio") or "").strip(),
+        "fecha_fin": (source.get("fecha_fin") or "").strip(),
+        "movimiento_tipo": (source.get("movimiento_tipo") or "").strip().lower(),
         # 🔥 NUEVO
         "pagina": int(source.get("pagina", 1)),
-
         # 🔥 NUEVO
         "por_pagina": int(source.get("por_pagina", 20)),
     }
@@ -607,7 +619,8 @@ def obtener_historial_oracle(idcliente):
         conn = oracle_pool.acquire()
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 PUNTOS,
                 TIPORECOMPENSA,
@@ -615,9 +628,9 @@ def obtener_historial_oracle(idcliente):
                 FECHATRANSACCION
             FROM SISTSIO.RIOREWARDS_DETALLE
             WHERE IDCLIENTE = :idcliente
-        """, {
-            "idcliente": int(idcliente)
-        })
+        """,
+            {"idcliente": int(idcliente)},
+        )
 
         rows = cursor.fetchall()
 
@@ -625,18 +638,16 @@ def obtener_historial_oracle(idcliente):
 
             puntos = int(row[0] or 0)
 
-            historial.append({
-                "tipo": "suma" if puntos >= 0 else "resta",
-                "cantidad": abs(puntos),
-                "motivo": row[1] or "",
-                "comentario": row[2] or "",
-                "usuario_admin": "Oracle",
-                "fecha": (
-                    row[3].strftime("%Y-%m-%d %H:%M:%S")
-                    if row[3]
-                    else ""
-                )
-            })
+            historial.append(
+                {
+                    "tipo": "suma" if puntos >= 0 else "resta",
+                    "cantidad": abs(puntos),
+                    "motivo": row[1] or "",
+                    "comentario": row[2] or "",
+                    "usuario_admin": "Oracle",
+                    "fecha": (row[3].strftime("%Y-%m-%d %H:%M:%S") if row[3] else ""),
+                }
+            )
 
         cursor.close()
         conn.close()
@@ -648,9 +659,7 @@ def obtener_historial_oracle(idcliente):
 
     movimientos = (
         db.query(MovimientoPuntos)
-        .filter(
-            MovimientoPuntos.paciente_id == str(idcliente)
-        )
+        .filter(MovimientoPuntos.paciente_id == str(idcliente))
         .all()
     )
 
@@ -659,35 +668,27 @@ def obtener_historial_oracle(idcliente):
         if (mov.motivo or "").lower() == "reseña":
             continue
 
-        historial.append({
-            "tipo": mov.tipo,
-            "cantidad": mov.cantidad,
-            "motivo": mov.motivo or "",
-            "comentario": mov.motivo or "",
-            "usuario_admin": mov.usuario_admin or "",
-            "fecha": (
-                mov.fecha.strftime("%Y-%m-%d %H:%M:%S")
-                if mov.fecha
-                else ""
-            )
-        })
+        historial.append(
+            {
+                "tipo": mov.tipo,
+                "cantidad": mov.cantidad,
+                "motivo": mov.motivo or "",
+                "comentario": mov.motivo or "",
+                "usuario_admin": mov.usuario_admin or "",
+                "fecha": (mov.fecha.strftime("%Y-%m-%d %H:%M:%S") if mov.fecha else ""),
+            }
+        )
 
-    historial.sort(
-        key=lambda x: x["fecha"],
-        reverse=True
-    )
+    historial.sort(key=lambda x: x["fecha"], reverse=True)
 
     return historial
 
-        
 
 def calcular_saldo_local(db, idcliente):
 
     movimientos = (
         db.query(MovimientoPuntos)
-        .filter(
-            MovimientoPuntos.paciente_id == str(idcliente)
-        )
+        .filter(MovimientoPuntos.paciente_id == str(idcliente))
         .all()
     )
 
@@ -706,6 +707,7 @@ def calcular_saldo_local(db, idcliente):
             total -= mov.cantidad
 
     return total
+
 
 def get_operational_points(db, idcliente):
 
@@ -748,39 +750,35 @@ def tiene_resena(idcliente):
         if conn:
             conn.close()
 
+
 def ya_tiene_resena_local(db, idcliente):
-    existe = db.query(MovimientoPuntos).filter(
-        MovimientoPuntos.paciente_id == str(idcliente),
-        MovimientoPuntos.motivo == "reseña"
-    ).first()
+    existe = (
+        db.query(MovimientoPuntos)
+        .filter(
+            MovimientoPuntos.paciente_id == str(idcliente),
+            MovimientoPuntos.motivo == "reseña",
+        )
+        .first()
+    )
     return existe is not None
 
 
 def build_report_context(db, filtros):
     pagina = int(filtros.get("pagina", 1))
-    por_pagina = int(
-        filtros.get("por_pagina", 8)
-    )
+    por_pagina = int(filtros.get("por_pagina", 8))
     offset = (pagina - 1) * por_pagina
 
     query_movimientos = build_filtered_movimientos_query(db, filtros)
 
     total_movimientos = query_movimientos.count()
 
-    movimientos_chart = (
-        query_movimientos
-        .order_by(
-            MovimientoPuntos.fecha.desc(),
-            MovimientoPuntos.id.desc()
-        )
-        .all()
-    )
+    movimientos_chart = query_movimientos.order_by(
+        MovimientoPuntos.fecha.desc(), MovimientoPuntos.id.desc()
+    ).all()
 
     movimientos = (
-        query_movimientos
-        .order_by(
-            MovimientoPuntos.fecha.desc(),
-            MovimientoPuntos.id.desc()
+        query_movimientos.order_by(
+            MovimientoPuntos.fecha.desc(), MovimientoPuntos.id.desc()
         )
         .offset(offset)
         .limit(por_pagina)
@@ -788,56 +786,37 @@ def build_report_context(db, filtros):
     )
     query_auditoria = build_filtered_auditoria_query(db, filtros)
 
-    auditoria_chart = (
-        query_auditoria
-        .order_by(
-            Auditoria.fecha.desc(),
-            Auditoria.id.desc()
-        )
-        .all()
-    )
+    auditoria_chart = query_auditoria.order_by(
+        Auditoria.fecha.desc(), Auditoria.id.desc()
+    ).all()
 
     auditoria = (
-        query_auditoria
-        .order_by(
-            Auditoria.fecha.desc(),
-            Auditoria.id.desc()
-        )
+        query_auditoria.order_by(Auditoria.fecha.desc(), Auditoria.id.desc())
         .offset(offset)
         .limit(por_pagina)
         .all()
     )
-    usuarios = db.query(Usuario).order_by(
-        Usuario.username.asc()
-    ).all()
+    usuarios = db.query(Usuario).order_by(Usuario.username.asc()).all()
 
     puntos_por_fecha = Counter()
     movimientos_por_fecha = Counter()
     movimientos_por_admin = Counter()
     for movimiento in movimientos_chart:
 
-        fecha_key = serialize_datetime(
-            movimiento.fecha
-        ).split(" ")[0]
+        fecha_key = serialize_datetime(movimiento.fecha).split(" ")[0]
 
         valor = (
-            movimiento.cantidad
-            if movimiento.tipo == "suma"
-            else -movimiento.cantidad
+            movimiento.cantidad if movimiento.tipo == "suma" else -movimiento.cantidad
         )
 
         puntos_por_fecha[fecha_key] += valor
 
         movimientos_por_fecha[fecha_key] += 1
 
-        movimientos_por_admin[
-            movimiento.usuario_admin
-            or "Sin usuario"
-        ] += 1
+        movimientos_por_admin[movimiento.usuario_admin or "Sin usuario"] += 1
 
     auditoria_por_accion = Counter(
-        registro.accion or "Sin accion"
-        for registro in auditoria_chart
+        registro.accion or "Sin accion" for registro in auditoria_chart
     )
     auditoria_por_fecha = Counter(
         serialize_datetime(registro.fecha).split(" ")[0]
@@ -881,61 +860,50 @@ def build_report_context(db, filtros):
 
     kpis = {
         "usuarios": len(usuarios),
-
-        "admins":
-            roles.get("admin", 0)
-            + roles.get("superadmin", 0),
-
-        "movimientos_puntos":
-            total_movimientos,
-
-        "auditoria":
-            len(auditoria),
-
-        "puntos_netos":
+        "admins": roles.get("admin", 0) + roles.get("superadmin", 0),
+        "movimientos_puntos": total_movimientos,
+        "auditoria": len(auditoria),
+        "puntos_netos": (
             len(auditoria)
             if tipo == "admin"
             else sum(
-                mov.cantidad
-                if mov.tipo == "suma"
-                else -mov.cantidad
+                mov.cantidad if mov.tipo == "suma" else -mov.cantidad
                 for mov in db.query(MovimientoPuntos).all()
-            ),
-
-        "movimientos_hoy":
+            )
+        ),
+        "movimientos_hoy": (
             len(auditoria_chart)
             if tipo == "admin"
             else sum(
                 1
                 for registro in datos_puntos
-                if registro["fecha"].startswith(
-                    date.today().isoformat()
-                )
+                if registro["fecha"].startswith(date.today().isoformat())
             )
+        ),
     }
 
     if tipo == "admin":
 
         chart_principal = {
             "labels": chart_auditoria["labels"],
-            "valores": chart_auditoria["valores"]
+            "valores": chart_auditoria["valores"],
         }
 
         chart_fechas = {
             "labels": chart_auditoria_fecha["labels"],
-            "valores": chart_auditoria_fecha["valores"]
+            "valores": chart_auditoria_fecha["valores"],
         }
 
     else:
 
         chart_principal = {
             "labels": chart_movimientos_admin["labels"],
-            "valores": chart_movimientos_admin["valores"]
+            "valores": chart_movimientos_admin["valores"],
         }
 
         chart_fechas = {
             "labels": chart_puntos_fecha["labels"],
-            "valores": chart_puntos_fecha["valores"]
+            "valores": chart_puntos_fecha["valores"],
         }
     return {
         "tipo": filtros.get("tipo", "puntos"),
@@ -968,7 +936,9 @@ def exportar_reportes_excel(context):
     resumen.title = "Resumen"
 
     header_font = Font(bold=True, color="FFFFFF")
-    header_fill = PatternFill(start_color="1D4ED8", end_color="1D4ED8", fill_type="solid")
+    header_fill = PatternFill(
+        start_color="1D4ED8", end_color="1D4ED8", fill_type="solid"
+    )
     center = Alignment(horizontal="center", vertical="center")
     border = Border(
         left=Side(style="thin"),
@@ -1001,26 +971,30 @@ def exportar_reportes_excel(context):
     puntos_sheet = workbook.create_sheet("Puntos")
     puntos_sheet.append(["Paciente", "IDCita", "Tipo", "Cantidad", "Admin", "Fecha"])
     for row in context["datos_puntos"]:
-        puntos_sheet.append([
-            row["paciente_id"],
-            row["idcita"],
-            row["tipo"],
-            row["cantidad"],
-            row["usuario_admin"],
-            row["fecha"],
-        ])
+        puntos_sheet.append(
+            [
+                row["paciente_id"],
+                row["idcita"],
+                row["tipo"],
+                row["cantidad"],
+                row["usuario_admin"],
+                row["fecha"],
+            ]
+        )
     style_sheet(puntos_sheet)
 
     auditoria_sheet = workbook.create_sheet("Auditoria")
     auditoria_sheet.append(["Admin", "Accion", "Usuario", "Detalle", "Fecha"])
     for row in context["datos_admin"]:
-        auditoria_sheet.append([
-            row["usuario_admin"],
-            row["accion"],
-            row["usuario_afectado"],
-            row["detalle"],
-            row["fecha"],
-        ])
+        auditoria_sheet.append(
+            [
+                row["usuario_admin"],
+                row["accion"],
+                row["usuario_afectado"],
+                row["detalle"],
+                row["fecha"],
+            ]
+        )
     style_sheet(auditoria_sheet)
 
     output = io.BytesIO()
@@ -1036,27 +1010,33 @@ def exportar_reportes_excel(context):
 def exportar_reportes_csv(context):
     stream = io.StringIO()
     writer = csv.writer(stream)
-    writer.writerow(["seccion", "campo_1", "campo_2", "campo_3", "campo_4", "campo_5", "campo_6"])
+    writer.writerow(
+        ["seccion", "campo_1", "campo_2", "campo_3", "campo_4", "campo_5", "campo_6"]
+    )
     for row in context["datos_puntos"]:
-        writer.writerow([
-            "puntos",
-            row["paciente_id"],
-            row["idcita"],
-            row["tipo"],
-            row["cantidad"],
-            row["usuario_admin"],
-            row["fecha"],
-        ])
+        writer.writerow(
+            [
+                "puntos",
+                row["paciente_id"],
+                row["idcita"],
+                row["tipo"],
+                row["cantidad"],
+                row["usuario_admin"],
+                row["fecha"],
+            ]
+        )
     for row in context["datos_admin"]:
-        writer.writerow([
-            "auditoria",
-            row["usuario_admin"],
-            row["accion"],
-            row["usuario_afectado"],
-            row["detalle"],
-            row["fecha"],
-            "",
-        ])
+        writer.writerow(
+            [
+                "auditoria",
+                row["usuario_admin"],
+                row["accion"],
+                row["usuario_afectado"],
+                row["detalle"],
+                row["fecha"],
+                "",
+            ]
+        )
     return Response(
         stream.getvalue(),
         mimetype="text/csv; charset=utf-8",
@@ -1065,7 +1045,7 @@ def exportar_reportes_csv(context):
 
 
 def crear_base(db):
-    permisos_base = ["dashboard", "usuarios", "reportes", "puntos"]
+    permisos_base = ["dashboard", "usuarios", "reportes", "puntos", "vacaciones","vacaciones_admin"]
     roles_base = {
         "usuario": "",
         "admin": "dashboard,usuarios,reportes,puntos",
@@ -1080,12 +1060,7 @@ def crear_base(db):
         rol = db.query(Rol).filter_by(nombre=nombre).first()
 
         if not rol:
-            db.add(
-                Rol(
-                    nombre=nombre,
-                    permisos=permisos
-                )
-            )
+            db.add(Rol(nombre=nombre, permisos=permisos))
 
     db.commit()
 
@@ -1120,7 +1095,9 @@ def obtener_usuarios_ldap():
             auto_bind=True,
         )
         conn.search(LDAP_BASE_DN, "(objectClass=person)", attributes=["uid"])
-        usuarios = sorted({entry.uid.value for entry in conn.entries if hasattr(entry, "uid")})
+        usuarios = sorted(
+            {entry.uid.value for entry in conn.entries if hasattr(entry, "uid")}
+        )
         conn.unbind()
         return usuarios
     except Exception as exc:
@@ -1129,7 +1106,9 @@ def obtener_usuarios_ldap():
 
 
 def obtener_grupos_ldap(username):
-    if not all([LDAP_SERVER, LDAP_BASE_DN, LDAP_ADMIN_USER, LDAP_ADMIN_PASSWORD, username]):
+    if not all(
+        [LDAP_SERVER, LDAP_BASE_DN, LDAP_ADMIN_USER, LDAP_ADMIN_PASSWORD, username]
+    ):
         return []
     try:
         server = ldap3.Server(LDAP_SERVER)
@@ -1208,7 +1187,9 @@ def requiere_permiso(permiso):
             rol = db.query(Rol).filter_by(nombre=usuario.rol).first()
             permisos_rol = (rol.permisos or "").split(",") if rol else []
             permisos_usuario = (usuario.permisos or "").split(",")
-            permisos_finales = {valor.strip() for valor in permisos_rol + permisos_usuario if valor}
+            permisos_finales = {
+                valor.strip() for valor in permisos_rol + permisos_usuario if valor
+            }
 
             if permiso not in permisos_finales:
                 if request.path.startswith("/api/"):
@@ -1229,30 +1210,24 @@ def requiere_admin(funcion):
 
         if "usuario" not in session:
             if request.path.startswith("/api/"):
-                return jsonify({
-                    "status": "error",
-                    "msg": "No autenticado"
-                }), 401
+                return jsonify({"status": "error", "msg": "No autenticado"}), 401
             return redirect("/")
 
-        usuario = db.query(Usuario).filter_by(
-            username=session["usuario"]
-        ).first()
+        usuario = db.query(Usuario).filter_by(username=session["usuario"]).first()
 
         if not usuario:
             if request.path.startswith("/api/"):
-                return jsonify({
-                    "status": "error",
-                    "msg": "No autenticado"
-                }), 401
+                return jsonify({"status": "error", "msg": "No autenticado"}), 401
             return redirect("/")
 
         if usuario.rol not in ("admin", "superadmin"):
             if request.path.startswith("/api/"):
-                return jsonify({
-                    "status": "error",
-                    "msg": "No tienes permisos administrativos"
-                }), 403
+                return (
+                    jsonify(
+                        {"status": "error", "msg": "No tienes permisos administrativos"}
+                    ),
+                    403,
+                )
 
             return "No tienes permisos administrativos", 403
 
@@ -1262,8 +1237,40 @@ def requiere_admin(funcion):
     return wrapped
 
 
+def requiere_miguelvd(funcion):
+    @wraps(funcion)
+    def wrapped(*args, **kwargs):
+
+        if "usuario" not in session:
+            if request.path.startswith("/api/"):
+                return jsonify({"status": "error", "msg": "No autenticado"}), 401
+
+            return redirect("/")
+
+        if session.get("usuario", "").lower() != "miguelvd":
+            if request.path.startswith("/api/"):
+                return (
+                    jsonify(
+                        {
+                            "status": "error",
+                            "msg": "No tienes permisos para acceder a Transcripción",
+                        }
+                    ),
+                    403,
+                )
+
+            return render_template("403.html"), 403
+
+        return funcion(*args, **kwargs)
+
+    wrapped.__name__ = funcion.__name__
+    return wrapped
+
+
 def obtener_usuarios_ldap_cache():
-    cache = current_app.config.setdefault("LDAP_CACHE", {"data": [], "last_update": None})
+    cache = current_app.config.setdefault(
+        "LDAP_CACHE", {"data": [], "last_update": None}
+    )
     last_update = cache.get("last_update")
     if not last_update or datetime.now() - last_update > timedelta(minutes=2):
         cache["data"] = obtener_usuarios_ldap()
@@ -1327,10 +1334,10 @@ def login():
                 session["usuario"] = user.username
                 session["rol"] = user.rol
                 session["permisos"] = (
-                        [p.strip() for p in user.permisos.split(",") if p.strip()]
-                        if user.permisos
-                        else []
-                    )
+                    [p.strip() for p in user.permisos.split(",") if p.strip()]
+                    if user.permisos
+                    else []
+                )
                 print("Permisos cargados:", session["permisos"])
                 return redirect(obtener_pagina_inicio())
 
@@ -1338,7 +1345,9 @@ def login():
             user = db.query(Usuario).filter_by(username=username).first()
             if not user:
                 grupos = obtener_grupos_ldap(username)
-                user = Usuario(username=username, rol=mapear_rol_por_grupo(grupos), permisos="")
+                user = Usuario(
+                    username=username, rol=mapear_rol_por_grupo(grupos), permisos=""
+                )
                 db.add(user)
             elif not user.rol or user.rol == "usuario":
                 user.rol = mapear_rol_por_grupo(obtener_grupos_ldap(username))
@@ -1347,16 +1356,17 @@ def login():
             session["usuario"] = user.username
             session["rol"] = user.rol
             session["permisos"] = (
-                    [p.strip() for p in user.permisos.split(",") if p.strip()]
-                    if user.permisos
-                    else []
-                )
+                [p.strip() for p in user.permisos.split(",") if p.strip()]
+                if user.permisos
+                else []
+            )
             print("Permisos cargados:", session["permisos"])
             return redirect(obtener_pagina_inicio())
 
         error = "Credenciales invalidas"
 
     return render_template("login.html", error=error)
+
 
 def obtener_pagina_inicio():
     if session.get("rol") == "superadmin":
@@ -1376,6 +1386,9 @@ def obtener_pagina_inicio():
     if "reportes" in permisos:
         return "/reportes"
 
+    if "vacaciones" in permisos:
+        return "/vacaciones"
+
     if "transcripcion" in permisos:
         return "/transcripcion"
 
@@ -1390,7 +1403,9 @@ def dashboard():
     try:
         total_ldap = len(obtener_usuarios_ldap_cache())
         total_db = db.query(Usuario).count()
-        total_admins = db.query(Usuario).filter(Usuario.rol.in_(["admin", "superadmin"])).count()
+        total_admins = (
+            db.query(Usuario).filter(Usuario.rol.in_(["admin", "superadmin"])).count()
+        )
         actividad = db.query(Auditoria).order_by(Auditoria.id.desc()).limit(10).all()
         actividad_json = [
             {
@@ -1420,6 +1435,7 @@ def dashboard():
         notificaciones=get_unread_notifications_count(db, session.get("usuario")),
     )
 
+
 @app.route("/api/dashboard")
 @requiere_permiso("dashboard")
 def api_dashboard():
@@ -1440,7 +1456,9 @@ def api_dashboard():
             {
                 "total_ldap": len(obtener_usuarios_ldap_cache()),
                 "total_db": db.query(Usuario).count(),
-                "total_admins": db.query(Usuario).filter(Usuario.rol.in_(["admin", "superadmin"])).count(),
+                "total_admins": db.query(Usuario)
+                .filter(Usuario.rol.in_(["admin", "superadmin"]))
+                .count(),
                 "actividad": actividad_json,
                 "hora_servidor": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
             }
@@ -1459,26 +1477,16 @@ def api_reportes():
 
         filtros = get_report_filters(request.args)
 
-        filtros["pagina"] = int(
-            request.args.get("pagina", 1)
-        )
+        filtros["pagina"] = int(request.args.get("pagina", 1))
 
         filtros["por_pagina"] = 8
 
-        return jsonify(
-            build_report_context(
-                db,
-                filtros
-            )
-        )
+        return jsonify(build_report_context(db, filtros))
 
     except Exception as exc:
         print("API REPORTES ERROR:", exc)
 
-        return jsonify({
-            "error": True,
-            "msg": str(exc)
-        }), 500
+        return jsonify({"error": True, "msg": str(exc)}), 500
 
 
 @app.route("/usuarios")
@@ -1515,7 +1523,9 @@ def usuarios():
         current_page_activos=page_activos,
         permisos=db.query(Permiso).all(),
         roles=db.query(Rol).all(),
-        usuarios_dict={usuario.username: usuario for usuario in db.query(Usuario).all()},
+        usuarios_dict={
+            usuario.username: usuario for usuario in db.query(Usuario).all()
+        },
         notificaciones=get_unread_notifications_count(db, session.get("usuario")),
     )
 
@@ -1533,20 +1543,23 @@ def guardar_usuario():
         # usuario logueado
         usuario_actual = session.get("usuario")
 
-        admin_actual = db.query(Usuario)\
-            .filter_by(username=usuario_actual)\
-            .first()
+        admin_actual = db.query(Usuario).filter_by(username=usuario_actual).first()
 
         if not admin_actual:
-            return jsonify({
-                "status": "error",
-                "msg": "Usuario inválido"
-            }), 403
+            return jsonify({"status": "error", "msg": "Usuario inválido"}), 403
 
         if not username or not rol:
             return jsonify({"status": "error", "msg": "Datos incompletos"}), 400
         if username == "admin_root":
-            return jsonify({"status": "error", "msg": "No se puede modificar el usuario principal"}), 403
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "msg": "No se puede modificar el usuario principal",
+                    }
+                ),
+                403,
+            )
 
         permisos_str = ",".join(permisos) if permisos else ""
         admin = session.get("usuario") or "sistema"
@@ -1558,22 +1571,25 @@ def guardar_usuario():
 
         # Solo superadmin puede asignar superadmin
         if rol == "superadmin" and admin_actual.rol != "superadmin":
-            return jsonify({
-                "status": "error",
-                "msg": "Solo un superadmin puede asignar ese rol"
-            }), 403
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "msg": "Solo un superadmin puede asignar ese rol",
+                    }
+                ),
+                403,
+            )
 
         # Si el usuario destino ya es superadmin,
         # solo otro superadmin puede modificarlo
-        if (
-            user
-            and user.rol == "superadmin"
-            and admin_actual.rol != "superadmin"
-        ):
-            return jsonify({
-                "status": "error",
-                "msg": "No puedes modificar un superadmin"
-            }), 403
+        if user and user.rol == "superadmin" and admin_actual.rol != "superadmin":
+            return (
+                jsonify(
+                    {"status": "error", "msg": "No puedes modificar un superadmin"}
+                ),
+                403,
+            )
 
         # Un admin no puede cambiar el nivel de otro admin
         if (
@@ -1582,10 +1598,15 @@ def guardar_usuario():
             and admin_actual.rol == "admin"
             and rol != "admin"
         ):
-            return jsonify({
-                "status": "error",
-                "msg": "Un admin no puede cambiar el nivel de otro admin"
-            }), 403
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "msg": "Un admin no puede cambiar el nivel de otro admin",
+                    }
+                ),
+                403,
+            )
 
         if user:
             user.rol = rol
@@ -1614,24 +1635,16 @@ def guardar_usuario():
             "nueva_notificacion",
             {
                 "mensaje": f"{admin} modifico a {username}",
-                "fecha": serialize_datetime(datetime.now())
-            }
+                "fecha": serialize_datetime(datetime.now()),
+            },
         )
-        socketio.emit(
-            "actualizar_dashboard",
-            {
-                "tipo": "usuarios"
-            }
-        )
+        socketio.emit("actualizar_dashboard", {"tipo": "usuarios"})
         socketio.emit(
             "activity_feed",
             {
-                "mensaje":
-                    f"{admin} modificó a {username}",
-
-                "hora":
-                    datetime.now().strftime("%H:%M")
-            }
+                "mensaje": f"{admin} modificó a {username}",
+                "hora": datetime.now().strftime("%H:%M"),
+            },
         )
         return jsonify({"status": "ok"})
     except Exception as exc:
@@ -1641,7 +1654,7 @@ def guardar_usuario():
 
 
 @app.route("/api/usuario/<username>")
-@requiere_sesion
+@requiere_admin
 def api_usuario(username):
     db = get_db()
     try:
@@ -1663,7 +1676,11 @@ def reportes():
         return redirect("/")
     filtros = get_report_filters(request.values)
     context = build_report_context(db, filtros)
-    return render_template("reportes.html", **context, notificaciones=get_unread_notifications_count(db, session.get("usuario")))
+    return render_template(
+        "reportes.html",
+        **context,
+        notificaciones=get_unread_notifications_count(db, session.get("usuario")),
+    )
 
 
 @app.route("/exportar_reportes", methods=["GET", "POST"])
@@ -1694,46 +1711,38 @@ def eliminar_usuario(username):
 
         # No tocar admin_root
         if username == "admin_root":
-            return jsonify({
-                "status": "error",
-                "msg": "No se puede eliminar admin_root"
-            }), 403
+            return (
+                jsonify({"status": "error", "msg": "No se puede eliminar admin_root"}),
+                403,
+            )
 
         admin = session.get("usuario")
 
-        admin_actual = db.query(Usuario)\
-            .filter_by(username=admin)\
-            .first()
+        admin_actual = db.query(Usuario).filter_by(username=admin).first()
 
-        user = db.query(Usuario)\
-            .filter_by(username=username)\
-            .first()
+        user = db.query(Usuario).filter_by(username=username).first()
 
         if not user:
-            return jsonify({
-                "status": "error",
-                "msg": "Usuario no encontrado"
-            }), 404
+            return jsonify({"status": "error", "msg": "Usuario no encontrado"}), 404
 
         # Solo superadmin puede modificar otro superadmin
-        if (
-            user.rol == "superadmin"
-            and admin_actual.rol != "superadmin"
-        ):
-            return jsonify({
-                "status": "error",
-                "msg": "No puedes eliminar un superadmin"
-            }), 403
+        if user.rol == "superadmin" and admin_actual.rol != "superadmin":
+            return (
+                jsonify({"status": "error", "msg": "No puedes eliminar un superadmin"}),
+                403,
+            )
 
         # 🔒 Un admin no puede quitar el nivel de otro admin
-        if (
-            user.rol == "admin"
-            and admin_actual.rol == "admin"
-        ):
-            return jsonify({
-                "status": "error",
-                "msg": "Un admin no puede quitar el nivel de otro admin"
-            }), 403
+        if user.rol == "admin" and admin_actual.rol == "admin":
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "msg": "Un admin no puede quitar el nivel de otro admin",
+                    }
+                ),
+                403,
+            )
 
         # ==========================
         # QUITAR ACCESO
@@ -1748,23 +1757,18 @@ def eliminar_usuario(username):
             "nueva_notificacion",
             {
                 "mensaje": f"{admin} quitó acceso a {username}",
-                "fecha": serialize_datetime(datetime.now())
-            }
+                "fecha": serialize_datetime(datetime.now()),
+            },
         )
 
-        socketio.emit(
-            "actualizar_dashboard",
-            {
-                "tipo": "usuarios"
-            }
-        )
+        socketio.emit("actualizar_dashboard", {"tipo": "usuarios"})
 
         socketio.emit(
             "activity_feed",
             {
                 "mensaje": f"{admin} quitó acceso a {username}",
-                "hora": datetime.now().strftime("%H:%M")
-            }
+                "hora": datetime.now().strftime("%H:%M"),
+            },
         )
 
         return jsonify({"status": "ok"})
@@ -1775,10 +1779,7 @@ def eliminar_usuario(username):
 
         print("ERROR API PUNTOS:", str(exc))
 
-        return jsonify({
-            "status": "error",
-            "msg": str(exc)
-        }), 500
+        return jsonify({"status": "error", "msg": str(exc)}), 500
 
 
 @app.route("/api/notificaciones")
@@ -1791,13 +1792,23 @@ def api_notificaciones():
         if not user or user.rol == "usuario":
             return jsonify({"status": "ok", "total": 0, "data": []})
 
-        registros = db.query(Notificacion).filter(
-            Notificacion.usuario == usuario,
-            Notificacion.leido == 0,
-        ).order_by(Notificacion.id.desc()).limit(10).all()
+        registros = (
+            db.query(Notificacion)
+            .filter(
+                Notificacion.usuario == usuario,
+                Notificacion.leido == 0,
+            )
+            .order_by(Notificacion.id.desc())
+            .limit(10)
+            .all()
+        )
 
         data = [
-            {"id": registro.id, "mensaje": registro.mensaje, "fecha": serialize_datetime(registro.fecha)}
+            {
+                "id": registro.id,
+                "mensaje": registro.mensaje,
+                "fecha": serialize_datetime(registro.fecha),
+            }
             for registro in registros
         ]
         return jsonify({"status": "ok", "total": len(data), "data": data})
@@ -1863,12 +1874,20 @@ def limpiar_notificaciones():
 def api_usuarios_activos():
     db = get_db()
     try:
-        usuarios_con_acceso = db.query(Usuario).filter(
-            or_(func.coalesce(Usuario.permisos, "") != "", Usuario.rol != "usuario")
-        ).all()
+        usuarios_con_acceso = (
+            db.query(Usuario)
+            .filter(
+                or_(func.coalesce(Usuario.permisos, "") != "", Usuario.rol != "usuario")
+            )
+            .all()
+        )
         return jsonify(
             [
-                {"username": usuario.username, "rol": usuario.rol or "usuario", "permisos": usuario.permisos or ""}
+                {
+                    "username": usuario.username,
+                    "rol": usuario.rol or "usuario",
+                    "permisos": usuario.permisos or "",
+                }
                 for usuario in usuarios_con_acceso
             ]
         )
@@ -1892,17 +1911,14 @@ def api_buscar_ldap():
 def puntos():
     return render_template(
         "puntos.html",
-        notificaciones=get_unread_notifications_count(
-            get_db(),
-            session.get("usuario")
-        )
+        notificaciones=get_unread_notifications_count(get_db(), session.get("usuario")),
     )
 
 
 @app.route("/api/buscar_paciente")
 @requiere_permiso("puntos")
 def buscar_paciente():
-    
+
     valor = request.args.get("q", "").strip()
     print("VALOR:", valor)
     if not valor.isdigit():
@@ -1920,7 +1936,8 @@ def buscar_paciente():
         # 1. Buscar por IDCLIENTE
         # =====================================
 
-        cur.execute("""
+        cur.execute(
+            """
             SELECT
                 IDCLIENTE,
                 NOMBRE,
@@ -1928,9 +1945,9 @@ def buscar_paciente():
                 AMATERNO
             FROM SISTSIO.CLIENTES
             WHERE IDCLIENTE = :valor
-        """, {
-            "valor": int(valor)
-        })
+        """,
+            {"valor": int(valor)},
+        )
 
         row = cur.fetchone()
 
@@ -1940,17 +1957,19 @@ def buscar_paciente():
 
         if not row:
 
-            cur.execute("""
+            cur.execute(
+                """
                 SELECT IDCLIENTE
                 FROM SISTSIO.RIOREWARDS_DETALLE
                 WHERE IDCITA = :valor
-            """, {
-                "valor": int(valor)
-            })
+            """,
+                {"valor": int(valor)},
+            )
 
             prueba = cur.fetchone()
 
-            cur.execute("""
+            cur.execute(
+                """
                 SELECT
                     c.IDCLIENTE,
                     c.NOMBRE,
@@ -1961,20 +1980,24 @@ def buscar_paciente():
                 WHERE r.IDCLIENTE = c.IDCLIENTE
                 AND r.IDCITA = :valor
                 AND ROWNUM = 1
-            """, {
-                "valor": int(valor)
-            })
+            """,
+                {"valor": int(valor)},
+            )
 
             row = cur.fetchone()
 
         if not row:
             return jsonify([])
 
-        return jsonify([{
-            "idcliente": int(row[0]),
-            "nombre": f"{row[1]} {row[2]} {row[3]}",
-            "saldo": get_oracle_points(int(row[0]))
-        }])
+        return jsonify(
+            [
+                {
+                    "idcliente": int(row[0]),
+                    "nombre": f"{row[1]} {row[2]} {row[3]}",
+                    "saldo": get_oracle_points(int(row[0])),
+                }
+            ]
+        )
 
     except Exception as exc:
         import traceback
@@ -1989,6 +2012,7 @@ def buscar_paciente():
             cur.close()
         if conn:
             conn.close()
+
 
 @app.route("/api/puntos", methods=["POST"])
 @requiere_permiso("puntos")
@@ -2024,9 +2048,7 @@ def modificar_puntos():
         # 🔒 solo admin/superadmin pueden quitar reseñas
         usuario_actual = session.get("usuario")
 
-        usuario_db = db.query(Usuario).filter_by(
-            username=usuario_actual
-        ).first()
+        usuario_db = db.query(Usuario).filter_by(username=usuario_actual).first()
 
         rol_usuario = usuario_db.rol if usuario_db else "usuario"
 
@@ -2035,30 +2057,44 @@ def modificar_puntos():
             and categoria == "reseña"
             and rol_usuario not in ["admin", "superadmin"]
         ):
-            return jsonify({
-                "status": "error",
-                "msg": "No tienes permisos para retirar puntos de reseña"
-            }), 403
-
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "msg": "No tienes permisos para retirar puntos de reseña",
+                    }
+                ),
+                403,
+            )
 
         # 💰 Validación saldo
         saldo_actual = get_operational_points(db, idcliente)
 
         if tipo == "resta" and cantidad > saldo_actual["total"]:
-            return jsonify({
-                "status": "error",
-                "msg": "Saldo insuficiente",
-                "saldo_actual": saldo_actual["total"]
-            }), 400
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "msg": "Saldo insuficiente",
+                        "saldo_actual": saldo_actual["total"],
+                    }
+                ),
+                400,
+            )
 
         if tipo == "suma" and categoria == "reseña":
 
             if paciente_tiene_resena_oracle(idcliente):
 
-                return jsonify({
-                    "status": "error",
-                    "msg": "Este paciente ya tiene una reseña aplicada"
-                }), 400
+                return (
+                    jsonify(
+                        {
+                            "status": "error",
+                            "msg": "Este paciente ya tiene una reseña aplicada",
+                        }
+                    ),
+                    400,
+                )
         # 💾 Guardar
         nuevo = MovimientoPuntos(
             paciente_id=str(idcliente),
@@ -2067,7 +2103,7 @@ def modificar_puntos():
             cantidad=cantidad,
             motivo=categoria,
             origen="manual",
-            usuario_admin=session.get("usuario")
+            usuario_admin=session.get("usuario"),
         )
 
         try:
@@ -2080,7 +2116,7 @@ def modificar_puntos():
                     idcita=idcita,
                     cantidad=cantidad,
                     categoria=categoria,
-                    usuario=session.get("usuario")
+                    usuario=session.get("usuario"),
                 )
             if tipo == "resta" and categoria == "reseña":
 
@@ -2088,18 +2124,14 @@ def modificar_puntos():
                     idcliente=idcliente,
                     idcita=idcita,
                     cantidad=cantidad,
-                    usuario=session.get("usuario")
-                )    
+                    usuario=session.get("usuario"),
+                )
             db.commit()
             if tipo == "suma" and categoria == "reseña":
-                print(
-                    f"RESEÑA APLICADA -> cliente={idcliente} cita={idcita}"
-                )
+                print(f"RESEÑA APLICADA -> cliente={idcliente} cita={idcita}")
 
             if tipo == "resta" and categoria == "reseña":
-                print(
-                    f"RESEÑA CANCELADA -> cliente={idcliente} cita={idcita}"
-                )
+                print(f"RESEÑA CANCELADA -> cliente={idcliente} cita={idcita}")
             db.refresh(nuevo)
             # 🔔 crear notificación
             mensaje = (
@@ -2112,7 +2144,7 @@ def modificar_puntos():
                 mensaje=mensaje,
                 usuario=session.get("usuario"),
                 leido=0,
-                fecha=datetime.now()
+                fecha=datetime.now(),
             )
 
             db.add(notif)
@@ -2121,89 +2153,69 @@ def modificar_puntos():
             # 🔥 socket tiempo real
             socketio.emit(
                 "nueva_notificacion",
-                {
-                    "mensaje": mensaje,
-                    "fecha": serialize_datetime(datetime.now())
-                }
+                {"mensaje": mensaje, "fecha": serialize_datetime(datetime.now())},
             )
 
             socketio.emit(
                 "actualizar_dashboard",
-                {
-                    "tipo": "puntos"
-                },
-                
+                {"tipo": "puntos"},
             )
             socketio.emit(
                 "nuevo_movimiento",
                 {
-                    "fecha":
-                        datetime.now().strftime("%Y-%m-%d"),
-
-                    "puntos":
-                        cantidad,
-
-                    "admin":
-                        session.get("usuario"),
-
-                    "tipo":
-                        tipo
-                }
+                    "fecha": datetime.now().strftime("%Y-%m-%d"),
+                    "puntos": cantidad,
+                    "admin": session.get("usuario"),
+                    "tipo": tipo,
+                },
             )
 
             socketio.emit(
                 "activity_feed",
                 {
-                    "mensaje":
-                        (
-                            f"{session.get('usuario')} agregó {cantidad} puntos"
-                            if tipo == "suma"
-                            else f"{session.get('usuario')} retiró {cantidad} puntos"
-                        ),
-                    "hora":
-                        datetime.now().strftime("%H:%M")
-                }
+                    "mensaje": (
+                        f"{session.get('usuario')} agregó {cantidad} puntos"
+                        if tipo == "suma"
+                        else f"{session.get('usuario')} retiró {cantidad} puntos"
+                    ),
+                    "hora": datetime.now().strftime("%H:%M"),
+                },
             )
             nuevo_total = sum(
-                (
-                    mov.cantidad
-                    if mov.tipo == "suma"
-                    else -mov.cantidad
-                )
-                for mov in db.query(
-                    MovimientoPuntos
-                ).all()
+                (mov.cantidad if mov.tipo == "suma" else -mov.cantidad)
+                for mov in db.query(MovimientoPuntos).all()
             )
 
-            total_movimientos = db.query(
-                MovimientoPuntos
-            ).count()
-            
+            total_movimientos = db.query(MovimientoPuntos).count()
+
             socketio.emit(
-                "kpi_update",
-                {
-                    "puntos": nuevo_total,
-                    "movimientos": total_movimientos
-                }
+                "kpi_update", {"puntos": nuevo_total, "movimientos": total_movimientos}
             )
 
         except IntegrityError:
             db.rollback()
-            return jsonify({
-                "status": "error",
-                "msg": "Esta cita ya tiene reseña aplicada (bloqueo BD)"
-            }), 400
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "msg": "Esta cita ya tiene reseña aplicada (bloqueo BD)",
+                    }
+                ),
+                400,
+            )
 
         # 🔄 limpiar cache
         CACHE_PUNTOS.pop(str(idcliente), None)
 
         saldo_nuevo = get_operational_points(db, idcliente)
 
-        return jsonify({
-            "status": "ok",
-            "saldo": saldo_nuevo,
-            "movimiento": serialize_movimiento(nuevo)
-        })
+        return jsonify(
+            {
+                "status": "ok",
+                "saldo": saldo_nuevo,
+                "movimiento": serialize_movimiento(nuevo),
+            }
+        )
     except Exception as exc:
         db.rollback()
         print("ERROR API PUNTOS:", str(exc))
@@ -2213,9 +2225,8 @@ def modificar_puntos():
 @app.route("/api/historial/<idcliente>")
 @requiere_permiso("puntos")
 def historial(idcliente):
-    return jsonify(
-        obtener_historial_oracle(idcliente)
-    )
+    return jsonify(obtener_historial_oracle(idcliente))
+
 
 @app.route("/api/paciente/<idcliente>")
 @requiere_permiso("puntos")
@@ -2228,21 +2239,21 @@ def api_paciente(idcliente):
         historial = obtener_historial_oracle(idcliente)
         saldo = get_operational_points(db, idcliente)
 
-        return jsonify({
-            "puntos": saldo["total"],
-            "saldo": saldo,
-            "historial": historial,
-            "tiene_resena": tiene_resena_oracle(idcliente)
-        })
+        return jsonify(
+            {
+                "puntos": saldo["total"],
+                "saldo": saldo,
+                "historial": historial,
+                "tiene_resena": tiene_resena_oracle(idcliente),
+            }
+        )
 
     except Exception as exc:
 
         print("ERROR API PACIENTE:", exc)
 
-        return jsonify({
-            "error": True,
-            "msg": str(exc)
-        }), 500
+        return jsonify({"error": True, "msg": str(exc)}), 500
+
 
 def get_puntos_cache(idcliente):
     return get_oracle_points(idcliente)
@@ -2296,19 +2307,26 @@ def detalle_reporte():
         return jsonify([usuario.username for usuario in usuarios])
 
     if tipo in {"suma", "resta"}:
-        movimientos = db.query(MovimientoPuntos).filter(
-            MovimientoPuntos.tipo == tipo
-        ).order_by(MovimientoPuntos.fecha.desc()).limit(20).all()
+        movimientos = (
+            db.query(MovimientoPuntos)
+            .filter(MovimientoPuntos.tipo == tipo)
+            .order_by(MovimientoPuntos.fecha.desc())
+            .limit(20)
+            .all()
+        )
         return jsonify([serialize_movimiento(movimiento) for movimiento in movimientos])
 
     return jsonify([])
 
+
 @app.route("/transcripcion")
+@requiere_miguelvd
 def transcripcion():
     return render_template("transcripcion.html")
 
+
 @app.route("/api/transcripcion/estado")
-@requiere_sesion
+@requiere_miguelvd
 def estado_transcripcion():
 
     conn = None
@@ -2333,28 +2351,24 @@ def estado_transcripcion():
 
         if not row:
 
-            return jsonify({
-                "status": "success",
-                "modo": None
-            })
+            return jsonify({"status": "success", "modo": None})
 
-        return jsonify({
-            "status": "success",
-            "clave": row[0],
-            "modo": row[1],
-            "idcita": row[2],
-            "fecha_mod": str(row[3]) if row[3] else None,
-            "usuario_mod": row[4]
-        })
+        return jsonify(
+            {
+                "status": "success",
+                "clave": row[0],
+                "modo": row[1],
+                "idcita": row[2],
+                "fecha_mod": str(row[3]) if row[3] else None,
+                "usuario_mod": row[4],
+            }
+        )
 
     except Exception as e:
 
         print("ERROR ESTADO:", e)
 
-        return jsonify({
-            "status": "error",
-            "msg": str(e)
-        }), 500
+        return jsonify({"status": "error", "msg": str(e)}), 500
 
     finally:
 
@@ -2366,15 +2380,13 @@ def estado_transcripcion():
 
 
 @app.route("/vacaciones")
+@requiere_permiso("vacaciones")
 def vacaciones():
     return render_template(
         "vacaciones.html",
-        notificaciones=get_unread_notifications_count(
-            get_db(),
-            session.get("usuario")
-        )
+        notificaciones=get_unread_notifications_count(get_db(), session.get("usuario")),
     )
-            
+
 
 @socketio.on("connect")
 def socket_connect():
@@ -2391,15 +2403,12 @@ def socket_connect():
 
             usuarios_online[username] = True
 
-            emit(
-                "usuarios_online",
-                list(usuarios_online.keys()),
-                broadcast=True
-            )
+            emit("usuarios_online", list(usuarios_online.keys()), broadcast=True)
 
     except Exception as e:
 
         print("SOCKET CONNECT ERROR:", e)
+
 
 @socketio.on("disconnect")
 def socket_disconnect():
@@ -2414,33 +2423,15 @@ def socket_disconnect():
 
             leave_room(room)
 
-            usuarios_online.pop(
-                username,
-                None
-            )
+            usuarios_online.pop(username, None)
 
-            emit(
-                "usuarios_online",
-                list(usuarios_online.keys()),
-                broadcast=True
-            )
+            emit("usuarios_online", list(usuarios_online.keys()), broadcast=True)
 
     except Exception as e:
 
-        print(
-            "SOCKET DISCONNECT ERROR:",
-            e
-        )
+        print("SOCKET DISCONNECT ERROR:", e)
 
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "5000"))
-    socketio.run(
-        app,
-        host="0.0.0.0",
-        port=port,
-        debug=False,
-        use_reloader=False
-    )
-
-
+    socketio.run(app, host="0.0.0.0", port=port, debug=False, use_reloader=False)

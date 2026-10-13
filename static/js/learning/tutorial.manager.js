@@ -101,6 +101,36 @@ class TutorialManager {
     return Math.max(0, Math.min(savedStep, tutorial.pasos.length - 1));
   }
 
+  // ======================================
+  // PASO DEL REPASO INDIVIDUAL
+  // ======================================
+
+  getReviewStep(id) {
+    const tutorial = this.get(id);
+
+    if (!tutorial) return 0;
+
+    const savedStep = Number(
+      localStorage.getItem(`tutorial-review-step-${id}`),
+    );
+
+    if (Number.isNaN(savedStep)) {
+      return 0;
+    }
+
+    return Math.max(0, Math.min(savedStep, tutorial.pasos.length - 1));
+  }
+
+  saveReviewStep(id, stepIndex) {
+    localStorage.setItem(`tutorial-review-step-${id}`, stepIndex);
+
+    console.log(`🔄 Paso del repaso guardado: ${id} → ${stepIndex + 1}`);
+  }
+
+  clearReviewStep(id) {
+    localStorage.removeItem(`tutorial-review-step-${id}`);
+  }
+
   saveProgress(id, progress, stepIndex = null) {
     this.progress[id] = progress;
 
@@ -204,7 +234,6 @@ class TutorialManager {
     // =======================================
     // REPASO
     // =======================================
-
     if (repasar) {
       // ---------------------------------------
       // REPASO DEL RECORRIDO COMPLETO
@@ -242,9 +271,15 @@ class TutorialManager {
         // REPASO INDIVIDUAL
         // ---------------------------------------
 
-        startStep = 0;
+        const savedReviewStep = this.getReviewStep(id);
 
-        console.log(`🔄 Repaso individual de ${tutorial.nombre} desde paso 1`);
+        startStep = savedReviewStep;
+
+        console.log(
+          `🔄 Repaso individual de ${tutorial.nombre} desde paso ${
+            startStep + 1
+          }`,
+        );
       }
     } else {
       // =======================================
@@ -291,7 +326,7 @@ class TutorialManager {
         }
 
         // =======================================
-        // REPASO DEL RECORRIDO
+        // REPASO DEL RECORRIDO COMPLETO
         // =======================================
 
         if (reviewJourney) {
@@ -300,11 +335,27 @@ class TutorialManager {
           sessionStorage.setItem("academyReviewStep", String(stepIndex));
 
           console.log(`🔄 Paso del repaso guardado: ${id} → ${stepIndex + 1}`);
+
+          return;
         }
+
+        // =======================================
+        // REPASO INDIVIDUAL
+        // =======================================
+
+        this.saveReviewStep(id, stepIndex);
       },
 
       onFinish: () => {
         console.log(`🎉 Tutorial terminado: ${tutorial.nombre}`);
+
+        // =======================================
+        // LIMPIAR POSICIÓN DEL REPASO INDIVIDUAL
+        // =======================================
+
+        if (repasar && !reviewJourney) {
+          this.clearReviewStep(id);
+        }
 
         // =======================================
         // SI ES REPASO
