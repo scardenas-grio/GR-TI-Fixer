@@ -148,7 +148,6 @@ function registrarSolicitudReciente() {
 
   if (!tabla) {
     console.warn("⚠️ No se encontró la tabla de solicitudes recientes.");
-
     return;
   }
 
@@ -156,7 +155,6 @@ function registrarSolicitudReciente() {
 
   if (!tbody) {
     console.warn("⚠️ No se encontró el tbody de solicitudes recientes.");
-
     return;
   }
 
@@ -172,7 +170,20 @@ function registrarSolicitudReciente() {
     console.warn(
       "⚠️ No hay información suficiente para registrar la solicitud.",
     );
+    return;
+  }
 
+  // ========================================
+  // VERIFICAR STORE
+  // ========================================
+
+  if (
+    !window.VacacionesStore ||
+    typeof window.VacacionesStore.crear !== "function"
+  ) {
+    console.error(
+      "❌ VacacionesStore no está disponible. No se registró la solicitud.",
+    );
     return;
   }
 
@@ -182,13 +193,104 @@ function registrarSolicitudReciente() {
 
   const tipo = obtenerNombreTipoSolicitud(tipoSolicitudSeleccionada);
 
-  const fechaInicio = formatearFechaSolicitud(solicitudVacaciones.fechaInicio);
+  const fechaInicioISO = solicitudVacaciones.fechaInicio;
+  const fechaFinISO = solicitudVacaciones.fechaFin;
 
-  const fechaFin = formatearFechaSolicitud(solicitudVacaciones.fechaFin);
+  const fechaInicio = formatearFechaSolicitud(fechaInicioISO);
+  const fechaFin = formatearFechaSolicitud(fechaFinISO);
 
-  const dias = solicitudVacaciones.diasSolicitados;
+  const dias = Number(solicitudVacaciones.diasSolicitados) || 0;
 
   const duracion = `${dias} ${dias === 1 ? "día" : "días"}`;
+
+  // ========================================
+  // DATOS ADICIONALES SEGÚN TIPO
+  // ========================================
+
+  const esPermiso = tipoSolicitudSeleccionada === "permiso";
+
+  const motivo = esPermiso
+    ? solicitudVacaciones.motivoPermiso ||
+      solicitudVacaciones.comentarioPermiso ||
+      "Permiso"
+    : `Solicitud de ${tipo.toLowerCase()}`;
+
+  // ========================================
+  // REGISTRAR EN EL STORE
+  // ========================================
+
+  let solicitudRegistrada;
+
+  try {
+    solicitudRegistrada = window.VacacionesStore.crear({
+      tipo: tipoSolicitudSeleccionada,
+
+      tipoNombre: tipo,
+
+      fechaInicio: fechaInicioISO,
+      fechaFin: fechaFinISO,
+
+      diasSolicitados: dias,
+
+      duracion,
+
+      motivo,
+
+      observaciones: solicitudVacaciones.comentarioPermiso || "",
+
+      pagoPermiso: solicitudVacaciones.pagoPermiso || "",
+
+      estado: "pendiente",
+    });
+  } catch (error) {
+    console.error("❌ No se pudo registrar la solicitud:", error);
+
+    alert("No fue posible guardar la solicitud. Inténtalo nuevamente.");
+
+    return;
+  }
+
+  // ========================================
+  // IDENTIFICADOR Y ESTADO
+  // ========================================
+
+  const idSolicitud = solicitudRegistrada.id;
+
+  const estadoSolicitud = solicitudRegistrada.estado;
+
+  // ========================================
+  // REGISTRAR PERIODOS PARA VALIDACIONES
+  // ========================================
+
+  if (tipoSolicitudSeleccionada === "vacaciones") {
+    periodosVacacionesRegistrados.push({
+      id: idSolicitud,
+      fechaInicio: fechaInicioISO,
+      fechaFin: fechaFinISO,
+      dias,
+      estado: estadoSolicitud,
+    });
+
+    actualizarSaldoDisponibleReal();
+
+    console.log("📅 Vacaciones registradas:", dias, "días");
+
+    console.log("💰 Nuevo saldo disponible:", saldoDisponible, "días");
+  }
+
+  if (tipoSolicitudSeleccionada === "permiso") {
+    periodosPermisosRegistrados.push({
+      id: idSolicitud,
+      fechaInicio: fechaInicioISO,
+      fechaFin: fechaFinISO,
+      estado: estadoSolicitud,
+    });
+
+    console.log("📅 Permiso registrado:", {
+      fechaInicio: fechaInicioISO,
+      fechaFin: fechaFinISO,
+    });
+  }
 
   // ========================================
   // ICONO SEGÚN TIPO
@@ -196,45 +298,12 @@ function registrarSolicitudReciente() {
 
   const iconos = {
     vacaciones: "fa-umbrella-beach",
-
     permiso: "fa-file-check",
-
     horas: "fa-clock",
-
     incapacidad: "fa-bandage",
   };
 
   const icono = iconos[tipoSolicitudSeleccionada] || "fa-file";
-
-  if (tipoSolicitudSeleccionada === "vacaciones") {
-    periodosVacacionesRegistrados.push({
-      fechaInicio: solicitudVacaciones.fechaInicio,
-      fechaFin: solicitudVacaciones.fechaFin,
-      dias: solicitudVacaciones.diasSolicitados,
-    });
-
-    actualizarSaldoDisponibleReal();
-
-    console.log(
-      "📅 Vacaciones registradas:",
-      solicitudVacaciones.diasSolicitados,
-      "días",
-    );
-
-    console.log("💰 Nuevo saldo disponible:", saldoDisponible, "días");
-  }
-
-  if (tipoSolicitudSeleccionada === "permiso") {
-    periodosPermisosRegistrados.push({
-      fechaInicio: solicitudVacaciones.fechaInicio,
-      fechaFin: solicitudVacaciones.fechaFin,
-    });
-
-    console.log("📅 Permiso registrado:", {
-      fechaInicio: solicitudVacaciones.fechaInicio,
-      fechaFin: solicitudVacaciones.fechaFin,
-    });
-  }
 
   // ========================================
   // CREAR FILA
@@ -244,55 +313,36 @@ function registrarSolicitudReciente() {
 
   fila.classList.add("solicitud-reciente-nueva");
 
+  // Guardamos el ID real para futuras acciones.
+  fila.dataset.solicitudId = idSolicitud;
+
   fila.innerHTML = `
-
     <td>
-
       <div class="tipo-badge ${tipoSolicitudSeleccionada}">
-
-        <i
-          class="fa-solid ${icono}"
-        ></i>
-
+        <i class="fa-solid ${icono}"></i>
         ${tipo}
-
       </div>
-
     </td>
 
+    <td></td>
 
+    <td></td>
 
-    <td>
-      ${
-        tipoSolicitudSeleccionada === "permiso"
-          ? solicitudVacaciones.motivoPermiso ||
-            solicitudVacaciones.comentarioPermiso ||
-            "Permiso"
-          : `Solicitud de ${tipo.toLowerCase()}`
-      }
-    </td>
-
-
+    <td></td>
 
     <td>
-      ${fechaInicio} – ${fechaFin}
-    </td>
-
-
-    <td>
-      ${duracion}
-    </td>
-
-
-    <td>
-
       <span class="status-badge pending">
         Pendiente
       </span>
-
     </td>
-
   `;
+
+  // Insertar los textos como texto, no como HTML.
+  const celdas = fila.querySelectorAll("td");
+
+  celdas[1].textContent = motivo;
+  celdas[2].textContent = `${fechaInicio} – ${fechaFin}`;
+  celdas[3].textContent = duracion;
 
   // ========================================
   // INSERTAR AL PRINCIPIO
@@ -300,20 +350,25 @@ function registrarSolicitudReciente() {
 
   tbody.insertBefore(fila, tbody.firstChild);
 
-  if (tipoSolicitudSeleccionada === "permiso") {
+  // ========================================
+  // ACTUALIZAR CALENDARIO
+  // ========================================
+
+  if (esPermiso) {
     renderCalendarioVacaciones();
   }
 
-  console.log("✅ Solicitud agregada a recientes:", {
+  console.log("✅ Solicitud registrada correctamente:", {
+    id: idSolicitud,
     tipo,
-    fechaInicio,
-    fechaFin,
+    fechaInicio: fechaInicioISO,
+    fechaFin: fechaFinISO,
     dias,
-    estado: "Pendiente",
+    estado: estadoSolicitud,
   });
 
   // ========================================
-  // PEQUEÑA ANIMACIÓN
+  // ANIMACIÓN
   // ========================================
 
   requestAnimationFrame(() => {

@@ -1,224 +1,333 @@
 console.log("🚀 VACACIONES ADMIN JS CARGADO");
-/* =========================================================
-   VACACIONES - ADMINISTRACIÓN
-   Datos simulados para pruebas de interfaz
-========================================================= */
 
 document.addEventListener("DOMContentLoaded", () => {
-  const tabSolicitud = document.getElementById("tabSolicitud");
-  const tabAutorizaciones = document.getElementById("tabAutorizaciones");
+  "use strict";
 
-  const solicitudView = document.getElementById("vacacionesSolicitudView");
+  const store = window.VacacionesStore;
+  const $ = (id) => document.getElementById(id);
 
-  const autorizacionesView = document.getElementById(
-    "vacacionesAutorizacionesView",
-  );
+  const tabSolicitud = $("tabSolicitud");
+  const tabAutorizaciones = $("tabAutorizaciones");
+  const solicitudView = $("vacacionesSolicitudView");
+  const autorizacionesView = $("vacacionesAutorizacionesView");
 
-  const searchInput = document.getElementById("adminSearch");
-
-  const tipoSelect = document.getElementById("adminTipo");
-
-  const estadoSelect = document.getElementById("adminEstado");
-
-  const tableBody = document.getElementById("adminSolicitudesBody");
-
-  const resultCount = document.getElementById("adminResultCount");
-
-  const pendingCount = document.getElementById("adminPendingCount");
-
-  const approvedCount = document.getElementById("adminApprovedCount");
-
-  const rejectedCount = document.getElementById("adminRejectedCount");
-
-  const totalCount = document.getElementById("adminTotalCount");
-
-  const noResults = document.getElementById("adminNoResults");
-
-  const refreshButton = document.getElementById("adminRefresh");
-
-  /*
-  ---------------------------------------------------------
-  MODAL DE DETALLE
-  ---------------------------------------------------------
-  */
-
-  const adminModal = document.getElementById("adminSolicitudModal");
-
-  const adminModalOverlay = adminModal.querySelector(".admin-modal-overlay");
-
-  const adminModalClose = document.getElementById("adminModalClose");
-
-  const adminModalTitle = document.getElementById("adminModalTitle");
-
-  const adminModalAvatar = document.getElementById("adminModalAvatar");
-
-  const adminModalEmployee = document.getElementById("adminModalEmployee");
-
-  const adminModalRequest = document.getElementById("adminModalRequest");
-
-  const adminModalStatus = document.getElementById("adminModalStatus");
-
-  const adminModalTipo = document.getElementById("adminModalTipo");
-
-  const adminModalFecha = document.getElementById("adminModalFecha");
-
-  const adminModalDuracion = document.getElementById("adminModalDuracion");
-
-  const adminModalMotivo = document.getElementById("adminModalMotivo");
-
-  const adminModalObservaciones = document.getElementById(
-    "adminModalObservaciones",
-  );
-
-  const adminModalActions = document.getElementById("adminModalActions");
-
-  const adminModalApprove = document.getElementById("adminModalApprove");
-
-  const adminModalReject = document.getElementById("adminModalReject");
-
-  let solicitudModalActual = null;
-
-  /*
-  ---------------------------------------------------------
-  VALIDACIÓN
-  ---------------------------------------------------------
-  */
+  const searchInput = $("adminSearch");
+  const tipoSelect = $("adminTipo");
+  const estadoSelect = $("adminEstado");
+  const tableBody = $("adminSolicitudesBody");
+  const resultCount = $("adminResultCount");
+  const pendingCount = $("adminPendingCount");
+  const approvedCount = $("adminApprovedCount");
+  const rejectedCount = $("adminRejectedCount");
+  const totalCount = $("adminTotalCount");
+  const noResults = $("adminNoResults");
+  const refreshButton = $("adminRefresh");
+  const modal = $("adminSolicitudModal");
 
   if (
+    !store ||
+    !modal ||
     !tabSolicitud ||
     !tabAutorizaciones ||
     !solicitudView ||
-    !autorizacionesView
+    !autorizacionesView ||
+    !tableBody
   ) {
+    console.error("[VacacionesAdmin] Faltan elementos HTML o VacacionesStore.");
     return;
   }
 
-  /*
-  ---------------------------------------------------------
-  DATOS SIMULADOS
-  ---------------------------------------------------------
-  */
+  const modalOverlay = modal.querySelector(".admin-modal-overlay");
+  const modalClose = $("adminModalClose");
+  const modalTitle = $("adminModalTitle");
+  const modalAvatar = $("adminModalAvatar");
+  const modalEmployee = $("adminModalEmployee");
+  const modalRequest = $("adminModalRequest");
+  const modalStatus = $("adminModalStatus");
+  const modalTipo = $("adminModalTipo");
+  const modalFecha = $("adminModalFecha");
+  const modalDuracion = $("adminModalDuracion");
+  const modalMotivo = $("adminModalMotivo");
+  const modalObservaciones = $("adminModalObservaciones");
+  const modalActions = $("adminModalActions");
+  const modalApprove = $("adminModalApprove");
+  const modalReject = $("adminModalReject");
 
-  let solicitudes = [
-    {
-      id: 1,
-      empleado: "Juan Pérez",
-      tipo: "vacaciones",
-      tipoNombre: "Vacaciones",
-      motivo: "Descanso anual",
-      fecha: "24 Sep 2026",
-      duracion: "5 días",
-      estado: "pendiente",
-      observaciones:
-        "Solicita los días correspondientes a su periodo vacacional.",
-    },
+  let solicitudModalActual = null;
 
-    {
-      id: 2,
-      empleado: "María López",
-      tipo: "permiso",
-      tipoNombre: "Permiso",
-      motivo: "Cita médica",
-      fecha: "25 Sep 2026",
-      duracion: "3 horas",
-      estado: "pendiente",
-      observaciones: "Permiso solicitado para asistir a una cita médica.",
-    },
-
-    {
-      id: 3,
-      empleado: "Carlos Hernández",
-      tipo: "horas",
-      tipoNombre: "Horas extras",
-      motivo: "Cobertura de turno",
-      fecha: "26 Sep 2026",
-      duracion: "4 horas",
-      estado: "pendiente",
-      observaciones: "Horas adicionales realizadas para cubrir un turno.",
-    },
-
-    {
-      id: 4,
-      empleado: "Ana García",
-      tipo: "incapacidad",
-      tipoNombre: "Incapacidad",
-      motivo: "Incapacidad médica",
-      fecha: "27 Sep 2026",
-      duracion: "2 días",
-      estado: "pendiente",
-      observaciones:
-        "Se presenta incapacidad médica correspondiente al periodo indicado.",
-    },
+  const required = [
+    searchInput,
+    tipoSelect,
+    estadoSelect,
+    resultCount,
+    pendingCount,
+    approvedCount,
+    rejectedCount,
+    totalCount,
+    noResults,
+    refreshButton,
+    modalOverlay,
+    modalClose,
+    modalTitle,
+    modalAvatar,
+    modalEmployee,
+    modalRequest,
+    modalStatus,
+    modalTipo,
+    modalFecha,
+    modalDuracion,
+    modalMotivo,
+    modalObservaciones,
+    modalActions,
+    modalApprove,
+    modalReject,
   ];
 
-  /*
-  ---------------------------------------------------------
-  FUNCIONES
-  ---------------------------------------------------------
-  */
+  if (required.some((element) => !element)) {
+    console.error(
+      "[VacacionesAdmin] Faltan controles del panel administrativo.",
+    );
+    return;
+  }
+
+  if (
+    typeof store.listar !== "function" ||
+    typeof store.crear !== "function" ||
+    typeof store.actualizarEstado !== "function"
+  ) {
+    console.error(
+      "[VacacionesAdmin] La API de VacacionesStore está incompleta.",
+    );
+    return;
+  }
+
+  // =========================================================
+  // MIGRACIÓN DE SOLICITUDES DE DEMOSTRACIÓN
+  // =========================================================
+
+  const MIGRATION_KEY = "tiFixer.vacaciones.admin.samplesMigrated.v1";
+
+  function migrarEjemplos() {
+    try {
+      if (localStorage.getItem(MIGRATION_KEY) === "true") {
+        return;
+      }
+
+      // No eliminamos las solicitudes que ya existen.
+      const ejemplos = [
+        {
+          empleado: "Juan Pérez",
+          tipo: "vacaciones",
+          tipoNombre: "Vacaciones",
+          motivo: "Descanso anual",
+          fechaInicio: "2026-09-24",
+          fechaFin: "2026-09-28",
+          diasSolicitados: 5,
+          duracion: "5 días",
+          estado: "pendiente",
+          observaciones:
+            "Solicita los días correspondientes a su periodo vacacional.",
+        },
+        {
+          empleado: "María López",
+          tipo: "permiso",
+          tipoNombre: "Permiso",
+          motivo: "Cita médica",
+          fechaInicio: "2026-09-25",
+          fechaFin: "2026-09-25",
+          diasSolicitados: 3,
+          duracion: "3 horas",
+          estado: "pendiente",
+          observaciones: "Permiso solicitado para asistir a una cita médica.",
+        },
+        {
+          empleado: "Carlos Hernández",
+          tipo: "horas",
+          tipoNombre: "Horas extras",
+          motivo: "Cobertura de turno",
+          fechaInicio: "2026-09-26",
+          fechaFin: "2026-09-26",
+          diasSolicitados: 4,
+          duracion: "4 horas",
+          estado: "pendiente",
+          observaciones: "Horas adicionales realizadas para cubrir un turno.",
+        },
+        {
+          empleado: "Ana García",
+          tipo: "incapacidad",
+          tipoNombre: "Incapacidad",
+          motivo: "Incapacidad médica",
+          fechaInicio: "2026-09-27",
+          fechaFin: "2026-09-28",
+          diasSolicitados: 2,
+          duracion: "2 días",
+          estado: "pendiente",
+          observaciones:
+            "Se presenta incapacidad médica correspondiente al periodo indicado.",
+        },
+      ];
+
+      ejemplos.forEach((ejemplo) => {
+        store.crear(ejemplo);
+      });
+
+      localStorage.setItem(MIGRATION_KEY, "true");
+
+      console.info(
+        "[VacacionesAdmin] Ejemplos migrados al almacenamiento central.",
+      );
+    } catch (error) {
+      console.error("[VacacionesAdmin] Error al migrar los ejemplos:", error);
+    }
+  }
+
+  migrarEjemplos();
+
+  // =========================================================
+  // FUNCIONES AUXILIARES
+  // =========================================================
+
+  function nombreTipo(tipo) {
+    const nombres = {
+      vacaciones: "Vacaciones",
+      permiso: "Permiso",
+      horas: "Horas extras",
+      incapacidad: "Incapacidad",
+    };
+
+    return nombres[tipo] || "Solicitud";
+  }
+
+  function fechaBonita(fechaISO) {
+    if (!fechaISO || !/^\d{4}-\d{2}-\d{2}$/.test(fechaISO)) {
+      return fechaISO || "Fecha pendiente";
+    }
+
+    const [anio, mes, dia] = fechaISO.split("-").map(Number);
+
+    return new Intl.DateTimeFormat("es-MX", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }).format(new Date(anio, mes - 1, dia));
+  }
+
+  function adaptarSolicitud(solicitud) {
+    const inicio = solicitud.fechaInicio || "";
+    const fin = solicitud.fechaFin || inicio;
+    const dias = Number(solicitud.diasSolicitados) || 0;
+
+    let fecha = "Fecha pendiente";
+
+    if (inicio) {
+      fecha =
+        fin && fin !== inicio
+          ? `${fechaBonita(inicio)} – ${fechaBonita(fin)}`
+          : fechaBonita(inicio);
+    }
+
+    return {
+      ...solicitud,
+      empleado: solicitud.empleado || "Empleado de prueba",
+      tipo: solicitud.tipo || "permiso",
+      tipoNombre: solicitud.tipoNombre || nombreTipo(solicitud.tipo),
+      motivo:
+        solicitud.motivo ||
+        solicitud.comentarioPermiso ||
+        "Sin motivo especificado",
+      fecha,
+      duracion: solicitud.duracion || `${dias} ${dias === 1 ? "día" : "días"}`,
+      observaciones:
+        solicitud.observaciones || solicitud.comentarioPermiso || "",
+      estado: solicitud.estado || "pendiente",
+    };
+  }
+
+  function obtenerSolicitudes() {
+    return store
+      .listar()
+      .map(adaptarSolicitud)
+      .sort((a, b) =>
+        String(b.fechaRegistro || "").localeCompare(
+          String(a.fechaRegistro || ""),
+        ),
+      );
+  }
 
   function obtenerIconoTipo(tipo) {
     const iconos = {
       vacaciones: "fa-solid fa-umbrella-beach",
-
       permiso: "fa-solid fa-file-check",
-
       horas: "fa-solid fa-clock",
-
       incapacidad: "fa-solid fa-bandage",
     };
 
     return iconos[tipo] || "fa-solid fa-file";
   }
 
-  function obtenerClaseEstado(estado) {
-    return `admin-status ${estado}`;
-  }
-
   function obtenerTextoEstado(estado) {
     const textos = {
       pendiente: "Pendiente",
-
       aprobado: "Aprobado",
-
       rechazado: "Rechazado",
     };
 
     return textos[estado] || estado;
   }
 
-  function actualizarContador() {
-    const pendientes = solicitudes.filter(
-      (solicitud) => solicitud.estado === "pendiente",
-    ).length;
-
-    const aprobadas = solicitudes.filter(
-      (solicitud) => solicitud.estado === "aprobado",
-    ).length;
-
-    const rechazadas = solicitudes.filter(
-      (solicitud) => solicitud.estado === "rechazado",
-    ).length;
-
-    const total = solicitudes.length;
-
-    pendingCount.textContent = pendientes;
-    approvedCount.textContent = aprobadas;
-    rejectedCount.textContent = rechazadas;
-    totalCount.textContent = total;
+  function escaparHTML(valor) {
+    return String(valor ?? "").replace(
+      /[&<>"']/g,
+      (caracter) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        })[caracter],
+    );
   }
 
+  // =========================================================
+  // CONTADORES
+  // =========================================================
+
+  function actualizarContadores(solicitudes) {
+    pendingCount.textContent = solicitudes.filter(
+      (s) => s.estado === "pendiente",
+    ).length;
+
+    approvedCount.textContent = solicitudes.filter(
+      (s) => s.estado === "aprobado",
+    ).length;
+
+    rejectedCount.textContent = solicitudes.filter(
+      (s) => s.estado === "rechazado",
+    ).length;
+
+    totalCount.textContent = solicitudes.length;
+  }
+
+  // =========================================================
+  // RENDERIZAR TABLA
+  // =========================================================
+
   function renderSolicitudes() {
+    const todas = obtenerSolicitudes();
+
     const texto = (searchInput.value || "").trim().toLowerCase();
 
     const tipo = tipoSelect.value;
     const estado = estadoSelect.value;
 
-    const filtradas = solicitudes.filter((solicitud) => {
+    const filtradas = todas.filter((solicitud) => {
       const coincideTexto =
         !texto ||
         solicitud.empleado.toLowerCase().includes(texto) ||
-        solicitud.motivo.toLowerCase().includes(texto);
+        solicitud.motivo.toLowerCase().includes(texto) ||
+        solicitud.tipoNombre.toLowerCase().includes(texto) ||
+        String(solicitud.id).toLowerCase().includes(texto);
 
       const coincideTipo = tipo === "todos" || solicitud.tipo === tipo;
 
@@ -230,123 +339,90 @@ document.addEventListener("DOMContentLoaded", () => {
     tableBody.innerHTML = "";
 
     filtradas.forEach((solicitud) => {
-      const row = document.createElement("tr");
+      const fila = document.createElement("tr");
 
-      row.innerHTML = `
+      fila.dataset.solicitudId = solicitud.id;
 
+      fila.innerHTML = `
         <td>
           <div class="admin-employee">
-
             <div class="admin-avatar">
-              ${solicitud.empleado.substring(0, 2).toUpperCase()}
+              ${escaparHTML(solicitud.empleado.substring(0, 2).toUpperCase())}
             </div>
 
             <div>
-              <strong>
-                ${solicitud.empleado}
-              </strong>
-
+              <strong>${escaparHTML(solicitud.empleado)}</strong>
               <small>
-                Solicitud #${solicitud.id}
+                Solicitud #${escaparHTML(solicitud.id)}
               </small>
             </div>
-
           </div>
         </td>
 
-
         <td>
-
           <div class="admin-type">
-
-            <span class="admin-type-icon ${solicitud.tipo}">
+            <span class="admin-type-icon ${escaparHTML(solicitud.tipo)}">
               <i class="${obtenerIconoTipo(solicitud.tipo)}"></i>
             </span>
 
-            <span>
-              ${solicitud.tipoNombre}
-            </span>
-
+            <span>${escaparHTML(solicitud.tipoNombre)}</span>
           </div>
-
         </td>
 
+        <td>${escaparHTML(solicitud.motivo)}</td>
+
+        <td>${escaparHTML(solicitud.fecha)}</td>
+
+        <td>${escaparHTML(solicitud.duracion)}</td>
 
         <td>
-          ${solicitud.motivo}
-        </td>
-
-
-        <td>
-          ${solicitud.fecha}
-        </td>
-
-
-        <td>
-          ${solicitud.duracion}
-        </td>
-
-
-        <td>
-
-          <span class="${obtenerClaseEstado(solicitud.estado)}">
+          <span class="admin-status ${escaparHTML(solicitud.estado)}">
             ${obtenerTextoEstado(solicitud.estado)}
           </span>
-
         </td>
 
-
         <td>
-
           <div class="admin-actions">
-
             <button
               type="button"
               class="admin-action-btn view"
               data-action="view"
-              data-id="${solicitud.id}"
+              data-id="${escaparHTML(solicitud.id)}"
               title="Ver detalle"
             >
               <i class="fa-solid fa-eye"></i>
             </button>
 
-
             ${
               solicitud.estado === "pendiente"
                 ? `
+                  <button
+                    type="button"
+                    class="admin-action-btn approve"
+                    data-action="approve"
+                    data-id="${escaparHTML(solicitud.id)}"
+                    title="Aprobar"
+                  >
+                    <i class="fa-solid fa-check"></i>
+                  </button>
 
-                <button
-                  type="button"
-                  class="admin-action-btn approve"
-                  data-action="approve"
-                  data-id="${solicitud.id}"
-                  title="Aprobar"
-                >
-                  <i class="fa-solid fa-check"></i>
-                </button>
-
-
-                <button
-                  type="button"
-                  class="admin-action-btn reject"
-                  data-action="reject"
-                  data-id="${solicitud.id}"
-                  title="Rechazar"
-                >
-                  <i class="fa-solid fa-xmark"></i>
-                </button>
-
-              `
+                  <button
+                    type="button"
+                    class="admin-action-btn reject"
+                    data-action="reject"
+                    data-id="${escaparHTML(solicitud.id)}"
+                    title="Rechazar"
+                  >
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                `
                 : ""
             }
-
           </div>
-
         </td>
-
       `;
 
-      tableBody.appendChild(row);
+      tableBody.appendChild(fila);
     });
 
     resultCount.textContent = `${filtradas.length} ${
@@ -355,48 +431,50 @@ document.addEventListener("DOMContentLoaded", () => {
 
     noResults.hidden = filtradas.length !== 0;
 
-    actualizarContador();
+    actualizarContadores(todas);
   }
 
-  /*
-  ---------------------------------------------------------
-  CAMBIO DE VISTA
-  ---------------------------------------------------------
-  */
+  // =========================================================
+  // CAMBIO DE VISTAS
+  // =========================================================
 
   function mostrarSolicitud() {
-    // Mostrar Solicitud
     solicitudView.hidden = false;
     solicitudView.removeAttribute("hidden");
     solicitudView.classList.remove("vista-oculta");
 
-    // Ocultar Autorizaciones
     autorizacionesView.hidden = true;
     autorizacionesView.setAttribute("hidden", "");
     autorizacionesView.classList.add("vista-oculta");
 
-    // Tabs
     tabSolicitud.classList.add("active");
     tabAutorizaciones.classList.remove("active");
   }
 
   function mostrarAutorizaciones() {
-    // Ocultar Solicitud
     solicitudView.hidden = true;
     solicitudView.setAttribute("hidden", "");
     solicitudView.classList.add("vista-oculta");
 
-    // Mostrar Autorizaciones
     autorizacionesView.hidden = false;
     autorizacionesView.removeAttribute("hidden");
     autorizacionesView.classList.remove("vista-oculta");
 
-    // Tabs
     tabSolicitud.classList.remove("active");
     tabAutorizaciones.classList.add("active");
 
-    // Renderizar solicitudes
     renderSolicitudes();
+  }
+
+  // =========================================================
+  // MODAL DE DETALLES
+  // =========================================================
+
+  function actualizarEstadoModal(estado) {
+    modalStatus.className = `admin-status ${estado}`;
+    modalStatus.textContent = obtenerTextoEstado(estado);
+
+    modalActions.style.display = estado === "pendiente" ? "flex" : "none";
   }
 
   function abrirModalSolicitud(solicitud) {
@@ -409,65 +487,64 @@ document.addEventListener("DOMContentLoaded", () => {
       .join("")
       .toUpperCase();
 
-    adminModalTitle.textContent = `Solicitud #${solicitud.id}`;
+    modalTitle.textContent = `Solicitud #${solicitud.id}`;
 
-    adminModalAvatar.textContent = iniciales;
+    modalAvatar.textContent = iniciales;
+    modalEmployee.textContent = solicitud.empleado;
+    modalRequest.textContent = `Solicitud #${solicitud.id}`;
 
-    adminModalEmployee.textContent = solicitud.empleado;
+    modalTipo.textContent = solicitud.tipoNombre;
+    modalFecha.textContent = solicitud.fecha;
+    modalDuracion.textContent = solicitud.duracion;
+    modalMotivo.textContent = solicitud.motivo;
 
-    adminModalRequest.textContent = `Solicitud #${solicitud.id}`;
-
-    adminModalTipo.textContent = solicitud.tipoNombre;
-
-    adminModalFecha.textContent = solicitud.fecha;
-
-    adminModalDuracion.textContent = solicitud.duracion;
-
-    adminModalMotivo.textContent = solicitud.motivo;
-
-    adminModalObservaciones.textContent =
+    modalObservaciones.textContent =
       solicitud.observaciones || "Sin observaciones registradas.";
 
     actualizarEstadoModal(solicitud.estado);
 
-    adminModal.classList.add("open");
-
-    adminModal.setAttribute("aria-hidden", "false");
-  }
-
-  function actualizarEstadoModal(estado) {
-    adminModalStatus.className = `admin-status ${estado}`;
-
-    adminModalStatus.textContent = obtenerTextoEstado(estado);
-
-    const pendiente = estado === "pendiente";
-
-    adminModalActions.style.display = pendiente ? "flex" : "none";
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
   }
 
   function cerrarModalSolicitud() {
-    adminModal.classList.remove("open");
-
-    adminModal.setAttribute("aria-hidden", "true");
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden", "true");
 
     solicitudModalActual = null;
   }
 
-  /*
-  ---------------------------------------------------------
-  EVENTOS DE TABS
-  ---------------------------------------------------------
-  */
+  // =========================================================
+  // APROBAR Y RECHAZAR
+  // =========================================================
+
+  function cambiarEstadoSolicitud(id, nuevoEstado) {
+    try {
+      store.actualizarEstado(id, nuevoEstado);
+
+      renderSolicitudes();
+      cerrarModalSolicitud();
+
+      console.info(`[VacacionesAdmin] Solicitud ${id}: ${nuevoEstado}`);
+    } catch (error) {
+      console.error(
+        "[VacacionesAdmin] No se pudo actualizar el estado:",
+        error,
+      );
+
+      alert(
+        "No fue posible actualizar la solicitud. Revisa la consola e inténtalo nuevamente.",
+      );
+    }
+  }
+
+  // =========================================================
+  // EVENTOS
+  // =========================================================
 
   tabSolicitud.addEventListener("click", mostrarSolicitud);
 
   tabAutorizaciones.addEventListener("click", mostrarAutorizaciones);
-
-  /*
-  ---------------------------------------------------------
-  FILTROS
-  ---------------------------------------------------------
-  */
 
   searchInput.addEventListener("input", renderSolicitudes);
 
@@ -477,113 +554,73 @@ document.addEventListener("DOMContentLoaded", () => {
 
   refreshButton.addEventListener("click", renderSolicitudes);
 
-  /*
-  ---------------------------------------------------------
-  ACCIONES DE TABLA
-  ---------------------------------------------------------
-  */
-
   tableBody.addEventListener("click", (event) => {
-    const button = event.target.closest("[data-action]");
+    const boton = event.target.closest("[data-action]");
 
-    if (!button) {
-      return;
-    }
+    if (!boton) return;
 
-    const id = Number(button.dataset.id);
+    const id = boton.dataset.id;
 
-    const action = button.dataset.action;
-
-    const solicitud = solicitudes.find((item) => item.id === id);
+    const solicitud = obtenerSolicitudes().find(
+      (item) => String(item.id) === String(id),
+    );
 
     if (!solicitud) {
+      console.warn("[VacacionesAdmin] Solicitud no encontrada:", id);
       return;
     }
 
-    /*
-      VER DETALLE
-      */
+    const accion = boton.dataset.action;
 
-    if (action === "view") {
-      if (action === "view") {
-        abrirModalSolicitud(solicitud);
-
-        return;
-      }
-
-      return;
+    if (accion === "view") {
+      abrirModalSolicitud(solicitud);
     }
 
-    /*
-      APROBAR
-      */
-
-    if (action === "approve") {
-      solicitud.estado = "aprobado";
-
-      renderSolicitudes();
-
-      return;
+    if (accion === "approve") {
+      cambiarEstadoSolicitud(id, "aprobado");
     }
 
-    /*
-      RECHAZAR
-      */
-
-    if (action === "reject") {
-      solicitud.estado = "rechazado";
-
-      renderSolicitudes();
-
-      return;
+    if (accion === "reject") {
+      cambiarEstadoSolicitud(id, "rechazado");
     }
   });
 
-  /*
-  ---------------------------------------------------------
-  EVENTOS DEL MODAL
-  ---------------------------------------------------------
-  */
+  modalClose.addEventListener("click", cerrarModalSolicitud);
 
-  adminModalClose.addEventListener("click", cerrarModalSolicitud);
-
-  adminModalOverlay.addEventListener("click", cerrarModalSolicitud);
+  modalOverlay.addEventListener("click", cerrarModalSolicitud);
 
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && adminModal.classList.contains("open")) {
+    if (event.key === "Escape" && modal.classList.contains("open")) {
       cerrarModalSolicitud();
     }
   });
 
-  adminModalApprove.addEventListener("click", () => {
-    if (!solicitudModalActual) {
-      return;
-    }
+  modalApprove.addEventListener("click", () => {
+    if (!solicitudModalActual) return;
 
-    solicitudModalActual.estado = "aprobado";
-
-    actualizarContador();
-    renderSolicitudes();
-    cerrarModalSolicitud();
+    cambiarEstadoSolicitud(solicitudModalActual.id, "aprobado");
   });
 
-  adminModalReject.addEventListener("click", () => {
-    if (!solicitudModalActual) {
-      return;
-    }
+  modalReject.addEventListener("click", () => {
+    if (!solicitudModalActual) return;
 
-    solicitudModalActual.estado = "rechazado";
-
-    actualizarContador();
-    renderSolicitudes();
-    cerrarModalSolicitud();
+    cambiarEstadoSolicitud(solicitudModalActual.id, "rechazado");
   });
 
-  /*
-  ---------------------------------------------------------
-  ESTADO INICIAL
-  ---------------------------------------------------------
-  */
+  // Actualizar la tabla cuando el store emita cambios.
+  window.addEventListener("vacaciones:solicitudes-cambio", renderSolicitudes);
+
+  // Actualizar si otra pestaña del mismo origen modifica el store.
+  window.addEventListener("storage", (event) => {
+    if (event.key === "tiFixer.vacaciones.solicitudes.v1") {
+      renderSolicitudes();
+    }
+  });
+
+  // =========================================================
+  // INICIALIZACIÓN
+  // =========================================================
 
   mostrarSolicitud();
+  renderSolicitudes();
 });
