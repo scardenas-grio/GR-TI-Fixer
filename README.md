@@ -100,6 +100,7 @@ TI-Fixer/
 ├── templates/
 ├── security/
 ├── scripts/
+├── tests/
 ├── requirements.txt
 ├── Dockerfile
 └── README.md
@@ -113,6 +114,7 @@ TI-Fixer/
 | templates | Plantillas HTML utilizadas por Flask. |
 | security | Funciones relacionadas con autenticación y seguridad. |
 | scripts | Scripts auxiliares para mantenimiento o despliegue. |
+| tests | Pruebas unitarias (pytest). |
 | app.py | Punto de entrada principal de la aplicación. |
 
 ---
@@ -160,6 +162,25 @@ Crear un archivo `.env` en la raíz del proyecto y completar las variables de en
 
 ```bash
 python app.py
+```
+
+---
+
+## 🧪 Pruebas
+
+Las pruebas unitarias viven en `tests/` y se ejecutan sin Oracle, LDAP ni Postgres:
+el cliente de Oracle y las conexiones LDAP se sustituyen por dobles de prueba y la
+base de datos se levanta en SQLite en memoria.
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
+
+Reporte de cobertura:
+
+```bash
+pytest --cov --cov-report=term-missing
 ```
 
 ---
